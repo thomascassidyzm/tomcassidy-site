@@ -1,0 +1,21 @@
+{
+  "name": "tomcassidy-site",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/vercel": "^9.0.2",
+    "astro": "^5.16.6",
+    "katex": "^0.16.27",
+    "marked": "^14.1.4",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,452 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import EssayCard from '@/components/EssayCard.astro';
+
+// Homepage prerenders. Pull the writing preview from the essays collection.
+export const prerender = true;
+
+const essays = (await getCollection('essays')).filter((e) => !e.data.draft);
+essays.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// "The Journey" surfaces recent writing — but never The Format itself, which
+// has its own keystone slot up top.
+const journey = essays.filter((e) => e.data.slug !== 'the-format').slice(0, 4);
+---
+
+<BaseLayout currentPage="home">
+  <!-- HERO — an invitation, not a monument. -->
+  <section class="hero">
+    <svg class="hero-icosa" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round">
+      <!-- icosahedron (face projection): 9 visible vertices / 18 edges, drawn on by stroke-dashoffset -->
+      <path class="icosa-line" d="M50,4 L89.5,27 L89.5,73 L50,96 L10.5,73 L10.5,27 Z" />
+      <path class="icosa-line" d="M50,4 L33,40 M50,4 L67,40 M33,40 L67,40 M10.5,27 L33,40 M89.5,27 L67,40" />
+      <path class="icosa-line" d="M33,40 L50,72 M67,40 L50,72 M33,40 L10.5,73 M67,40 L89.5,73 M10.5,73 L50,72 M89.5,73 L50,72 M50,72 L50,96" />
+      <g class="icosa-nodes" fill="currentColor" stroke="none"><circle cx="50" cy="4" r="1.7"/><circle cx="10.5" cy="27" r="1.7"/><circle cx="89.5" cy="27" r="1.7"/><circle cx="33" cy="40" r="1.7"/><circle cx="67" cy="40" r="1.7"/><circle cx="10.5" cy="73" r="1.7"/><circle cx="89.5" cy="73" r="1.7"/><circle cx="50" cy="72" r="1.7"/><circle cx="50" cy="96" r="1.7"/></g>
+    </svg>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Comprehensivist</p>
+      <h1 class="hero-name">Tom Cassidy</h1>
+      <p class="hero-tagline">Thinking out loud — and inviting you in.</p>
+      <p class="hero-blurb">
+        This isn't a monument to finished ideas. It's a place to think in the open:
+        an ongoing attempt to understand a few things that seem to matter, offered
+        in a form that talks back. You're welcome to disagree. That's rather the point.
+      </p>
+    </div>
+  </section>
+
+  <!-- KEYSTONE — The Format: the front door to "how this works." -->
+  <section class="keystone-wrap">
+    <a href="/writing/the-format" class="keystone">
+      <svg class="keystone-mark" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <path d="M50,4 L89.5,27 L89.5,73 L50,96 L10.5,73 L10.5,27 Z M50,4 L33,40 M50,4 L67,40 M33,40 L67,40 M10.5,27 L33,40 M89.5,27 L67,40 M33,40 L50,72 M67,40 L50,72 M33,40 L10.5,73 M67,40 L89.5,73 M10.5,73 L50,72 M89.5,73 L50,72 M50,72 L50,96" />
+      </svg>
+      <span class="keystone-eyebrow pigment-chip is-established">Start here · The method</span>
+      <h2 class="keystone-title">The Format</h2>
+      <p class="keystone-body">
+        Why this site talks back. Most of what's here — the essays, the frameworks,
+        the books — is published as a <em>living epistemic work</em>: it adapts to you,
+        every claim wears its status, the objections live inside, and a guide called
+        Alexander helps you carry the ideas into your own life. The best way to understand
+        the format is to use it.
+      </p>
+      <span class="keystone-link">Read The Format ↗</span>
+    </a>
+  </section>
+
+  <!-- THE THREE MOVEMENTS -->
+  <section class="arc">
+    <p class="arc-overline">
+      <svg class="arc-node" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M50,4 L89.5,27 L89.5,73 L50,96 L10.5,73 L10.5,27 Z M50,4 L33,40 M50,4 L67,40 M33,40 L67,40 M10.5,27 L33,40 M89.5,27 L67,40 M33,40 L50,72 M67,40 L50,72 M33,40 L10.5,73 M67,40 L89.5,73 M10.5,73 L50,72 M89.5,73 L50,72 M50,72 L50,96"/></svg>
+      Three movements
+    </p>
+
+    <!-- 1 · THE FUTURE — Configuration Economics (Carse invitation) -->
+    <article class="movement" data-accent="derived">
+      <div class="movement-index"><span class="movement-num">1</span><span class="movement-label">The Future</span></div>
+      <div class="movement-body">
+        <h3 class="movement-title">Configuration Economics</h3>
+        <p class="movement-lede">
+          An invitation to an infinite game.
+        </p>
+        <p class="movement-text">
+          A physics-grounded account of economic value — what enables future possibility
+          rather than what gets consumed. But more than that, it's an open game in the sense
+          James Carse meant: the point isn't to win it or finish it, but to keep it going and
+          bring others in — continuing the work begun by people like Buckminster Fuller. This
+          is what I'd like to spend the rest of my life on. Come and think about it with me.
+        </p>
+        <a href="https://configuration-economics.vercel.app" class="movement-link" target="_blank" rel="noopener noreferrer">
+          configuration-economics.vercel.app ↗
+        </a>
+      </div>
+    </article>
+
+    <!-- 2 · THE FOUNDATION — Distinction Physics (humble credibility) -->
+    <article class="movement" data-accent="established">
+      <div class="movement-index"><span class="movement-num">2</span><span class="movement-label">The Foundation</span></div>
+      <div class="movement-body">
+        <h3 class="movement-title">Distinction Physics</h3>
+        <p class="movement-lede">
+          The serious thinking that earns the rest a hearing.
+        </p>
+        <p class="movement-text">
+          A treatise taking distinction as the primitive from which physics, mind and meaning
+          are reconstructed — standing, as all such work does, on the shoulders of giants. It's
+          the foundation Configuration Economics rests on, and it's offered in that spirit: some
+          novelty, a lot of reframing — most of it, I hope, helpful. The honesty is the point;
+          the credibility comes from not pretending it's more than it is.
+        </p>
+        <a href="https://distinction-physics.vercel.app" class="movement-link" target="_blank" rel="noopener noreferrer">
+          distinction-physics.vercel.app ↗
+        </a>
+      </div>
+    </article>
+
+    <!-- 3 · THE JOURNEY — everything else: the body of work over time -->
+    <article class="movement" data-accent="open">
+      <div class="movement-index"><span class="movement-num">3</span><span class="movement-label">The Journey</span></div>
+      <div class="movement-body">
+        <h3 class="movement-title">The Journey</h3>
+        <p class="movement-lede">
+          The body of work, and the arc of it over time.
+        </p>
+        <p class="movement-text">
+          Everything else: the frameworks, the essays, the books published and unpublished —
+          decades of thinking at rising levels of sophistication. A timeline is coming; for now,
+          here's some recent writing, with the whole collection a click away.
+        </p>
+
+        <div class="essay-grid">
+          {journey.map((e) => (
+            <EssayCard
+              title={e.data.title}
+              slug={e.data.slug}
+              summary={e.data.summary}
+              date={e.data.date}
+              topics={e.data.topics}
+              epistemicStatus={e.data.epistemicStatus}
+              series={e.data.series}
+            />
+          ))}
+        </div>
+
+        <a href="/writing" class="movement-link">All writing ↗</a>
+      </div>
+    </article>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 66vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    overflow: hidden;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+  }
+
+  /* Large faint structural icosahedron — bold intentional crop, bleeding off the right. */
+  .hero-icosa {
+    position: absolute;
+    top: 50%;
+    right: -22%;
+    width: min(62vw, 640px);
+    height: min(62vw, 640px);
+    transform: translateY(-50%) rotate(-8deg);
+    color: var(--established);
+    opacity: 0.16;
+    pointer-events: none;
+    z-index: 0;
+    animation: icosa-float 26s ease-in-out infinite;
+  }
+  .icosa-line {
+    stroke-dasharray: 320;
+    stroke-dashoffset: 320;
+    animation: icosa-draw 2.6s ease forwards;
+  }
+  .icosa-line:nth-child(2) { animation-delay: 0.35s; }
+  .icosa-line:nth-child(3) { animation-delay: 0.7s; }
+  .icosa-nodes { opacity: 0; animation: icosa-fade 1.4s ease 1.4s forwards; }
+
+  @keyframes icosa-draw { to { stroke-dashoffset: 0; } }
+  @keyframes icosa-fade { to { opacity: 1; } }
+  @keyframes icosa-float {
+    0%, 100% { transform: translateY(-50%) rotate(-8deg); }
+    50% { transform: translateY(-52%) rotate(-3deg); }
+  }
+
+  .hero-content { position: relative; z-index: 1; max-width: 660px; }
+
+  /* Staggered page-load reveal. */
+  .hero-eyebrow,
+  .hero-name,
+  .hero-tagline,
+  .hero-blurb,
+  .keystone {
+    opacity: 0;
+    animation: rise-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  .hero-eyebrow { animation-delay: 0.05s; }
+  .hero-name { animation-delay: 0.18s; }
+  .hero-tagline { animation-delay: 0.34s; }
+  .hero-blurb { animation-delay: 0.48s; }
+  .keystone { animation-delay: 0.62s; }
+
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--established);
+    margin-bottom: 1.1rem;
+  }
+  .hero-eyebrow-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--established);
+  }
+
+  .hero-name {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: var(--step-5);
+    font-weight: 380;
+    letter-spacing: -0.02em;
+    line-height: 1.0;
+    color: var(--text-primary);
+  }
+
+  .hero-tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.7rem;
+    color: var(--text-secondary);
+    margin-top: 1.4rem;
+    line-height: 1.3;
+  }
+
+  .hero-blurb {
+    font-family: var(--font-body);
+    font-size: 1.12rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    margin-top: 1.6rem;
+    max-width: 56ch;
+  }
+
+  /* KEYSTONE — The Format */
+  .keystone-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 2.5rem;
+  }
+
+  .keystone {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, var(--established-wash), transparent 55%),
+      var(--bg-elevated);
+    border: 1px solid var(--hairline);
+    border-left: 5px solid var(--established);
+    border-radius: 14px;
+    padding: 2.5rem 2.75rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    color: inherit;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .keystone:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .keystone-mark {
+    position: absolute;
+    top: -28px;
+    right: -28px;
+    width: 170px;
+    height: 170px;
+    color: var(--established);
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .keystone-eyebrow { /* uses .pigment-chip */
+    display: inline-block;
+    text-transform: none;
+    letter-spacing: 0.06em;
+  }
+
+  .keystone-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2rem, 5vw, 2.85rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    margin: 0.7rem 0 0.75rem;
+    line-height: 1.05;
+  }
+
+  .keystone-body {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.72;
+    color: var(--text-secondary);
+    max-width: 64ch;
+  }
+  .keystone-body em { font-style: italic; color: var(--text-primary); }
+
+  .keystone-link {
+    display: inline-block;
+    margin-top: 1.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    color: var(--established);
+  }
+
+  /* THE ARC */
+  .arc {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  .arc-overline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+  }
+  .arc-node { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .arc-overline::before,
+  .arc-overline::after {
+    content: '';
+    width: clamp(2rem, 16%, 7rem);
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  .movement {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 3rem;
+    padding: 3rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .movement:first-of-type { border-top: none; }
+
+  .movement-index {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .movement-num {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(3.5rem, 7vw, 5rem);
+    font-weight: 420;
+    line-height: 0.85;
+    letter-spacing: -0.03em;
+  }
+  .movement[data-accent='derived'] .movement-num { color: var(--derived); }
+  .movement[data-accent='established'] .movement-num { color: var(--established); }
+  .movement[data-accent='open'] .movement-num { color: var(--open); }
+
+  .movement-label {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding-top: 0.7rem;
+    border-top: 3px solid var(--text-muted);
+  }
+  .movement[data-accent='derived'] .movement-label { color: var(--derived); border-top-color: var(--derived); }
+  .movement[data-accent='established'] .movement-label { color: var(--established); border-top-color: var(--established); }
+  .movement[data-accent='open'] .movement-label { color: var(--open); border-top-color: var(--open); }
+
+  .movement-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.85rem, 4vw, 2.45rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    line-height: 1.08;
+  }
+
+  .movement-lede {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.35rem;
+    color: var(--text-secondary);
+    margin: 0.6rem 0 1.1rem;
+  }
+
+  .movement-text {
+    font-family: var(--font-body);
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    max-width: 64ch;
+  }
+
+  .movement-link {
+    display: inline-block;
+    margin-top: 1.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+  }
+  .movement[data-accent='derived'] .movement-link { color: var(--derived); }
+  .movement[data-accent='established'] .movement-link { color: var(--established); }
+  .movement[data-accent='open'] .movement-link { color: var(--open); }
+
+  .essay-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.9rem;
+  }
+
+  @media (max-width: 768px) {
+    .hero-icosa { right: -30%; opacity: 0.1; }
+    .movement {
+      grid-template-columns: 1fr;
+      gap: 1.4rem;
+    }
+    .movement-index {
+      flex-direction: row;
+      align-items: center;
+      gap: 1.1rem;
+    }
+    .movement-label { padding-top: 0; border-top: none; border-left: 3px solid; padding-left: 0.7rem; }
+  }
+</style>

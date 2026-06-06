@@ -1,0 +1,87 @@
+---
+/**
+ * ProjectCard — showcase card for a first-class linked work (external).
+ */
+interface Props {
+  title: string;
+  oneLiner: string;
+  href: string;
+  /** optional accent token name to colour the card edge */
+  accent?: 'established' | 'derived' | 'contested' | 'open';
+}
+
+const { title, oneLiner, href, accent } = Astro.props;
+const external = /^https?:\/\//.test(href);
+---
+
+<a
+  href={href}
+  class="project-card"
+  data-accent={accent}
+  {...external ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
+>
+  <h3 class="project-title">
+    {title}
+    {external && <span class="ext" aria-hidden="true">↗</span>}
+  </h3>
+  <p class="project-oneliner">{oneLiner}</p>
+  <span class="project-link">{external ? new URL(href).host : href}</span>
+</a>
+
+<style>
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--hairline);
+    border-top: 4px solid var(--text-muted);
+    border-radius: 12px;
+    padding: 1.9rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    color: inherit;
+    height: 100%;
+  }
+
+  .project-card[data-accent='established'] { border-top-color: var(--established); background: linear-gradient(180deg, var(--established-wash), transparent 40%), var(--bg-elevated); }
+  .project-card[data-accent='derived'] { border-top-color: var(--derived); background: linear-gradient(180deg, var(--derived-wash), transparent 40%), var(--bg-elevated); }
+  .project-card[data-accent='contested'] { border-top-color: var(--contested); background: linear-gradient(180deg, var(--contested-wash), transparent 40%), var(--bg-elevated); }
+  .project-card[data-accent='open'] { border-top-color: var(--open); background: linear-gradient(180deg, var(--open-wash), transparent 40%), var(--bg-elevated); }
+
+  .project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .project-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.6rem;
+    font-weight: 460;
+    color: var(--text-primary);
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .ext { font-size: 0.85rem; color: var(--accent); }
+  .project-card[data-accent='derived'] .ext { color: var(--derived); }
+  .project-card[data-accent='established'] .ext { color: var(--established); }
+  .project-card[data-accent='open'] .ext { color: var(--open); }
+
+  .project-oneliner {
+    font-family: var(--font-body);
+    font-size: 1.02rem;
+    color: var(--text-secondary);
+    line-height: 1.62;
+    flex: 1;
+  }
+
+  .project-link {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+</style>

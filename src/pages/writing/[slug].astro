@@ -1,0 +1,34 @@
+---
+import { getCollection, render } from 'astro:content';
+import EssayLayout from '@/layouts/EssayLayout.astro';
+
+// Server output by default makes dynamic routes SSR; prerender=true +
+// getStaticPaths makes each essay a static page at build time. No API/guide
+// call happens here — the guide only runs on POST to /api/guide.
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const essays = (await getCollection('essays')).filter((e) => !e.data.draft);
+  return essays.map((entry) => ({
+    // Route on the authored frontmatter slug, not the file id.
+    params: { slug: entry.data.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<EssayLayout
+  title={d.title}
+  slug={d.slug}
+  summary={d.summary}
+  date={d.date}
+  topics={d.topics}
+  epistemicStatus={d.epistemicStatus}
+  series={d.series}
+>
+  <Content />
+</EssayLayout>

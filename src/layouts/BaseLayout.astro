@@ -1,0 +1,76 @@
+---
+/**
+ * BaseLayout — the shell every page renders into.
+ *
+ * Loads the design-system tokens globally, preconnects + loads the three
+ * Google fonts (Fraunces / Newsreader / IBM Plex Mono), wires the theme
+ * toggle's no-flash init script, and renders SiteHeader + SiteFooter around a
+ * <slot/>. Pages pass title/description; everything visual comes from tokens.
+ */
+import '@/styles/tokens.css';
+import SiteHeader from '@/components/SiteHeader.astro';
+import SiteFooter from '@/components/SiteFooter.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentPage?: 'home' | 'format' | 'writing' | 'projects' | 'about';
+  /** Set true on essay pages so they can size content around the guide panel. */
+  withGuide?: boolean;
+}
+
+const {
+  title = 'Tom Cassidy',
+  description = 'Tom Cassidy — Comprehensivist & Zengineer. Thinking out loud.',
+  currentPage,
+  withGuide = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..600;1,9..144,360..560&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..520&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- No-flash theme init: apply saved theme before first paint. -->
+    <script is:inline>
+      (function () {
+        try {
+          const saved = localStorage.getItem('theme');
+          if (saved === 'light' || saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', saved);
+          }
+        } catch (e) {
+          /* localStorage unavailable — fall through to default dark */
+        }
+      })();
+    </script>
+  </head>
+  <body data-with-guide={withGuide ? 'true' : undefined}>
+    <SiteHeader currentPage={currentPage} />
+    <main class="site-main">
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>
+
+<style>
+  .site-main {
+    /* Header is fixed at 56px. */
+    padding-top: 56px;
+    min-height: calc(100vh - 56px);
+  }
+</style>

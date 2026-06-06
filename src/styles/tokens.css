@@ -1,0 +1,238 @@
+/* =====================================================================
+   tomcassidy-site — design tokens (single source of truth)
+
+   A "design-science journal": warm printed-paper editorial. Light is the
+   warm-paper reading mode; dark is a deep warm charcoal. The four epistemic
+   pigments (established / derived / contested / open) are the categorical
+   language of the whole site — deployed as section numerals, rules, chips,
+   dots and tinted washes, not just thin borders.
+
+   Dark remains the default (no [data-theme] attribute); light is opted into
+   with [data-theme="light"]. ThemeToggle flips the attribute + persists it.
+
+   Typography:
+     DISPLAY  Fraunces (variable, optical) — wordmark, hero, headings, titles
+     BODY     Newsreader — editorial serif for prose + most copy, italic deks
+     MONO     IBM Plex Mono — metadata / labels / chips / code (used sparingly)
+   ===================================================================== */
+
+:root,
+:root[data-theme='dark'] {
+  /* Deep warm charcoal — NOT pure black */
+  --void: #16140f;
+  --depth-1: #201e18;
+  --depth-2: #272420;
+  --depth-3: #322e27;
+  --surface: #3a352d;
+
+  /* Epistemic pigments — brightened to glow on dark */
+  --established: #5b9fd6; /* ink-blue */
+  --derived: #57b481;     /* forest green */
+  --contested: #e08545;   /* burnt amber */
+  --open: #a981c9;        /* plum */
+
+  /* Soft tint washes (very low alpha) for pigment-coded surfaces */
+  --established-wash: rgba(91, 159, 214, 0.08);
+  --derived-wash: rgba(87, 180, 129, 0.08);
+  --contested-wash: rgba(224, 133, 69, 0.08);
+  --open-wash: rgba(169, 129, 201, 0.08);
+
+  /* Legible chip fills (text sits on these) */
+  --established-chip: rgba(91, 159, 214, 0.16);
+  --derived-chip: rgba(87, 180, 129, 0.16);
+  --contested-chip: rgba(224, 133, 69, 0.16);
+  --open-chip: rgba(169, 129, 201, 0.16);
+
+  /* Text — warm off-white */
+  --text-primary: #ece5d8;
+  --text-secondary: #b8ad9c;
+  --text-muted: #8a8071;
+
+  /* Accent (defaults to ink-blue / established) */
+  --accent: #5b9fd6;
+  --accent-glow: rgba(91, 159, 214, 0.14);
+
+  /* Surfaces / hairlines */
+  --bg: var(--void);
+  --bg-elevated: var(--depth-1);
+  --border: rgba(236, 229, 216, 0.1);
+  --border-soft: rgba(236, 229, 216, 0.06);
+  --hairline: rgba(236, 229, 216, 0.14);
+
+  /* Warm layered shadows */
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-lift: 0 4px 8px rgba(0, 0, 0, 0.34), 0 24px 48px rgba(0, 0, 0, 0.44);
+
+  /* Paper grain — lighter on dark */
+  --grain-opacity: 0.035;
+
+  /* Guide panel tokens */
+  --guide-bg: #1b1914;
+  --guide-border: rgba(236, 229, 216, 0.09);
+  --guide-tint: rgba(91, 159, 214, 0.05);
+  --guide-text: var(--text-primary);
+  --guide-text-secondary: var(--text-secondary);
+  --guide-muted: var(--text-muted);
+  --guide-accent: var(--established);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  /* Warm printed paper */
+  --void: #f3eee4;
+  --depth-1: #ece4d6;
+  --depth-2: #e7dece;
+  --depth-3: #ddd2bf;
+  --surface: #d6c9b3;
+
+  /* Epistemic pigments — deepened "printed-pigment" versions */
+  --established: #2e5a86; /* ink-blue */
+  --derived: #3c7a58;     /* forest green */
+  --contested: #b8601d;   /* burnt amber */
+  --open: #6f4a86;        /* plum */
+
+  --established-wash: rgba(46, 90, 134, 0.06);
+  --derived-wash: rgba(60, 122, 88, 0.06);
+  --contested-wash: rgba(184, 96, 29, 0.06);
+  --open-wash: rgba(111, 74, 134, 0.06);
+
+  --established-chip: rgba(46, 90, 134, 0.12);
+  --derived-chip: rgba(60, 122, 88, 0.12);
+  --contested-chip: rgba(184, 96, 29, 0.12);
+  --open-chip: rgba(111, 74, 134, 0.12);
+
+  /* Warm ink text */
+  --text-primary: #1c1a17;
+  --text-secondary: #4a443c;
+  --text-muted: #857c70;
+
+  --accent: #2e5a86;
+  --accent-glow: rgba(46, 90, 134, 0.09);
+
+  --bg: var(--void);
+  --bg-elevated: var(--depth-1);
+  --border: rgba(28, 26, 23, 0.12);
+  --border-soft: rgba(28, 26, 23, 0.07);
+  --hairline: rgba(28, 26, 23, 0.16);
+
+  --shadow-soft: 0 1px 2px rgba(72, 58, 38, 0.06), 0 8px 22px rgba(72, 58, 38, 0.1);
+  --shadow-lift: 0 4px 10px rgba(72, 58, 38, 0.1), 0 22px 44px rgba(72, 58, 38, 0.16);
+
+  --grain-opacity: 0.06;
+
+  --guide-bg: #ece4d6;
+  --guide-border: rgba(28, 26, 23, 0.1);
+  --guide-tint: rgba(46, 90, 134, 0.045);
+  --guide-text: var(--text-primary);
+  --guide-text-secondary: var(--text-secondary);
+  --guide-muted: var(--text-muted);
+  --guide-accent: var(--established);
+
+  color-scheme: light;
+}
+
+:root {
+  /* Typefaces */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Newsreader', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Modular type scale (1.25 — major third) */
+  --step--1: 0.82rem;
+  --step-0: 1.0625rem;  /* body reading size */
+  --step-1: 1.3rem;
+  --step-2: 1.62rem;
+  --step-3: 2.05rem;
+  --step-4: 2.6rem;
+  --step-5: clamp(3rem, 8vw, 5.25rem);
+
+  /* Spacing */
+  --space-unit: 8px;
+
+  /* Reading measure */
+  --measure: 66ch;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  position: relative;
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Paper grain — fixed fractal-noise overlay, very low opacity. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  mix-blend-mode: var(--grain-blend, multiply);
+}
+:root:not([data-theme='light']) body::before { --grain-blend: screen; }
+
+/* Keep real content above the grain. */
+.site-header,
+.site-main,
+.site-footer,
+.guide-panel,
+.guide-mobile-trigger { position: relative; z-index: 2; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Shared epistemic-status text colours */
+.status-established { color: var(--established); }
+.status-derived { color: var(--derived); }
+.status-contested { color: var(--contested); }
+.status-open { color: var(--open); }
+
+/* ---------------------------------------------------------------------
+   Pigment CHIP — the categorical metadata token used across surfaces.
+   --------------------------------------------------------------------- */
+.pigment-chip {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.5rem;
+  border-radius: 3px;
+  background: var(--border-soft);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.pigment-chip.is-established { background: var(--established-chip); color: var(--established); }
+.pigment-chip.is-derived { background: var(--derived-chip); color: var(--derived); }
+.pigment-chip.is-contested { background: var(--contested-chip); color: var(--contested); }
+.pigment-chip.is-open { background: var(--open-chip); color: var(--open); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

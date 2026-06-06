@@ -1,0 +1,70 @@
+---
+/**
+ * ThemeToggle — flips [data-theme] on <html> between dark and light and
+ * persists the choice in localStorage. Default (no attribute) is dark.
+ * The no-flash restore happens in BaseLayout's inline head script.
+ */
+---
+
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle colour theme" title="Toggle light / dark">
+  <span class="toggle-icon" aria-hidden="true">◐</span>
+  <span class="toggle-label" id="theme-toggle-label">Light</span>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 0.4rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--established);
+    color: var(--text-primary);
+    background: var(--established-wash);
+  }
+
+  .toggle-icon {
+    font-size: 0.85rem;
+    color: var(--established);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('theme-toggle');
+    const label = document.getElementById('theme-toggle-label');
+
+    function current(): 'light' | 'dark' {
+      return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+
+    function sync() {
+      if (label) label.textContent = current() === 'light' ? 'Dark' : 'Light';
+    }
+
+    sync();
+
+    btn?.addEventListener('click', () => {
+      const next = current() === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try {
+        localStorage.setItem('theme', next);
+      } catch (e) {
+        /* ignore storage errors */
+      }
+      sync();
+    });
+  });
+</script>

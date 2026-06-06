@@ -1,0 +1,52 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout title="About — Tom Cassidy" currentPage="about">
+  <section class="section">
+    <h1 class="page-title">About</h1>
+    {/* TODO: real bio + links go here. This is placeholder scaffold copy. */}
+    <div class="prose">
+      <p>
+        <strong>PLACEHOLDER.</strong> Tom Cassidy — comprehensivist and
+        zengineer. This page is a shell; the real about-text, links and contact
+        details are a separate content job.
+      </p>
+      <p>
+        The hub gathers writing and projects in one place, alongside a reading
+        guide that thinks with you rather than at you.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 6vw, 3.6rem);
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+  }
+
+  .prose p {
+    font-family: var(--font-body);
+    font-size: 1.18rem;
+    line-height: 1.78;
+    color: var(--text-primary);
+    margin-bottom: 1.4rem;
+    max-width: var(--measure);
+  }
+
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+</style>

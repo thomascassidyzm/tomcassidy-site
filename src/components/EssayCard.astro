@@ -1,0 +1,109 @@
+---
+/**
+ * EssayCard — preview card for an essay in grids/indexes.
+ */
+interface Props {
+  title: string;
+  slug: string;
+  summary: string;
+  date: Date;
+  topics?: string[];
+  epistemicStatus?: string;
+  series?: string;
+}
+
+const { title, slug, summary, date, topics = [], epistemicStatus, series } = Astro.props;
+const dateStr = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<a href={`/writing/${slug}`} class="essay-card" data-status={epistemicStatus}>
+  <div class="card-meta">
+    <span class="card-date">{dateStr}</span>
+    {series && <span class="card-series">{series}</span>}
+    {epistemicStatus && (
+      <span class={`pigment-chip is-${epistemicStatus}`}>{epistemicStatus}</span>
+    )}
+  </div>
+  <h3 class="card-title">{title}</h3>
+  <p class="card-summary">{summary}</p>
+  {topics.length > 0 && (
+    <div class="card-topics">
+      {topics.map((t) => <span class="topic">#{t}</span>)}
+    </div>
+  )}
+</a>
+
+<style>
+  .essay-card {
+    display: block;
+    background: var(--bg-elevated);
+    border: 1px solid var(--hairline);
+    border-left: 4px solid var(--text-muted);
+    border-radius: 10px;
+    padding: 1.6rem 1.7rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    color: inherit;
+  }
+
+  .essay-card[data-status='established'] { border-left-color: var(--established); }
+  .essay-card[data-status='derived'] { border-left-color: var(--derived); }
+  .essay-card[data-status='contested'] { border-left-color: var(--contested); }
+  .essay-card[data-status='open'] { border-left-color: var(--open); }
+
+  .essay-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-soft);
+  }
+  .essay-card[data-status='established']:hover { background: linear-gradient(90deg, var(--established-wash), transparent 60%), var(--bg-elevated); }
+  .essay-card[data-status='derived']:hover { background: linear-gradient(90deg, var(--derived-wash), transparent 60%), var(--bg-elevated); }
+  .essay-card[data-status='contested']:hover { background: linear-gradient(90deg, var(--contested-wash), transparent 60%), var(--bg-elevated); }
+  .essay-card[data-status='open']:hover { background: linear-gradient(90deg, var(--open-wash), transparent 60%), var(--bg-elevated); }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .card-series { color: var(--text-secondary); }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.5rem;
+    font-weight: 460;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.15;
+  }
+
+  .card-summary {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.62;
+  }
+
+  .card-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1.1rem;
+  }
+
+  .topic {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    background: var(--border-soft);
+    border-radius: 3px;
+    padding: 0.15rem 0.5rem;
+  }
+</style>

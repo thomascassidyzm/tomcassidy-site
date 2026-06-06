@@ -1,0 +1,137 @@
+---
+/**
+ * SiteHeader — fixed editorial top bar shared across the hub.
+ * Fraunces wordmark + small icosahedron mark on the left; ink nav text with
+ * the active item carrying a pigment underline; theme toggle on the right.
+ */
+import ThemeToggle from '@/components/ThemeToggle.astro';
+
+interface Props {
+  currentPage?: 'home' | 'format' | 'writing' | 'projects' | 'about';
+}
+
+const { currentPage } = Astro.props;
+---
+
+<header class="site-header">
+  <a href="/" class="site-brand" aria-label="Tom Cassidy — home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+      <!-- icosahedron (face projection): 9 vertices / 18 edges -->
+      <path d="M50,4 L89.5,27 L89.5,73 L50,96 L10.5,73 L10.5,27 Z M50,4 L33,40 M50,4 L67,40 M33,40 L67,40 M10.5,27 L33,40 M89.5,27 L67,40 M33,40 L50,72 M67,40 L50,72 M33,40 L10.5,73 M67,40 L89.5,73 M10.5,73 L50,72 M89.5,73 L50,72 M50,72 L50,96" />
+      <g fill="currentColor" stroke="none"><circle cx="50" cy="4" r="3.4"/><circle cx="10.5" cy="27" r="3.4"/><circle cx="89.5" cy="27" r="3.4"/><circle cx="33" cy="40" r="3.4"/><circle cx="67" cy="40" r="3.4"/><circle cx="10.5" cy="73" r="3.4"/><circle cx="89.5" cy="73" r="3.4"/><circle cx="50" cy="72" r="3.4"/><circle cx="50" cy="96" r="3.4"/></g>
+    </svg>
+    <span class="site-title">Tom Cassidy</span>
+  </a>
+
+  <nav class="header-center" aria-label="Primary">
+    <a href="/" class:list={['nav-link', { active: currentPage === 'home' }]}>Home</a>
+    <a href="/writing/the-format" class:list={['nav-link', { active: currentPage === 'format' }]}>The Format</a>
+    <a href="/writing" class:list={['nav-link', { active: currentPage === 'writing' }]}>Writing</a>
+    <a href="/projects" class:list={['nav-link', { active: currentPage === 'projects' }]}>Projects</a>
+    <a href="/about" class:list={['nav-link', { active: currentPage === 'about' }]}>About</a>
+  </nav>
+
+  <div class="header-meta">
+    <ThemeToggle />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border-bottom: 1px solid var(--hairline);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    z-index: 100;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text-primary);
+  }
+
+  .brand-mark {
+    width: 22px;
+    height: 22px;
+    color: var(--established);
+    opacity: 0.9;
+    flex: none;
+  }
+
+  .site-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.18rem;
+    font-weight: 540;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: color 0.2s;
+  }
+
+  .site-brand:hover .site-title { color: var(--established); }
+
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+  }
+
+  .nav-link {
+    position: relative;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    padding: 0.35rem 0;
+    transition: color 0.2s;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--established);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.22s ease;
+  }
+
+  .nav-link:hover { color: var(--text-primary); }
+  .nav-link:hover::after { transform: scaleX(0.4); opacity: 0.5; }
+
+  .nav-link.active {
+    color: var(--text-primary);
+    font-weight: 540;
+  }
+  .nav-link.active::after { transform: scaleX(1); opacity: 1; }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .site-header { padding: 0 1rem; }
+    .header-center { gap: 0.9rem; }
+    .nav-link { font-size: 0.85rem; }
+    .brand-mark { width: 18px; height: 18px; }
+  }
+
+  @media (max-width: 560px) {
+    .site-title { display: none; }
+    .nav-link { font-size: 0.8rem; }
+  }
+</style>

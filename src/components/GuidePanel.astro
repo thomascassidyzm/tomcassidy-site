@@ -1,0 +1,526 @@
+---
+/**
+ * GuidePanel — persistent right-hand reading companion (desktop) /
+ * floating button (mobile). Architecture ported from
+ * configuration-economics' GuidePanel.astro.
+ *
+ * Reads the current essay context from window globals set by the essay page:
+ *   window.currentSlug   — frontmatter slug (drives live-text injection)
+ *   window.currentTitle  — display title
+ *   window.currentStatus — epistemic status (optional)
+ *   window.currentMode   — surface ('essay' | 'writing' | 'home' | 'projects')
+ *
+ * The companion is Alexander — the shared Socratic guide across Tom's sites.
+ *
+ * IMPORTANT: never auto-sends. A billed model call only happens when the
+ * reader submits the form or clicks a suggestion. Until ANTHROPIC_API_KEY is
+ * set the endpoint returns 503 and the panel shows a graceful "not yet
+ * available" message.
+ */
+interface Props {
+  currentTitle?: string;
+  epistemicStatus?: string;
+}
+
+const { currentTitle = 'Tom Cassidy', epistemicStatus = '' } = Astro.props;
+---
+
+<aside id="guide-panel" class="guide-panel">
+  <header class="guide-header">
+    <div class="guide-presence">
+      <svg class="guide-mark" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M50,4 L89.5,27 L89.5,73 L50,96 L10.5,73 L10.5,27 Z M50,4 L33,40 M50,4 L67,40 M33,40 L67,40 M10.5,27 L33,40 M89.5,27 L67,40 M33,40 L50,72 M67,40 L50,72 M33,40 L10.5,73 M67,40 L89.5,73 M10.5,73 L50,72 M89.5,73 L50,72 M50,72 L50,96"/></svg>
+      <span class="guide-title">Alexander</span>
+      <span class="guide-dot" aria-hidden="true"></span>
+    </div>
+    <span class="guide-role">Reading companion</span>
+  </header>
+
+  <div class="guide-context">
+    <div class="context-item">
+      <span class="context-label">Currently Reading</span>
+      <span id="guide-section" class="context-value">{currentTitle}</span>
+    </div>
+    <div class="context-item" id="guide-status-item" style={epistemicStatus ? '' : 'display:none'}>
+      <span class="context-label">Epistemic Status</span>
+      <span id="guide-status" class={`context-value status-${epistemicStatus}`}>{epistemicStatus}</span>
+    </div>
+  </div>
+
+  <div id="guide-messages" class="guide-messages">
+    <div class="guide-welcome">
+      <p>I'm here to think alongside you. I can:</p>
+      <ul>
+        <li>Surface the distinction a passage is really making</li>
+        <li>Connect this piece to others</li>
+        <li>Mark what's established vs. still open</li>
+        <li>Go deeper, at your level</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guide-suggestions" id="guide-suggestions">
+    <button class="suggestion" data-query="What is this piece really about?">What's this about?</button>
+    <button class="suggestion" data-query="Explain the core distinction here simply.">Explain simply</button>
+    <button class="suggestion" data-query="What's contested or open here?">What's open?</button>
+    <button class="suggestion" data-query="How does this connect to Tom's other writing?">Connections</button>
+  </div>
+
+  <form id="guide-form" class="guide-input-form">
+    <input type="text" id="guide-input" class="guide-input" placeholder="Ask about this page..." autocomplete="off" />
+    <button type="submit" class="guide-submit" aria-label="Send">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+      </svg>
+    </button>
+  </form>
+</aside>
+
+<button id="guide-mobile-trigger" class="guide-mobile-trigger" aria-label="Open Alexander">
+  <span class="guide-dot"></span>
+</button>
+
+<style>
+  .guide-panel {
+    position: fixed;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    background:
+      linear-gradient(180deg, var(--guide-tint), transparent 220px),
+      var(--guide-bg);
+    border-left: 3px solid var(--established);
+    box-shadow: -1px 0 0 var(--guide-border), -16px 0 40px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-body);
+    z-index: 50;
+  }
+
+  .guide-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--guide-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .guide-presence {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .guide-mark {
+    width: 18px;
+    height: 18px;
+    color: var(--established);
+    flex: none;
+  }
+
+  .guide-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--derived);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  .guide-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.1rem;
+    font-weight: 540;
+    letter-spacing: -0.01em;
+    color: var(--guide-text);
+    text-transform: none;
+  }
+
+  .guide-role {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--guide-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .guide-context {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--guide-border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--guide-tint);
+  }
+
+  .context-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .context-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--guide-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .context-value {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1rem;
+    color: var(--guide-text);
+    font-weight: 480;
+    line-height: 1.25;
+  }
+  #guide-status.context-value { font-family: var(--font-mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .guide-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .guide-welcome {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--guide-text-secondary);
+    line-height: 1.7;
+  }
+  .guide-welcome p:first-child { font-style: italic; color: var(--guide-text); }
+
+  .guide-welcome ul {
+    margin: 12px 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .guide-welcome li {
+    position: relative;
+    margin-bottom: 8px;
+    padding-left: 18px;
+  }
+  .guide-welcome li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--established);
+    transform: rotate(45deg);
+  }
+
+  .message {
+    padding: 13px 17px;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    max-width: 95%;
+  }
+
+  .message.user {
+    background: var(--established);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    font-family: var(--font-body);
+  }
+
+  .message.assistant {
+    background: transparent;
+    color: var(--guide-text);
+    align-self: flex-start;
+    border: none;
+    border-left: 2px solid var(--established);
+    border-radius: 0;
+    padding-left: 16px;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 1.05rem;
+    line-height: 1.66;
+  }
+
+  :global(.message.assistant p) { margin: 0 0 0.75em 0; }
+  :global(.message.assistant p:last-child) { margin-bottom: 0; }
+  :global(.message.assistant strong) { color: var(--guide-text); font-weight: 600; font-style: normal; }
+  :global(.message.assistant em) { font-style: normal; }
+  :global(.message.assistant ul), :global(.message.assistant ol) { margin: 0.5em 0; padding-left: 1.5em; }
+  :global(.message.assistant code) {
+    background: var(--border-soft);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 0.85em;
+  }
+  :global(.message.assistant .katex) { font-style: normal; color: var(--guide-text); font-size: 1em; }
+  :global(.message.assistant .katex-display) { margin: 0.75em 0; overflow-x: auto; }
+
+  :global(.typing-indicator) { display: flex; align-items: center; gap: 4px; padding: 8px 0; }
+  :global(.typing-indicator span) {
+    width: 6px; height: 6px; background: var(--guide-accent);
+    border-radius: 50%; animation: typing-pulse 1.2s infinite ease-in-out;
+  }
+  :global(.typing-indicator span:nth-child(2)) { animation-delay: 0.15s; }
+  :global(.typing-indicator span:nth-child(3)) { animation-delay: 0.3s; }
+  @keyframes typing-pulse {
+    0%, 60%, 100% { opacity: 0.3; transform: scale(1); }
+    30% { opacity: 1; transform: scale(1.15); }
+  }
+
+  .message.error { background: rgba(255, 100, 100, 0.12); color: #ff6b6b; font-style: normal; font-family: var(--font-body); }
+
+  .guide-suggestions {
+    padding: 14px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    border-top: 1px solid var(--guide-border);
+  }
+
+  .suggestion {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--guide-border);
+    background: var(--border-soft);
+    color: var(--guide-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .suggestion:hover {
+    border-color: var(--established);
+    color: var(--established);
+    background: var(--established-wash);
+  }
+  .guide-suggestions.hidden { display: none; }
+
+  .guide-input-form {
+    padding: 18px 22px;
+    border-top: 1px solid var(--guide-border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .guide-input {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--guide-border);
+    background: var(--bg);
+    color: var(--guide-text);
+    font-size: 1rem;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .guide-input::placeholder { color: var(--guide-muted); font-style: italic; }
+  .guide-input:focus {
+    border-color: var(--established);
+    box-shadow: 0 0 0 3px var(--established-wash);
+  }
+
+  .guide-submit {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: none;
+    background: var(--established);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+  }
+  .guide-submit:hover { opacity: 0.88; }
+
+  .guide-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .guide-mobile-trigger {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 1100px) {
+    .guide-panel {
+      top: auto;
+      bottom: 80px;
+      right: 16px;
+      width: calc(100vw - 32px);
+      max-width: 380px;
+      max-height: 70vh;
+      border-radius: 12px;
+      border: 1px solid var(--guide-border);
+      display: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+    .guide-panel.mobile-open { display: flex; }
+    .guide-mobile-trigger { display: flex; }
+  }
+</style>
+
+<script>
+  function parseMarkdown(text: string): string {
+    let html = text;
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+    html = html
+      .split(/\n\n+/)
+      .map((p) => {
+        p = p.trim();
+        if (p && !p.startsWith('<ul>')) return `<p>${p}</p>`;
+        return p;
+      })
+      .join('');
+    return html;
+  }
+
+  function substituteMath(html: string, mathBlocks: string[] = []): string {
+    return html.replace(/XXMATH(\d+)XX/g, (_m, idx) => {
+      const i = parseInt(idx, 10);
+      return mathBlocks[i] !== undefined ? mathBlocks[i] : `[math ${i}]`;
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const panel = document.getElementById('guide-panel');
+    const mobileTrigger = document.getElementById('guide-mobile-trigger');
+    const form = document.getElementById('guide-form');
+    const input = document.getElementById('guide-input') as HTMLInputElement | null;
+    const messagesContainer = document.getElementById('guide-messages');
+    const suggestionsContainer = document.getElementById('guide-suggestions');
+    const suggestions = document.querySelectorAll('.suggestion');
+
+    type Tier = 'haiku' | 'sonnet' | 'opus';
+    interface HistoryEntry {
+      role: 'user' | 'assistant';
+      content: string;
+      displayContent?: string;
+      math?: string[];
+    }
+    let conversationHistory: HistoryEntry[] = [];
+    let isLoading = false;
+
+    mobileTrigger?.addEventListener('click', () => panel?.classList.toggle('mobile-open'));
+
+    function getContext() {
+      const w = window as any;
+      return {
+        currentSlug: w.currentSlug ?? null,
+        currentTitle: w.currentTitle ?? null,
+        epistemicStatus: w.currentStatus ?? null,
+        mode: w.currentMode ?? 'writing',
+      };
+    }
+
+    function scrollToBottom() {
+      if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    suggestions.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const q = btn.getAttribute('data-query');
+        if (q) sendMessage(q);
+      });
+    });
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const message = input?.value.trim();
+      if (message && !isLoading) {
+        sendMessage(message);
+        if (input) input.value = '';
+      }
+    });
+
+    // NOTE: nothing here fires on load. A request only happens on explicit
+    // user action (form submit / suggestion click). No auto-send.
+    async function sendMessage(message: string, tier: Tier = 'haiku') {
+      if (isLoading) return;
+      isLoading = true;
+
+      messagesContainer?.querySelector('.guide-welcome')?.remove();
+      suggestionsContainer?.classList.add('hidden');
+
+      const userEl = document.createElement('div');
+      userEl.className = 'message user';
+      userEl.textContent = message;
+      messagesContainer?.appendChild(userEl);
+
+      const typingEl = document.createElement('div');
+      typingEl.className = 'message assistant';
+      typingEl.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      messagesContainer?.appendChild(typingEl);
+      scrollToBottom();
+
+      try {
+        const res = await fetch('/api/guide', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message,
+            history: conversationHistory.map(({ role, content }) => ({ role, content })),
+            context: getContext(),
+            tier,
+          }),
+        });
+
+        if (res.status === 503) {
+          typingEl.classList.add('error');
+          typingEl.textContent = 'The guide is not enabled yet on this site.';
+          isLoading = false;
+          return;
+        }
+        if (!res.ok) throw new Error('Guide unavailable');
+
+        const data = await res.json();
+        const mathBlocks: string[] = Array.isArray(data.math) ? data.math : [];
+        typingEl.innerHTML = substituteMath(parseMarkdown(data.message), mathBlocks);
+        scrollToBottom();
+
+        const raw: string = typeof data.rawMessage === 'string' ? data.rawMessage : data.message;
+        conversationHistory.push(
+          { role: 'user', content: message },
+          { role: 'assistant', content: raw, displayContent: data.message, math: mathBlocks },
+        );
+        if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
+      } catch (err) {
+        typingEl.classList.add('error');
+        typingEl.textContent = "I'm having trouble connecting. Please try again.";
+      }
+      isLoading = false;
+    }
+  });
+</script>

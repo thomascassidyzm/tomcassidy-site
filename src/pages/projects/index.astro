@@ -1,0 +1,191 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+
+export const prerender = true;
+
+// First-class linked works, each given its own register (see homepage arc):
+//   Configuration Economics — the Carse invitation (forward-looking, open).
+//   Distinction Physics    — the humble foundation (non-aggrandising).
+const projects = [
+  {
+    title: 'Configuration Economics',
+    register: 'The Future — an invitation to an infinite game',
+    oneLiner:
+      'A physics-grounded account of economic value: what enables future possibility, not what gets consumed. An open game in James Carse’s sense — the point is not to win or finish it but to keep it going and bring others in, continuing the work begun by people like Buckminster Fuller. The work I’d like to spend the rest of my life on. Come and think about it with me.',
+    href: 'https://configuration-economics.vercel.app',
+    accent: 'derived' as const,
+  },
+  {
+    title: 'Distinction Physics',
+    register: 'The Foundation — standing on the shoulders of giants',
+    oneLiner:
+      'A treatise taking distinction as the primitive from which physics, mind and meaning are reconstructed. The serious thinking that earns the rest a hearing — offered without aggrandisement: some novelty, a lot of reframing, most of it (I hope) helpful. The honesty is the credibility.',
+    href: 'https://distinction-physics.vercel.app',
+    accent: 'established' as const,
+  },
+];
+---
+
+<BaseLayout title="Projects — Tom Cassidy" currentPage="projects">
+  <section class="section">
+    <header class="page-head">
+      <h1 class="page-title">Projects</h1>
+      <p class="page-sub">Bodies of work, each with its own home.</p>
+    </header>
+
+    <div class="project-grid">
+      {projects.map((p) => (
+        <div class="project-cell">
+          <p class={`project-register is-${p.accent}`}>{p.register}</p>
+          <ProjectCard title={p.title} oneLiner={p.oneLiner} href={p.href} accent={p.accent} />
+        </div>
+      ))}
+    </div>
+
+    <!-- FORTHCOMING — clearly marked, not a live link. -->
+    <header class="sub-head">
+      <h2 class="sub-title">Forthcoming</h2>
+      <p class="sub-note">Work that may graduate into its own sibling site.</p>
+    </header>
+
+    <div class="project-grid">
+      <div class="project-cell">
+        <p class="project-register">Coming — a possible sibling site</p>
+        <div class="project-card placeholder" aria-disabled="true">
+          <span class="placeholder-badge">Forthcoming</span>
+          <h3 class="project-title">Reasonable Eating</h3>
+          <p class="project-oneliner">
+            An applied strand of the reason-ability work, focused on how we actually eat. Currently
+            living among the essays; it may graduate into its own sibling site alongside
+            Configuration Economics and Distinction Physics. Not yet live — watch this space.
+          </p>
+          <span class="project-link">link coming soon</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 6vw, 3.6rem);
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .page-sub {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 1.35rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0 2.5rem;
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .project-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .project-register {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .project-register.is-derived { color: var(--derived); }
+  .project-register.is-established { color: var(--established); }
+  .project-register.is-open { color: var(--open); }
+  .project-register.is-contested { color: var(--contested); }
+
+  /* FORTHCOMING section */
+  .sub-head {
+    margin: 3.5rem 0 1.5rem;
+    border-top: 1px solid var(--hairline);
+    padding-top: 2rem;
+  }
+
+  .sub-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.85rem;
+    font-weight: 440;
+    color: var(--text-primary);
+  }
+
+  .sub-note {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  /* Placeholder card — mirrors ProjectCard but inert (no link, dashed edge). */
+  .project-card.placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    background: linear-gradient(180deg, var(--contested-wash), transparent 40%), var(--bg-elevated);
+    border: 1px dashed var(--hairline);
+    border-top: 4px dashed var(--contested);
+    border-radius: 12px;
+    padding: 1.9rem;
+    height: 100%;
+    opacity: 0.95;
+    cursor: default;
+  }
+
+  .placeholder-badge {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--contested);
+    background: var(--contested-chip);
+    border-radius: 3px;
+    padding: 0.18rem 0.5rem;
+  }
+
+  .project-card.placeholder .project-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.6rem;
+    font-weight: 460;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .project-card.placeholder .project-oneliner {
+    font-family: var(--font-body);
+    font-size: 1.02rem;
+    color: var(--text-secondary);
+    line-height: 1.62;
+    flex: 1;
+  }
+
+  .project-card.placeholder .project-link {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+</style>

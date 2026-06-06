@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import EssayCard from '@/components/EssayCard.astro';
+
+export const prerender = true;
+
+const essays = (await getCollection('essays')).filter((e) => !e.data.draft);
+essays.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Derive filter facets from the collection. Filtering itself is client-side
+// (data attributes + buttons) so the page stays a static prerender.
+const topics = [...new Set(essays.flatMap((e) => e.data.topics))].sort();
+const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))] as string[];
+---
+
+<BaseLayout title="Writing — Tom Cassidy" currentPage="writing">
+  <section class="section">
+    <header class="page-head">
+      <h1 class="page-title">Writing</h1>
+      <p class="page-sub">Essays and notes. Thinking out loud.</p>
+    </header>
+
+    {/* TODO: placeholder essays are listed until real content is migrated. */}
+    {(topics.length > 0 || seriesList.length > 0) && (
+      <div class="filters" id="filters">
+        <button class="filter active" data-filter-type="all" data-filter-value="">All</button>
+        {seriesList.map((s) => (
+          <button class="filter" data-filter-type="series" data-filter-value={s}>{s}</button>
+        ))}
+        {topics.map((t) => (
+          <button class="filter" data-filter-type="topic" data-filter-value={t}>#{t}</button>
+        ))}
+      </div>
+    )}
+
+    <div class="essay-grid" id="essay-grid">
+      {essays.map((e) => (
+        <div
+          class="grid-item"
+          data-topics={e.data.topics.join(',')}
+          data-series={e.data.series ?? ''}
+        >
+          <EssayCard
+            title={e.data.title}
+            slug={e.data.slug}
+            summary={e.data.summary}
+            date={e.data.date}
+            topics={e.data.topics}
+            epistemicStatus={e.data.epistemicStatus}
+            series={e.data.series}
+          />
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 6vw, 3.6rem);
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .page-sub {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 1.35rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2.25rem 0;
+  }
+
+  .filter {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .filter:hover { color: var(--text-secondary); border-color: var(--text-muted); }
+  .filter.active { border-color: var(--established); color: var(--established); background: var(--established-wash); }
+
+  .essay-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .grid-item.hidden { display: none; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filters = document.querySelectorAll('.filter');
+    const items = document.querySelectorAll<HTMLElement>('.grid-item');
+
+    filters.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filters.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const type = btn.getAttribute('data-filter-type');
+        const value = btn.getAttribute('data-filter-value') ?? '';
+
+        items.forEach((item) => {
+          let show = true;
+          if (type === 'topic') {
+            show = (item.dataset.topics ?? '').split(',').includes(value);
+          } else if (type === 'series') {
+            show = item.dataset.series === value;
+          }
+          item.classList.toggle('hidden', !show);
+        });
+      });
+    });
+  });
+</script>
