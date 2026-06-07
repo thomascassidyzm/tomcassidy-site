@@ -130,7 +130,7 @@ As a teacher you will be assigned a more senior member of staff to be your devel
 
 ## Part 6: The Importance of the Design of The Framework
 
-I alluded earlier to the Teacher Development Trust's 2015 report, which summarised the findings from a review of 947 reviews of CPD programmes conducted since 2000. This report found that three characteristics were evident in the most successful CPD programmes:
+Three characteristics seem to stand out in the most successful CPD programmes. I came to these through my own practice, and was glad to find them corroborated later by the research into effective professional development — the work associated with Robert Coe and the Education Endowment Foundation:
 
 1. **Duration** — the programme had to be designed to last over some time, rather than be a short sharp blast.
 2. **Rhythm** — the programme had a regular cadence, repetition, cyclic revisiting of the key themes on a regular basis.
