@@ -8,10 +8,25 @@ export const prerender = true;
 const essays = (await getCollection('essays')).filter((e) => !e.data.draft);
 essays.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
-// Derive filter facets from the collection. Filtering itself is client-side
-// (data attributes + buttons) so the page stays a static prerender.
-const topics = [...new Set(essays.flatMap((e) => e.data.topics))].sort();
-const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))] as string[];
+// The four series are the primary organising groups ("bigger groupings").
+// Granular topics are no longer filter chips — they live on the cards and are
+// reachable through the search box, which matches title + summary + topics.
+const SERIES_ORDER = [
+  'The Art of Learning',
+  'Philosophy & Leadership',
+  'Reason-Ability',
+  'The Format',
+];
+const present = new Set(essays.map((e) => e.data.series).filter(Boolean) as string[]);
+const seriesList = SERIES_ORDER.filter((s) => present.has(s));
+// Future-proofing: any series not in the explicit order is appended alphabetically.
+for (const s of [...present].sort()) if (!seriesList.includes(s)) seriesList.push(s);
+
+// Lowercased search blob per essay: title + summary + topics + series.
+const searchBlob = (e: (typeof essays)[number]): string =>
+  [e.data.title, e.data.summary, (e.data.topics ?? []).join(' '), e.data.series ?? '']
+    .join(' ')
+    .toLowerCase();
 ---
 
 <BaseLayout title="Writing — Tom Cassidy" currentPage="writing">
@@ -21,25 +36,36 @@ const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))
       <p class="page-sub">Essays and notes. Thinking out loud.</p>
     </header>
 
-    {/* TODO: placeholder essays are listed until real content is migrated. */}
-    {(topics.length > 0 || seriesList.length > 0) && (
-      <div class="filters" id="filters">
-        <button class="filter active" data-filter-type="all" data-filter-value="">All</button>
-        {seriesList.map((s) => (
-          <button class="filter" data-filter-type="series" data-filter-value={s}>{s}</button>
-        ))}
-        {topics.map((t) => (
-          <button class="filter" data-filter-type="topic" data-filter-value={t}>#{t}</button>
-        ))}
-      </div>
-    )}
+    <div class="controls">
+      <label class="search" for="writing-search">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input
+          id="writing-search"
+          type="search"
+          class="search-input"
+          placeholder="Search writing…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search writing"
+        />
+      </label>
+
+      {seriesList.length > 0 && (
+        <div class="filters" id="filters">
+          <button class="filter active" data-filter-value="">All</button>
+          {seriesList.map((s) => (
+            <button class="filter" data-filter-value={s}>{s}</button>
+          ))}
+        </div>
+      )}
+    </div>
 
     <div class="essay-grid" id="essay-grid">
       {essays.map((e) => (
         <div
           class="grid-item"
-          data-topics={e.data.topics.join(',')}
           data-series={e.data.series ?? ''}
+          data-search={searchBlob(e)}
         >
           <EssayCard
             title={e.data.title}
@@ -53,6 +79,11 @@ const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))
         </div>
       ))}
     </div>
+
+    <p class="empty" id="empty-state" hidden>
+      Nothing matches that.
+      <button class="empty-clear" id="empty-clear" type="button">Clear</button>
+    </p>
   </section>
 </BaseLayout>
 
@@ -80,11 +111,53 @@ const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))
     margin-top: 0.5rem;
   }
 
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    margin: 2.25rem 0;
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    max-width: 420px;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: transparent;
+    transition: border-color 0.2s ease;
+  }
+  .search:focus-within { border-color: var(--text-muted); }
+
+  .search-icon {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+  }
+  .search-input::placeholder { color: var(--text-muted); }
+  /* Hide the native search clear affordance for a cleaner look. */
+  .search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin: 2.25rem 0;
+    margin: 0;
   }
 
   .filter {
@@ -110,30 +183,74 @@ const seriesList = [...new Set(essays.map((e) => e.data.series).filter(Boolean))
   }
 
   .grid-item.hidden { display: none; }
+
+  .empty {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    margin-top: 2.5rem;
+  }
+  .empty-clear {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.6rem;
+    margin-left: 0.4rem;
+    border-radius: 5px;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .empty-clear:hover { color: var(--text-secondary); border-color: var(--text-muted); }
 </style>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const filters = document.querySelectorAll('.filter');
-    const items = document.querySelectorAll<HTMLElement>('.grid-item');
+    const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter'));
+    const items = Array.from(document.querySelectorAll<HTMLElement>('.grid-item'));
+    const search = document.getElementById('writing-search') as HTMLInputElement | null;
+    const empty = document.getElementById('empty-state') as HTMLElement | null;
+    const emptyClear = document.getElementById('empty-clear');
+
+    let activeSeries = '';
+    let query = '';
+
+    function apply() {
+      let visible = 0;
+      items.forEach((item) => {
+        const seriesOk = activeSeries === '' || item.dataset.series === activeSeries;
+        const queryOk = query === '' || (item.dataset.search ?? '').includes(query);
+        const show = seriesOk && queryOk;
+        item.classList.toggle('hidden', !show);
+        if (show) visible++;
+      });
+      if (empty) empty.hidden = visible !== 0;
+    }
 
     filters.forEach((btn) => {
       btn.addEventListener('click', () => {
         filters.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
-        const type = btn.getAttribute('data-filter-type');
-        const value = btn.getAttribute('data-filter-value') ?? '';
-
-        items.forEach((item) => {
-          let show = true;
-          if (type === 'topic') {
-            show = (item.dataset.topics ?? '').split(',').includes(value);
-          } else if (type === 'series') {
-            show = item.dataset.series === value;
-          }
-          item.classList.toggle('hidden', !show);
-        });
+        activeSeries = btn.getAttribute('data-filter-value') ?? '';
+        apply();
       });
+    });
+
+    search?.addEventListener('input', () => {
+      query = (search.value ?? '').trim().toLowerCase();
+      apply();
+    });
+
+    emptyClear?.addEventListener('click', () => {
+      query = '';
+      activeSeries = '';
+      if (search) search.value = '';
+      filters.forEach((b) => b.classList.remove('active'));
+      filters[0]?.classList.add('active');
+      apply();
     });
   });
 </script>

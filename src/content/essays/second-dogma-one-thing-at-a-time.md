@@ -3,7 +3,7 @@ title: "The Second Dogma: One Thing at a Time"
 slug: "second-dogma-one-thing-at-a-time"
 summary: "How Benjamin Franklin's 13x4 system for self-mastery — focusing on just one thing at a time — can be customised to master almost any goal."
 date: 2026-05-29
-topics: ["self-mastery", "method", "habits", "Reason-Ability"]
+topics: ["self-mastery", "method", "habits", "reason-ability"]
 draft: false
 featured: false
 series: "Reason-Ability"
