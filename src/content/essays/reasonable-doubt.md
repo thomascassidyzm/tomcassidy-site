@@ -203,7 +203,7 @@ They've got the same dilemma as you:
 
 What would they choose to be thinking about regarding their imminent performance?
 
-**a) Relaxed confidence:** that this is going to go well, that everything is going to click, that they'll realize their full potential, that all their training had been worth it, this is what life is all about?
+**a) Relaxed confidence:** that this is going to go well, that everything is going to click, that they'll realise their full potential, that all their training had been worth it, this is what life is all about?
 
 Or
 
