@@ -104,7 +104,7 @@ Now, while it is tricky to measure in a meaningful way, it is not impossible and
 
 The most important characteristics are those highlighted earlier as the characteristics of exceptional learners and it is through 'being the example' that you can influence students the most.
 
-## Part 3: The 'HOW'
+## Part 4: The 'HOW'
 
 So, this is all great, but I'm sure that you will now want to know HOW we are going to do it.
 
@@ -116,7 +116,7 @@ Given that the world is changing at an ever-increasing rate, we favour the 'lear
 
 **ADAPT.** Learn fast, changing as you go. Improve continuously.
 
-## Part 4: How will this work for me?
+## Part 5: How will this work for me?
 
 As a teacher you will be assigned a more senior member of staff to be your development guide to mentor you through the process. Together with your mentor:
 
@@ -128,7 +128,7 @@ As a teacher you will be assigned a more senior member of staff to be your devel
 6. You meet with your mentor to see how it went. (INVESTIGATE)
 7. You make any changes to keep you on track to achieve your vision. (ADAPT)
 
-## Part 5: The Importance of the Design of The Framework
+## Part 6: The Importance of the Design of The Framework
 
 I alluded earlier to the Teacher Development Trust's 2015 report, which summarised the findings from a review of 947 reviews of CPD programmes conducted since 2000. This report found that three characteristics were evident in the most successful CPD programmes:
 
