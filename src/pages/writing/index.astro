@@ -2,31 +2,62 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import EssayCard from '@/components/EssayCard.astro';
+import { SERIES, type SeriesDef } from '@/content/series';
 
 export const prerender = true;
 
-const essays = (await getCollection('essays')).filter((e) => !e.data.draft);
-essays.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const all = (await getCollection('essays')).filter((e) => !e.data.draft);
+type Essay = (typeof all)[number];
+const bySlug = new Map<string, Essay>(all.map((e) => [e.data.slug, e]));
+const get = (slug: string): Essay | undefined => bySlug.get(slug);
 
-// The four series are the primary organising groups ("bigger groupings").
-// Granular topics are no longer filter chips — they live on the cards and are
-// reachable through the search box, which matches title + summary + topics.
-const SERIES_ORDER = [
-  'The Art of Learning',
-  'Philosophy & Leadership',
-  'Reason-Ability',
-  'The Format',
-];
-const present = new Set(essays.map((e) => e.data.series).filter(Boolean) as string[]);
-const seriesList = SERIES_ORDER.filter((s) => present.has(s));
-// Future-proofing: any series not in the explicit order is appended alphabetically.
-for (const s of [...present].sort()) if (!seriesList.includes(s)) seriesList.push(s);
+const featuredFirst = (a: Essay, b: Essay) =>
+  Number(b.data.featured) - Number(a.data.featured) || a.data.title.localeCompare(b.data.title);
 
-// Lowercased search blob per essay: title + summary + topics + series.
-const searchBlob = (e: (typeof essays)[number]): string =>
+// Granular topics are no longer filter chips; they feed the search box.
+const searchBlob = (e: Essay): string =>
   [e.data.title, e.data.summary, (e.data.topics ?? []).join(' '), e.data.series ?? '']
     .join(' ')
     .toLowerCase();
+
+interface Block {
+  def: SeriesDef;
+  lead?: Essay;
+  sequence?: { label: string; parts: { numeral: string; e: Essay }[] };
+  cards: Essay[];
+}
+
+const blocks: Block[] = SERIES.map((def) => {
+  const inSeries = all.filter((e) => e.data.series === def.name);
+
+  if (def.kind === 'collection') {
+    return { def, cards: [...inSeries].sort(featuredFirst) };
+  }
+  if (def.kind === 'single') {
+    const lead = (def.lead ? get(def.lead) : undefined) ?? [...inSeries].sort(featuredFirst)[0];
+    return { def, lead, cards: inSeries.filter((e) => e.data.slug !== lead?.data.slug) };
+  }
+
+  // framework: lead "door", optional numbered sequence, then related/rest as cards
+  const placed = new Set<string>();
+  const lead = def.lead ? get(def.lead) : undefined;
+  if (lead) placed.add(lead.data.slug);
+
+  let sequence: Block['sequence'];
+  if (def.sequence) {
+    const parts = def.sequence.parts
+      .map((p) => ({ numeral: p.numeral, e: get(p.slug) }))
+      .filter((p): p is { numeral: string; e: Essay } => Boolean(p.e));
+    parts.forEach((p) => placed.add(p.e.data.slug));
+    sequence = { label: def.sequence.label, parts };
+  }
+
+  const related = (def.related ?? []).map(get).filter((e): e is Essay => Boolean(e));
+  related.forEach((e) => placed.add(e.data.slug));
+  const rest = inSeries.filter((e) => !placed.has(e.data.slug)).sort(featuredFirst);
+
+  return { def, lead, sequence, cards: [...related, ...rest] };
+});
 ---
 
 <BaseLayout title="Writing — Tom Cassidy" currentPage="writing">
@@ -50,33 +81,75 @@ const searchBlob = (e: (typeof essays)[number]): string =>
         />
       </label>
 
-      {seriesList.length > 0 && (
-        <div class="filters" id="filters">
-          <button class="filter active" data-filter-value="">All</button>
-          {seriesList.map((s) => (
-            <button class="filter" data-filter-value={s}>{s}</button>
-          ))}
-        </div>
-      )}
+      <div class="filters" id="filters">
+        <button class="filter active" data-filter-value="">All</button>
+        {blocks.map((b) => (
+          <button class="filter" data-filter-value={b.def.name}>{b.def.name}</button>
+        ))}
+      </div>
     </div>
 
-    <div class="essay-grid" id="essay-grid">
-      {essays.map((e) => (
-        <div
-          class="grid-item"
-          data-series={e.data.series ?? ''}
-          data-search={searchBlob(e)}
-        >
-          <EssayCard
-            title={e.data.title}
-            slug={e.data.slug}
-            summary={e.data.summary}
-            date={e.data.date}
-            topics={e.data.topics}
-            epistemicStatus={e.data.epistemicStatus}
-            series={e.data.series}
-          />
-        </div>
+    <div class="series-sections" id="series-sections">
+      {blocks.map((b) => (
+        <section class="series-block" data-series={b.def.name}>
+          <header class="series-head">
+            <h2 class="series-name">{b.def.name}</h2>
+            <p class="series-blurb">{b.def.blurb}</p>
+          </header>
+
+          {b.lead && (
+            <div class="lead piece" data-series={b.def.name} data-search={searchBlob(b.lead)}>
+              {b.def.kind === 'framework' && <span class="lead-eyebrow">Start here</span>}
+              <EssayCard
+                title={b.lead.data.title}
+                slug={b.lead.data.slug}
+                summary={b.lead.data.summary}
+                date={b.lead.data.date}
+                topics={b.lead.data.topics}
+                epistemicStatus={b.lead.data.epistemicStatus}
+              />
+            </div>
+          )}
+
+          {b.sequence && (
+            <div class="sequence">
+              <p class="seq-label">{b.sequence.label}</p>
+              <div class="seq-list">
+                {b.sequence.parts.map((p) => (
+                  <a
+                    class="seq-row piece"
+                    href={`/writing/${p.e.data.slug}`}
+                    data-series={b.def.name}
+                    data-search={searchBlob(p.e)}
+                  >
+                    <span class="seq-num">{p.numeral}</span>
+                    <span class="seq-body">
+                      <span class="seq-title">{p.e.data.title}</span>
+                      <span class="seq-summary">{p.e.data.summary}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {b.cards.length > 0 && (
+            <div class="cards">
+              {b.cards.map((e) => (
+                <div class="piece" data-series={b.def.name} data-search={searchBlob(e)}>
+                  <EssayCard
+                    title={e.data.title}
+                    slug={e.data.slug}
+                    summary={e.data.summary}
+                    date={e.data.date}
+                    topics={e.data.topics}
+                    epistemicStatus={e.data.epistemicStatus}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       ))}
     </div>
 
@@ -88,11 +161,7 @@ const searchBlob = (e: (typeof essays)[number]): string =>
 </BaseLayout>
 
 <style>
-  .section {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
-  }
+  .section { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
 
   .page-title {
     font-family: var(--font-display);
@@ -102,7 +171,6 @@ const searchBlob = (e: (typeof essays)[number]): string =>
     letter-spacing: -0.02em;
     color: var(--text-primary);
   }
-
   .page-sub {
     font-family: var(--font-body);
     font-style: italic;
@@ -111,12 +179,8 @@ const searchBlob = (e: (typeof essays)[number]): string =>
     margin-top: 0.5rem;
   }
 
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-    margin: 2.25rem 0;
-  }
+  /* Controls: search above the series chips */
+  .controls { display: flex; flex-direction: column; gap: 1.1rem; margin: 2.25rem 0 0; }
 
   .search {
     display: flex;
@@ -131,78 +195,76 @@ const searchBlob = (e: (typeof essays)[number]): string =>
     transition: border-color 0.2s ease;
   }
   .search:focus-within { border-color: var(--text-muted); }
-
-  .search-icon {
-    color: var(--text-muted);
-    font-size: 1rem;
-    line-height: 1;
-  }
-
+  .search-icon { color: var(--text-muted); font-size: 1rem; line-height: 1; }
   .search-input {
-    flex: 1;
-    min-width: 0;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    letter-spacing: 0.02em;
+    flex: 1; min-width: 0; background: transparent; border: none; outline: none;
+    color: var(--text-primary); font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.02em;
   }
   .search-input::placeholder { color: var(--text-muted); }
-  /* Hide the native search clear affordance for a cleaner look. */
   .search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0;
-  }
-
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; }
   .filter {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.4rem 0.8rem;
-    border-radius: 5px;
-    border: 1px solid var(--hairline);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.4rem 0.8rem; border-radius: 5px; border: 1px solid var(--hairline);
+    background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
   }
   .filter:hover { color: var(--text-secondary); border-color: var(--text-muted); }
   .filter.active { border-color: var(--established); color: var(--established); background: var(--established-wash); }
 
-  .essay-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+  /* Series sections */
+  .series-sections { display: flex; flex-direction: column; gap: 3.5rem; margin-top: 3rem; }
+  .series-block.hidden { display: none; }
+
+  .series-head { border-bottom: 1px solid var(--hairline); padding-bottom: 0.85rem; margin-bottom: 1.5rem; }
+  .series-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 440; letter-spacing: -0.01em; color: var(--text-primary);
+  }
+  .series-blurb {
+    font-family: var(--font-body); font-style: italic; font-size: 1.05rem;
+    color: var(--text-secondary); margin-top: 0.35rem; max-width: 62ch;
   }
 
-  .grid-item.hidden { display: none; }
+  .piece.hidden { display: none; }
 
-  .empty {
-    font-family: var(--font-body);
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    margin-top: 2.5rem;
+  /* The "door" — a full-width lead card with an eyebrow */
+  .lead { margin-bottom: 1.6rem; }
+  .lead-eyebrow {
+    display: inline-block; font-family: var(--font-mono); font-size: 0.62rem;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--established);
+    margin-bottom: 0.55rem;
   }
+
+  /* Numbered sequence (the Dogmas) */
+  .sequence { margin-bottom: 1.6rem; }
+  .seq-label {
+    font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.85rem;
+  }
+  .seq-list { display: flex; flex-direction: column; gap: 0.55rem; }
+  .seq-row {
+    display: flex; align-items: baseline; gap: 1.1rem;
+    padding: 0.95rem 1.15rem; border: 1px solid var(--hairline); border-radius: 8px;
+    background: var(--bg-elevated); color: inherit; text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .seq-row:hover { transform: translateX(4px); border-color: var(--text-muted); }
+  .seq-num {
+    font-family: var(--font-display); font-size: 1.05rem; color: var(--text-muted);
+    min-width: 2.2rem; text-align: center; letter-spacing: 0.02em;
+  }
+  .seq-body { display: flex; flex-direction: column; gap: 0.2rem; }
+  .seq-title { font-family: var(--font-display); font-size: 1.15rem; color: var(--text-primary); }
+  .seq-summary { font-family: var(--font-body); font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+
+  .empty { font-family: var(--font-body); font-size: 1.05rem; color: var(--text-secondary); margin-top: 2.5rem; }
   .empty-clear {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.25rem 0.6rem;
-    margin-left: 0.4rem;
-    border-radius: 5px;
-    border: 1px solid var(--hairline);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.25rem 0.6rem; margin-left: 0.4rem; border-radius: 5px; border: 1px solid var(--hairline);
+    background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
   }
   .empty-clear:hover { color: var(--text-secondary); border-color: var(--text-muted); }
 </style>
@@ -210,7 +272,7 @@ const searchBlob = (e: (typeof essays)[number]): string =>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter'));
-    const items = Array.from(document.querySelectorAll<HTMLElement>('.grid-item'));
+    const sblocks = Array.from(document.querySelectorAll<HTMLElement>('.series-block'));
     const search = document.getElementById('writing-search') as HTMLInputElement | null;
     const empty = document.getElementById('empty-state') as HTMLElement | null;
     const emptyClear = document.getElementById('empty-clear');
@@ -219,15 +281,21 @@ const searchBlob = (e: (typeof essays)[number]): string =>
     let query = '';
 
     function apply() {
-      let visible = 0;
-      items.forEach((item) => {
-        const seriesOk = activeSeries === '' || item.dataset.series === activeSeries;
-        const queryOk = query === '' || (item.dataset.search ?? '').includes(query);
-        const show = seriesOk && queryOk;
-        item.classList.toggle('hidden', !show);
-        if (show) visible++;
+      let anyVisible = false;
+      sblocks.forEach((block) => {
+        const seriesOk = activeSeries === '' || block.dataset.series === activeSeries;
+        let blockHasVisible = false;
+        block.querySelectorAll<HTMLElement>('.piece').forEach((piece) => {
+          const queryOk = query === '' || (piece.dataset.search ?? '').includes(query);
+          const show = seriesOk && queryOk;
+          piece.classList.toggle('hidden', !show);
+          if (show) blockHasVisible = true;
+        });
+        const showBlock = seriesOk && blockHasVisible;
+        block.classList.toggle('hidden', !showBlock);
+        if (showBlock) anyVisible = true;
       });
-      if (empty) empty.hidden = visible !== 0;
+      if (empty) empty.hidden = anyVisible;
     }
 
     filters.forEach((btn) => {
