@@ -9,7 +9,8 @@ topics:
   - systems
   - mindset
 series: Reason-Ability
-featured: true
+featured: false
+draft: true
 ---
 
 Reason-Ability in a sentence:

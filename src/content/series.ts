@@ -32,7 +32,7 @@ export const SERIES: SeriesDef[] = [
     name: 'Reason-Ability',
     kind: 'framework',
     blurb: 'A framework for reasoning and acting well — an overview, four dogmas, and the doubt that keeps it honest.',
-    lead: 'reason-ability-an-overview',
+    lead: 'what-is-reason-ability',
     sequence: {
       label: 'The Four Dogmas',
       parts: [
@@ -42,7 +42,7 @@ export const SERIES: SeriesDef[] = [
         { numeral: 'IV', slug: 'fourth-dogma-a-reasonable-plan' },
       ],
     },
-    related: ['what-is-reason-ability', 'reasonable-doubt'],
+    related: ['reasonable-doubt'],
   },
   {
     name: 'The Art of Learning',
