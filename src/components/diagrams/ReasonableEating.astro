@@ -1,0 +1,227 @@
+---
+/**
+ * ReasonableEating.astro — the 13×4 wheel, in the house diagram language
+ * established by NineByFour.astro.
+ *
+ * Four pigment-coded domains — WHAT / HOW / WHY / WHEN — each holding three
+ * focus points (12 in total), around the EAT MORE central focus (Algorithm
+ * Zero). The numerals are the week numbers, and they reveal the rotation: one
+ * focus point per week, cycling the four domains — weeks 1,5,9 in HOW; 2,6,10
+ * in WHEN; 3,7,11 in WHY; 4,8,12 in WHAT.
+ *
+ * Theme-aware: every colour is a design token, so it flips light/dark untouched.
+ */
+
+interface Props {
+  caption?: string;
+}
+const { caption = 'The Reasonable Eating 13×4 — four domains, twelve focus points, one central focus.' } = Astro.props;
+
+const cx = 360, cy = 300, ro = 206, ri = 86, rHub = 83, rArc = 214, rLab = 150, rNum = 190;
+const NUM_INSET = 6; // degrees into each slice from its leading edge
+
+const pt = (r: number, deg: number): [number, number] => {
+  const a = (deg * Math.PI) / 180;
+  return [+(cx + r * Math.sin(a)).toFixed(2), +(cy - r * Math.cos(a)).toFixed(2)];
+};
+const sector = (a1: number, a2: number): string => {
+  const [ox1, oy1] = pt(ro, a1);
+  const [ox2, oy2] = pt(ro, a2);
+  const [ix2, iy2] = pt(ri, a2);
+  const [ix1, iy1] = pt(ri, a1);
+  return `M${ox1},${oy1} A${ro},${ro} 0 0,1 ${ox2},${oy2} L${ix2},${iy2} A${ri},${ri} 0 0,0 ${ix1},${iy1} Z`;
+};
+const arcPath = (a1: number, a2: number, r: number): string => {
+  const [x1, y1] = pt(r, a1);
+  const [x2, y2] = pt(r, a2);
+  return `M${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2}`;
+};
+
+// Quadrants, clockwise from the top. WHAT top-left, HOW top-right, WHY
+// bottom-left, WHEN bottom-right (as in the original). Each holds three focus
+// points; the numeral is the programme week.
+const QUADS = [
+  { name: 'HOW', pigment: 'derived', base: 0, segs: [
+    { n: 1, lines: ['Chew until', 'liquid'] },
+    { n: 5, lines: ['Eat slow'] },
+    { n: 9, lines: ['Savour the', 'flavour'] },
+  ] },
+  { name: 'WHEN', pigment: 'contested', base: 90, segs: [
+    { n: 2, lines: ['Hunger >>', 'Appetite'] },
+    { n: 6, lines: ['Stop when', 'no longer', 'hungry'] },
+    { n: 10, lines: ['Eat naturally', 'not', 'continuously'] },
+  ] },
+  { name: 'WHY', pigment: 'open', base: 180, segs: [
+    { n: 3, lines: ['Eat for the', 'body & the', 'taste buds'] },
+    { n: 7, lines: ['Eat for a', 'long life'] },
+    { n: 11, lines: ['Eat for fun'] },
+  ] },
+  { name: 'WHAT', pigment: 'established', base: 270, segs: [
+    { n: 4, lines: ['Did it grow', 'into its', 'shape?'] },
+    { n: 8, lines: ['Eat a high', 'NERD'] },
+    { n: 12, lines: ['Eat what', 'YOU control'] },
+  ] },
+];
+
+let order = 0;
+const segs = QUADS.flatMap((q) =>
+  q.segs.map((s, i) => {
+    const a1 = q.base + i * 30;
+    const a2 = a1 + 30;
+    const mid = a1 + 15;
+    const [lx, ly] = pt(rLab, mid);
+    const [nx, ny] = pt(rNum, a1 + NUM_INSET);
+    return { ...s, pigment: q.pigment, order: order++, path: sector(a1, a2), lx, ly, nx, ny };
+  })
+);
+
+const quadMeta = QUADS.map((q) => {
+  const mid = q.base + 45;
+  const [qlx, qly] = pt(rArc + 30, mid);
+  return { name: q.name, pigment: q.pigment, arc: arcPath(q.base + 1.2, q.base + 88.8, rArc), qlx, qly };
+});
+---
+
+<figure class="reasonable-eating" role="group" aria-labelledby="re13-title">
+  <svg viewBox="0 0 720 660" class="wheel" xmlns="http://www.w3.org/2000/svg">
+    <title id="re13-title">The Reasonable Eating 13×4 wheel</title>
+    <desc>
+      A wheel of the Reasonable Eating programme: the EAT MORE central focus at
+      the hub, surrounded by four domains — How, When, Why and What you eat —
+      each holding three weekly focus points, twelve in all.
+    </desc>
+
+    <!-- segments -->
+    {segs.map((s) => (
+      <path class={`seg seg--${s.pigment}`} d={s.path} style={`--i:${s.order}`} />
+    ))}
+
+    <!-- quadrant rim arcs + labels -->
+    {quadMeta.map((q) => (
+      <path class={`quad-arc quad--${q.pigment}`} d={q.arc} fill="none" />
+    ))}
+    {quadMeta.map((q) => (
+      <text class={`quad-label quad--${q.pigment}`} x={q.qlx} y={q.qly} text-anchor="middle">{q.name}</text>
+    ))}
+
+    <!-- hub: EAT MORE (Algorithm Zero) -->
+    <circle class="hub" cx={cx} cy={cy} r={rHub} />
+    <g class="num num--hub">
+      <circle class="num-dot" cx={cx} cy={cy - 28} r="10.5" />
+      <text class="num-text" x={cx} y={cy - 24} text-anchor="middle">0</text>
+    </g>
+    <text class="hub-label" x={cx} y={cy + 6} text-anchor="middle">EAT</text>
+    <text class="hub-label" x={cx} y={cy + 27} text-anchor="middle">MORE</text>
+
+    <!-- segment labels -->
+    {segs.map((s) => (
+      <text class="label" x={s.lx} y={s.ly} text-anchor="middle">
+        {s.lines.map((line, k) => (
+          <tspan x={s.lx} dy={k === 0 ? -((s.lines.length - 1) * 11) / 2 + 3.5 : 11}>{line}</tspan>
+        ))}
+      </text>
+    ))}
+
+    <!-- numerals -->
+    {segs.map((s) => (
+      <g class={`num num--${s.pigment}`}>
+        <circle class="num-dot" cx={s.nx} cy={s.ny} r="10" />
+        <text class="num-text" x={s.nx} y={s.ny + 3.5} text-anchor="middle">{s.n}</text>
+      </g>
+    ))}
+  </svg>
+
+  {caption && <figcaption class="caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .reasonable-eating {
+    /* Break out wider than the reading column — a figure, not body text.
+       Centred on the column's own centre, so it overhangs symmetrically. */
+    width: min(960px, 94vw);
+    margin: 3.25rem 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .wheel { display: block; width: 100%; height: auto; overflow: visible; }
+
+  /* Segments — pigment-washed by domain, hairline divisions */
+  .seg { stroke: var(--hairline); stroke-width: 1; }
+  .seg--derived { fill: var(--derived-wash); }
+  .seg--contested { fill: var(--contested-wash); }
+  .seg--open { fill: var(--open-wash); }
+  .seg--established { fill: var(--established-wash); }
+
+  /* Quadrant rim arcs — the pigment signature of each domain */
+  .quad-arc { stroke-width: 2.5; stroke-linecap: round; }
+  .quad--derived { stroke: var(--derived); }
+  .quad--contested { stroke: var(--contested); }
+  .quad--open { stroke: var(--open); }
+  .quad--established { stroke: var(--established); }
+
+  /* Quadrant labels — display, set in the domain pigment */
+  text.quad-label {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 19px;
+    font-weight: 480;
+    letter-spacing: 0.06em;
+    dominant-baseline: middle;
+  }
+  text.quad--derived { fill: var(--derived); }
+  text.quad--contested { fill: var(--contested); }
+  text.quad--open { fill: var(--open); }
+  text.quad--established { fill: var(--established); }
+
+  /* Hub — the central focus */
+  .hub { fill: var(--depth-3); stroke: var(--hairline); stroke-width: 1.25; }
+  .hub-label {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 17px;
+    font-weight: 560;
+    letter-spacing: 0.02em;
+    fill: var(--text-primary);
+  }
+
+  /* Segment labels */
+  .label { font-family: var(--font-body); font-size: 10px; fill: var(--text-secondary); }
+
+  /* Numerals — mono, pigment-coloured, in a hairline well */
+  .num-dot { fill: var(--bg-elevated); stroke-width: 1.25; }
+  .num-text { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
+  .num--derived .num-dot { stroke: var(--derived); }
+  .num--derived .num-text { fill: var(--derived); }
+  .num--contested .num-dot { stroke: var(--contested); }
+  .num--contested .num-text { fill: var(--contested); }
+  .num--open .num-dot { stroke: var(--open); }
+  .num--open .num-text { fill: var(--open); }
+  .num--established .num-dot { stroke: var(--established); }
+  .num--established .num-text { fill: var(--established); }
+  .num--hub .num-dot { stroke: var(--text-muted); }
+  .num--hub .num-text { fill: var(--text-secondary); }
+
+  .caption {
+    margin-top: 0.4rem;
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  /* One quiet entrance — slices bloom around the clock, then settle. */
+  @media (prefers-reduced-motion: no-preference) {
+    .seg {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: re13-bloom 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+      animation-delay: calc(var(--i) * 45ms);
+    }
+    @keyframes re13-bloom {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  }
+</style>

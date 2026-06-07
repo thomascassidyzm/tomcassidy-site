@@ -1,0 +1,219 @@
+---
+/**
+ * NineByFour.astro — the 9×4 wheel, drawn entirely in the site's design tokens.
+ *
+ * The reference diagram for the site's diagram aesthetic: pigment-coded halves,
+ * hairline divisions, mono numerals, theme-aware (adapts to light/dark via the
+ * CSS custom properties — no hardcoded colour). Geometry is computed here so
+ * the markup stays clean and the system is reusable for sibling diagrams.
+ *
+ * Odd numbers (3,5,7,9) = the ACTION half (forest green / --derived).
+ * Even numbers (2,4,6,8) = the PHILOSOPHY half (burnt amber / --contested).
+ * The hub, Self-Belief (1), is the ink-blue keystone (--established).
+ */
+
+interface Props {
+  caption?: string;
+}
+const { caption = 'The 9×4 — developing the characteristics of exceptional teaching.' } = Astro.props;
+
+const cx = 340, cy = 250;
+const ro = 184, ri = 80, rHub = 77, rLab = 132, rNum = 165;
+
+const pt = (r: number, deg: number): [number, number] => {
+  const rad = (deg * Math.PI) / 180;
+  return [
+    +(cx + r * Math.sin(rad)).toFixed(2),
+    +(cy - r * Math.cos(rad)).toFixed(2),
+  ];
+};
+
+const sector = (a1: number, a2: number): string => {
+  const [ox1, oy1] = pt(ro, a1);
+  const [ox2, oy2] = pt(ro, a2);
+  const [ix2, iy2] = pt(ri, a2);
+  const [ix1, iy1] = pt(ri, a1);
+  return `M${ox1},${oy1} A${ro},${ro} 0 0,1 ${ox2},${oy2} L${ix2},${iy2} A${ri},${ri} 0 0,0 ${ix1},${iy1} Z`;
+};
+
+// Clockwise from the top. The 0°/180° boundaries make the Action|Philosophy
+// split fall on the true vertical, exactly as the original wheel.
+const DATA = [
+  { n: 2, side: 'phil', lines: ['know why', 'you’re doing it'] },
+  { n: 4, side: 'phil', lines: ['think big'] },
+  { n: 6, side: 'phil', lines: ['take risks'] },
+  { n: 8, side: 'phil', lines: ['reward effort'] },
+  { n: 3, side: 'act', lines: ['high energy'] },
+  { n: 5, side: 'act', lines: ['tell your', 'story'] },
+  { n: 7, side: 'act', lines: ['do the', 'basics well'] },
+  { n: 9, side: 'act', lines: ['get out', 'of the way'] },
+];
+
+// Every numeral sits at the SAME relative spot in its slice — the
+// clockwise-leading corner, just inside the dividing line, near the rim — so
+// they read evenly as you go around the clock, never start-of-slice on one and
+// end-of-slice on the next.
+const NUM_INSET = 7.5; // degrees into the slice from its leading edge
+
+const segs = DATA.map((d, i) => {
+  const a1 = i * 45;
+  const a2 = a1 + 45;
+  const mid = a1 + 22.5;
+  const [lx, ly] = pt(rLab, mid);
+  const [nx, ny] = pt(rNum, a1 + NUM_INSET);
+  return { ...d, path: sector(a1, a2), lx, ly, nx, ny };
+});
+---
+
+<figure class="nine-by-four" role="group" aria-labelledby="n94-title">
+  <svg viewBox="0 0 680 540" class="wheel" xmlns="http://www.w3.org/2000/svg">
+    <title id="n94-title">The 9×4 wheel</title>
+    <desc>
+      The nine characteristics of exceptional teaching, arranged as a wheel.
+      The Self-Belief hub sits at the centre. Four Action characteristics — high
+      energy, tell your story, do the basics well, get out of the way — form one
+      half; four Philosophy characteristics — know why you're doing it, think
+      big, take risks, reward effort — form the other.
+    </desc>
+
+    <!-- half labels -->
+    <text class="half half--act" x="120" y={cy} text-anchor="end">Action</text>
+    <text class="half half--phil" x="560" y={cy} text-anchor="start">Philosophy</text>
+
+    <!-- segments -->
+    {segs.map((s, i) => (
+      <path
+        class={`seg seg--${s.side}`}
+        d={s.path}
+        style={`--i:${i}`}
+      />
+    ))}
+
+    <!-- hub -->
+    <circle class="hub" cx={cx} cy={cy} r={rHub} />
+    <g class="num num--hub">
+      <circle class="num-dot" cx={cx} cy={cy - 26} r="10.5" />
+      <text class="num-text" x={cx} y={cy - 22} text-anchor="middle">1</text>
+    </g>
+    <text class="hub-label" x={cx} y={cy + 7} text-anchor="middle">Self-</text>
+    <text class="hub-label" x={cx} y={cy + 25} text-anchor="middle">Belief</text>
+
+    <!-- segment labels -->
+    {segs.map((s) => (
+      <text class="label" x={s.lx} y={s.ly} text-anchor="middle">
+        {s.lines.map((line, k) => (
+          <tspan x={s.lx} dy={k === 0 ? (s.lines.length > 1 ? -5 : 4) : 13}>{line}</tspan>
+        ))}
+      </text>
+    ))}
+
+    <!-- numerals -->
+    {segs.map((s) => (
+      <g class={`num num--${s.side}`}>
+        <circle class="num-dot" cx={s.nx} cy={s.ny} r="10.5" />
+        <text class="num-text" x={s.nx} y={s.ny + 4} text-anchor="middle">{s.n}</text>
+      </g>
+    ))}
+  </svg>
+
+  {caption && <figcaption class="caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .nine-by-four {
+    /* Break out wider than the reading column — a figure, not body text.
+       Centred on the column's own centre, so it overhangs symmetrically. */
+    width: min(960px, 94vw);
+    margin: 3.25rem 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .wheel {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Segments — pigment-washed fills, hairline divisions */
+  .seg {
+    stroke: var(--hairline);
+    stroke-width: 1;
+  }
+  .seg--act { fill: var(--derived-wash); }
+  .seg--phil { fill: var(--contested-wash); }
+
+  /* Hub — the ink-blue keystone */
+  .hub {
+    fill: var(--established-wash);
+    stroke: var(--established);
+    stroke-width: 1.25;
+  }
+  .hub-label {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 15.5px;
+    font-weight: 500;
+    fill: var(--text-primary);
+  }
+
+  /* Segment labels — quiet editorial serif */
+  .label {
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    fill: var(--text-secondary);
+  }
+
+  /* Numerals — mono, pigment-coloured, in a hairline well */
+  .num-dot {
+    fill: var(--bg-elevated);
+    stroke-width: 1.25;
+  }
+  .num-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .num--act .num-dot { stroke: var(--derived); }
+  .num--act .num-text { fill: var(--derived); }
+  .num--phil .num-dot { stroke: var(--contested); }
+  .num--phil .num-text { fill: var(--contested); }
+  .num--hub .num-dot { stroke: var(--established); }
+  .num--hub .num-text { fill: var(--established); }
+
+  /* Half labels — display, set in their pigment, generously spaced */
+  .half {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 18.5px;
+    font-weight: 460;
+    letter-spacing: 0.005em;
+    dominant-baseline: middle;
+  }
+  .half--act { fill: var(--derived); }
+  .half--phil { fill: var(--contested); }
+
+  .caption {
+    margin-top: 0.4rem;
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  /* One quiet entrance — segments bloom outward, then settle. */
+  @media (prefers-reduced-motion: no-preference) {
+    .seg {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: n94-bloom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+      animation-delay: calc(var(--i) * 55ms);
+    }
+    @keyframes n94-bloom {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  }
+</style>

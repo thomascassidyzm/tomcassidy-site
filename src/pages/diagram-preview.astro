@@ -1,0 +1,135 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import NineByFour from '@/components/diagrams/NineByFour.astro';
+import ReasonableEating from '@/components/diagrams/ReasonableEating.astro';
+import Quadrant from '@/components/diagrams/Quadrant.astro';
+import FoodScale from '@/components/diagrams/FoodScale.astro';
+---
+
+<BaseLayout title="Diagram preview — The 9×4">
+  <section class="preview">
+    <p class="eyebrow">Diagram preview · not linked from the site</p>
+    <h1 class="title">The 9×4 wheel</h1>
+    <p class="lede">
+      Redrawn from the original book art as theme-token SVG — pigment-coded
+      halves, hairline divisions, mono numerals. Flip the site's light/dark
+      toggle to see it switch with the theme. Nothing here is hardcoded colour.
+    </p>
+
+    <NineByFour />
+
+    <p class="note">
+      Action half = forest green (<code>--derived</code>) · Philosophy half =
+      burnt amber (<code>--contested</code>) · Self-Belief hub = ink-blue
+      (<code>--established</code>). The same system extends to the rest of the
+      book's diagrams.
+    </p>
+
+    <hr class="rule" />
+
+    <h2 class="title2">The Reasonable Eating 13×4</h2>
+    <p class="lede">
+      The same language at four-domain scale: WHAT / HOW / WHY / WHEN each take
+      one of the four pigments, three focus points apiece, around the EAT MORE
+      hub. The numerals are the programme weeks — read them around and you can
+      see the rotation through the domains.
+    </p>
+
+    <ReasonableEating />
+
+    <hr class="rule" />
+
+    <h2 class="title2">The sub-diagrams</h2>
+    <p class="lede">
+      Two new reusable types in the same language — a 2×2 <strong>Quadrant</strong>
+      (hairline axes, the goal cell pigment-washed) and a <strong>Scale</strong>
+      (pigment-graded tiers). Same tokens, same breakout.
+    </p>
+
+    <Quadrant
+      xAxis={['Bad taste', 'Great taste']}
+      yAxis={['Bad for you', 'Good for you']}
+      cells={{
+        tl: { lines: ['Good for you,', 'not tasty'] },
+        tr: { lines: ['Great-tasting', '& good for you'] },
+        bl: { lines: ['Bad &', 'not even tasty'] },
+        br: { lines: ['Delicious,', 'bad for you'] },
+      }}
+      highlight="tr"
+      pigment="derived"
+      caption="Body vs Taste Buds — aim for the top-right: great-tasting food that's also good for you."
+    />
+
+    <Quadrant
+      xAxis={['Low energy', 'High energy']}
+      yAxis={['Low nutrition', 'High nutrition']}
+      cells={{
+        tl: { score: '10' },
+        tr: { score: '7' },
+        bl: { score: '4' },
+        br: { score: '1' },
+      }}
+      highlight="tl"
+      pigment="derived"
+      caption="The NERD quadrant — a high Nutrition : Energy ratio wins. Broccoli 10, donuts 1."
+    />
+
+    <FoodScale />
+  </section>
+</BaseLayout>
+
+<style>
+  .preview {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    margin: 0.4rem 0 0.6rem;
+  }
+  .lede {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 60ch;
+  }
+  .note {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 60ch;
+    margin-top: 1.5rem;
+  }
+  .note code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    color: var(--text-secondary);
+  }
+  .rule {
+    border: none;
+    border-top: 1px solid var(--hairline);
+    margin: 4rem 0 2.5rem;
+  }
+  .title2 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+</style>

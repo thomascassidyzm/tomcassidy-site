@@ -1,0 +1,115 @@
+---
+/**
+ * FoodScale.astro — the "Did it grow into its shape?" sliding scale: a four-tier
+ * ladder from natural (top, best) to processed (bottom). Text-heavy, so it's an
+ * HTML figure built from the design tokens (pigment-coded, hairlines, breakout)
+ * rather than SVG — same house language, different medium.
+ */
+interface Props {
+  caption?: string;
+}
+const { caption = 'Eat as near the top of the scale as possible — did it grow into its shape?' } = Astro.props;
+
+// Top (best) to bottom (worst). Green for natural, amber for processed.
+const TIERS = [
+  {
+    n: 1,
+    pigment: 'derived',
+    title: 'Unchanged from its natural state',
+    eg: 'Fresh fruit & veg, nuts, seeds, raw eggs, raw fish, fresh milk',
+  },
+  {
+    n: 2,
+    pigment: 'derived',
+    title: 'Physically rearranged, chemically identical',
+    eg: 'Coleslaw, vegetable & fruit juices',
+  },
+  {
+    n: 3,
+    pigment: 'contested',
+    title: 'Physically & chemically changed, but structurally intact',
+    eg: 'Cooked, dried or roasted veg, grilled meat, grains, rice, houmous',
+  },
+  {
+    n: 4,
+    pigment: 'contested',
+    title: 'Changed beyond all relation to the original',
+    eg: 'Bread, pasteurised dairy, cake, pasta, sodas — anything with an ingredients list',
+  },
+];
+---
+
+<figure class="food-scale" role="group" aria-label={caption}>
+  <p class="scale-cue"><span class="cue-arrow" aria-hidden="true">↑</span> Eat nearer the top</p>
+  <ol class="tiers">
+    {TIERS.map((t) => (
+      <li class={`tier tier--${t.pigment}`}>
+        <span class="tier-num">{t.n}</span>
+        <div class="tier-body">
+          <p class="tier-title">{t.title}</p>
+          <p class="tier-eg">{t.eg}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+  {caption && <figcaption class="caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .food-scale {
+    /* Break out wider than the reading column. */
+    width: min(720px, 92vw);
+    margin: 3.25rem 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .scale-cue {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.7rem;
+  }
+  .cue-arrow { color: var(--derived); font-size: 0.95rem; }
+
+  .tiers { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .tier {
+    display: flex;
+    align-items: baseline;
+    gap: 1.1rem;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid var(--hairline);
+    border-left-width: 3px;
+    border-radius: 8px;
+    background: var(--bg-elevated);
+  }
+  .tier--derived { border-left-color: var(--derived); background: linear-gradient(90deg, var(--derived-wash), transparent 55%), var(--bg-elevated); }
+  .tier--contested { border-left-color: var(--contested); background: linear-gradient(90deg, var(--contested-wash), transparent 55%), var(--bg-elevated); }
+
+  .tier-num {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--text-muted);
+    min-width: 1.4rem;
+    text-align: center;
+  }
+  .tier--derived .tier-num { color: var(--derived); }
+  .tier--contested .tier-num { color: var(--contested); }
+
+  .tier-body { display: flex; flex-direction: column; gap: 0.2rem; }
+  .tier-title { font-family: var(--font-display); font-optical-sizing: auto; font-size: 1.1rem; font-weight: 500; color: var(--text-primary); }
+  .tier-eg { font-family: var(--font-body); font-size: 0.92rem; line-height: 1.45; color: var(--text-secondary); }
+
+  .caption {
+    margin-top: 0.9rem;
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+</style>

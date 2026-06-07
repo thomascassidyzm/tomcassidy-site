@@ -1,0 +1,136 @@
+---
+/**
+ * Quadrant.astro — a 2×2 quadrant in the house diagram language. Hairline axes
+ * and frame, the "aim-here" cell pigment-washed, theme-token throughout. Cells
+ * can carry a big mono score and/or a body-serif label.
+ *
+ * Reused for the Body-vs-Taste-Buds quadrant and the NERD quadrant.
+ */
+interface Cell {
+  score?: string;
+  lines?: string[];
+}
+interface Props {
+  /** [left pole, right pole] */
+  xAxis: [string, string];
+  /** [bottom pole, top pole] */
+  yAxis: [string, string];
+  cells: { tl: Cell; tr: Cell; bl: Cell; br: Cell };
+  /** which cell to highlight as the goal */
+  highlight?: 'tl' | 'tr' | 'bl' | 'br';
+  pigment?: 'derived' | 'established' | 'contested' | 'open';
+  caption?: string;
+}
+const { xAxis, yAxis, cells, highlight = 'tr', pigment = 'derived', caption } = Astro.props;
+
+const x0 = 168, x1 = 488, y0 = 96, y1 = 416;
+const mx = (x0 + x1) / 2;
+const my = (y0 + y1) / 2;
+const cw = (x1 - x0) / 2;
+const ch = (y1 - y0) / 2;
+
+const POS = {
+  tl: { cx: (x0 + mx) / 2, cy: (y0 + my) / 2, rx: x0, ry: y0 },
+  tr: { cx: (mx + x1) / 2, cy: (y0 + my) / 2, rx: mx, ry: y0 },
+  bl: { cx: (x0 + mx) / 2, cy: (my + y1) / 2, rx: x0, ry: my },
+  br: { cx: (mx + x1) / 2, cy: (my + y1) / 2, rx: mx, ry: my },
+} as const;
+
+const order = ['tl', 'tr', 'bl', 'br'] as const;
+---
+
+<figure class="quadrant" role="group" aria-label={caption ?? 'Quadrant diagram'}>
+  <svg viewBox="0 0 640 520" class="plot" xmlns="http://www.w3.org/2000/svg">
+    {caption && <desc>{caption}</desc>}
+
+    <!-- the goal cell, pigment-washed -->
+    <rect class={`cell-hl hl--${pigment}`} x={POS[highlight].rx} y={POS[highlight].ry} width={cw} height={ch} rx="3" />
+
+    <!-- frame + cross axes, hairline -->
+    <rect class="frame" x={x0} y={y0} width={x1 - x0} height={y1 - y0} rx="3" fill="none" />
+    <line class="axis" x1={mx} y1={y0} x2={mx} y2={y1} />
+    <line class="axis" x1={x0} y1={my} x2={x1} y2={my} />
+
+    <!-- cells -->
+    {order.map((pos) => {
+      const c = cells[pos];
+      const p = POS[pos];
+      const hasBoth = Boolean(c.score && c.lines && c.lines.length);
+      return (
+        <g class={`cell ${pos === highlight ? 'is-hl' : ''}`}>
+          {c.score && (
+            <text class={`cell-score ${pos === highlight ? `tint--${pigment}` : ''}`} x={p.cx} y={hasBoth ? p.cy - 10 : p.cy + 9} text-anchor="middle">{c.score}</text>
+          )}
+          {c.lines && c.lines.length > 0 && (
+            <text class="cell-label" x={p.cx} y={c.score ? p.cy + 20 : p.cy} text-anchor="middle">
+              {c.lines.map((l, k) => (
+                <tspan x={p.cx} dy={k === 0 ? -((c.lines!.length - 1) * 14) / 2 + 4.5 : 14}>{l}</tspan>
+              ))}
+            </text>
+          )}
+        </g>
+      );
+    })}
+
+    <!-- axis labels (the poles) -->
+    <text class="axis-label" x={mx} y={y0 - 18} text-anchor="middle">{yAxis[1]}</text>
+    <text class="axis-label" x={mx} y={y1 + 30} text-anchor="middle">{yAxis[0]}</text>
+    <text class="axis-label" x={x0 - 16} y={my} text-anchor="end" dominant-baseline="middle">{xAxis[0]}</text>
+    <text class="axis-label" x={x1 + 16} y={my} text-anchor="start" dominant-baseline="middle">{xAxis[1]}</text>
+  </svg>
+
+  {caption && <figcaption class="caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .quadrant {
+    /* Break out wider than the reading column (a figure, not body text). */
+    width: min(680px, 92vw);
+    margin: 3.25rem 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .plot { display: block; width: 100%; height: auto; overflow: visible; }
+
+  .cell-hl { opacity: 1; }
+  .hl--derived { fill: var(--derived-wash); }
+  .hl--established { fill: var(--established-wash); }
+  .hl--contested { fill: var(--contested-wash); }
+  .hl--open { fill: var(--open-wash); }
+
+  .frame, .axis { stroke: var(--hairline); stroke-width: 1; }
+
+  .cell-score {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 500;
+    fill: var(--text-muted);
+  }
+  .tint--derived { fill: var(--derived); }
+  .tint--established { fill: var(--established); }
+  .tint--contested { fill: var(--contested); }
+  .tint--open { fill: var(--open); }
+
+  .cell-label {
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    fill: var(--text-secondary);
+  }
+
+  .axis-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    fill: var(--text-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cell-hl, .frame, .axis, .cell { animation: q-fade 0.5s ease backwards; }
+    .cell-hl { animation-delay: 0.05s; }
+    .frame, .axis { animation-delay: 0.12s; }
+    .cell { animation-delay: 0.2s; }
+    @keyframes q-fade { from { opacity: 0; } to { opacity: 1; } }
+  }
+</style>
