@@ -7,7 +7,8 @@
  * tool for the job. The initial markup is server-rendered via set:html; the
  * script wires the interactions on the client. Every colour is a design token,
  * so it re-pigments with the site theme. Ported verbatim from the verified
- * prototype in prototypes/reasonable-eating-explorer.html.
+ * prototype in prototypes/reasonable-eating-explorer.html (hence @ts-nocheck:
+ * it is hand-written browser JS, not strict TypeScript).
  */
 const HTML = "<div class=\"ps-head\">\n  <p class=\"ps-cue\"><span class=\"ps-cue-arrow\" aria-hidden=\"true\">↑</span> Eat nearer the top — did it grow into its shape?</p>\n  <div class=\"ps-meter\" role=\"group\" aria-label=\"How natural is your plate\">\n    <div class=\"ps-meter-top\">\n      <span class=\"ps-meter-label\">How natural is your plate?</span>\n      <span class=\"ps-meter-val\" id=\"ps-meter-val\">—</span>\n    </div>\n    <div class=\"ps-meter-track\"><div class=\"ps-meter-fill\" id=\"ps-meter-fill\"></div></div>\n  </div>\n</div>\n\n<ol class=\"ps-ladder\" id=\"ps-ladder\"></ol>\n\n<div class=\"ps-tray-wrap\">\n  <p class=\"ps-tray-label\"><span>The tray — drag a food onto its rung</span><span class=\"ps-rule\" aria-hidden=\"true\"></span></p>\n  <div class=\"ps-tray\" id=\"ps-tray\" data-tier=\"tray\" role=\"list\" aria-label=\"Unsorted foods\"></div>\n</div>\n\n<div class=\"ps-foot\">\n  <p class=\"ps-msg\" id=\"ps-msg\" aria-live=\"polite\">Pick up a card and drop it on the rung where it belongs.</p>\n  <button type=\"button\" class=\"ps-reset\" id=\"ps-reset\">Reset</button>\n</div>";
 ---
@@ -325,6 +326,7 @@ const HTML = "<div class=\"ps-head\">\n  <p class=\"ps-cue\"><span class=\"ps-cu
 </style>
 
 <script>
+// @ts-nocheck
 (function(){
 const root = document.getElementById('p-scale');
 
