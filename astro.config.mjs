@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
+import svelte from '@astrojs/svelte';
 import { execSync } from 'child_process';
 
 // Build-number injection — copied from distinction-physics. Combines a UTC
@@ -20,6 +21,7 @@ const buildNumber = getBuildNumber();
 export default defineConfig({
   output: 'server',
   adapter: vercel(),
+  integrations: [svelte()],
   vite: {
     define: {
       '__BUILD_NUMBER__': JSON.stringify(buildNumber),
