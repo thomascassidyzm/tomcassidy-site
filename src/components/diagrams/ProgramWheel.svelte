@@ -267,16 +267,12 @@
     <button class="ctl-btn" type="button" onclick={() => step(-1)} aria-label="Previous">◀ Prev</button>
     <button class="ctl-btn" type="button" onclick={() => step(1)} aria-label="Next">Next ▶</button>
     <span class="ctl-readout">
-      {#if isSequential}
-        {#if selectedWeek == null}
-          {program.hub.algorithmName} · the keystone
-        {:else}
-          {selectedSlice?.domain} · {selectedWeek} of {maxNumeral}
-        {/if}
-      {:else if selectedWeek == null}
-        Algorithm Zero
+      {#if selectedWeek == null}
+        {hubKicker}
+      {:else if isSequential}
+        {selectedSlice?.domain} · {selectedWeek} of {maxNumeral}
       {:else}
-        Cycle {cycleNum} of {cycleCount} · Week {selectedWeek}/{layout.n} · {selectedSlice?.domain}
+        Cycle {cycleNum} of {cycleCount} · Week {selectedWeek}/{rotationOrder.length} · {selectedSlice?.domain}
       {/if}
     </span>
   </div>

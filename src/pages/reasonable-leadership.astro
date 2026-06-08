@@ -1,0 +1,161 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import { reasonableLeadership as program } from '@/lib/programs/reasonable-leadership';
+
+// A canonical Franklin 13×4 built from a text summary — 4 domains × 3 + a 13th
+// in-rotation review hub — entirely as one data file. Not linked in the nav.
+export const prerender = true;
+
+const pigClass: Record<string, string> = {
+  established: 'is-established',
+  derived: 'is-derived',
+  open: 'is-open',
+  contested: 'is-contested',
+};
+---
+
+<BaseLayout title="Reasonable Leadership — Tom Cassidy">
+  <article class="program">
+    <header class="prog-head">
+      <p class="eyebrow">Reason-Ability · an applied programme</p>
+      <h1 class="prog-title">{program.title}</h1>
+      <p class="prog-lede">{program.blurb}</p>
+    </header>
+
+    <ProgramWheel program={program} client:visible />
+
+    <section class="prose">
+      <p>
+        The worldview: each of us is an emergent property of Universe, and on a
+        finite planet, securing advantage for one group at the expense of others
+        is no longer viable. The work of leadership is to build systems where the
+        interests of all agents align with the well-being of all — most easily
+        <strong>at the level of design</strong>. People act for the good of all
+        most readily when it is <strong>better, simpler and cheaper</strong> to do
+        so: if you want people off fossil fuels, make solar better, simpler and
+        cheaper.
+      </p>
+      <p>
+        Thirteen focus points, one a week, cycling four domains — and a thirteenth
+        week to review the cycle and carry the learning forward. Tap a slice to
+        meet its focus; press <strong>Play</strong> to walk the thirteen.
+      </p>
+    </section>
+
+    {program.domains.map((domain) => (
+      <section class="domain" data-pig={domain.pigment}>
+        <div class="domain-head">
+          <h2 class={`domain-name ${pigClass[domain.pigment]}`}>{domain.name}</h2>
+          <p class="domain-q">{domain.question}</p>
+        </div>
+        <ol class="focuses">
+          {domain.focuses.map((f) => (
+            <li class="focus">
+              <span class={`focus-wk ${pigClass[domain.pigment]}`}>Week {f.week}</span>
+              <div class="focus-body">
+                <h3 class="focus-name">{f.name}</h3>
+                <p class="focus-wisdom">{f.coach.wisdom}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+
+    <!-- Week 13 — the review that closes the loop (the in-rotation hub). -->
+    <section class="domain review">
+      <div class="domain-head">
+        <h2 class="domain-name">{program.hub.algorithmName}</h2>
+        <p class="domain-q">{program.hub.kicker}</p>
+      </div>
+      <ol class="focuses">
+        <li class="focus">
+          <span class="focus-wk">Week {program.hub.numeral}</span>
+          <div class="focus-body">
+            <h3 class="focus-name">Close the cycle</h3>
+            <p class="focus-wisdom">{program.hub.coach.wisdom}</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <footer class="prog-foot">
+      <p>
+        Every word here is Tom's. The framework — a full Franklin 13×4 with a
+        thirteenth review week — was assembled from a plain text summary into this
+        interactive wheel, driven by one data file through the same
+        <code>ProgramWheel</code> that draws Reasonable Eating, the 9×4 and
+        Reasonable Success.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .program { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+  .prog-head { margin-bottom: 1rem; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+  }
+  .prog-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(2.4rem, 6.5vw, 3.6rem); font-weight: 420; letter-spacing: -0.02em;
+    color: var(--text-primary); margin: 0.4rem 0 0.6rem; line-height: 1;
+  }
+  .prog-lede {
+    font-family: var(--font-body); font-style: italic;
+    font-size: clamp(1.15rem, 2.2vw, 1.4rem); line-height: 1.45;
+    color: var(--text-secondary); max-width: 46ch;
+  }
+
+  .prose {
+    font-family: var(--font-body); font-size: 1.1rem; line-height: 1.7;
+    color: var(--text-secondary); max-width: 62ch; margin: 1rem auto;
+  }
+  .prose p + p { margin-top: 1rem; }
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  .domain { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .domain-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 3.6vw, 2rem); font-weight: 460; letter-spacing: 0.02em;
+    color: var(--text-primary);
+  }
+  .domain-q {
+    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+  .is-established { color: var(--established); }
+  .is-derived { color: var(--derived); }
+  .is-open { color: var(--open); }
+  .is-contested { color: var(--contested); }
+
+  .review { border-top-width: 2px; }
+
+  .focuses { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; }
+  .focus { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.5rem 1rem; align-items: start; }
+  @media (max-width: 520px) { .focus { grid-template-columns: 1fr; gap: 0.2rem; } }
+  .focus-wk {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em;
+    color: var(--text-muted); padding-top: 0.35rem; white-space: nowrap;
+  }
+  .focus-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.3rem; font-weight: 480; color: var(--text-primary); line-height: 1.15;
+  }
+  .focus-wisdom {
+    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6;
+    color: var(--text-secondary); margin-top: 0.3rem;
+  }
+
+  .prog-foot {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
+    font-family: var(--font-body); font-style: italic; font-size: 1.02rem;
+    line-height: 1.6; color: var(--text-muted); max-width: 62ch;
+  }
+  .prog-foot code { font-family: var(--font-mono); font-size: 0.82em; font-style: normal; }
+</style>
