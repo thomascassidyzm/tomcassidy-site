@@ -1,0 +1,600 @@
+---
+/**
+ * GrowIntoShape.astro — Did it grow into its shape? — interactive sorter (vanilla-script island).
+ *
+ * Self-contained imperative SVG/DOM viz, so it ships as a plain Astro <script>
+ * island (no framework runtime) rather than a Svelte component — the lightest
+ * tool for the job. The initial markup is server-rendered via set:html; the
+ * script wires the interactions on the client. Every colour is a design token,
+ * so it re-pigments with the site theme. Ported verbatim from the verified
+ * prototype in prototypes/reasonable-eating-explorer.html.
+ */
+const HTML = "<div class=\"ps-head\">\n  <p class=\"ps-cue\"><span class=\"ps-cue-arrow\" aria-hidden=\"true\">↑</span> Eat nearer the top — did it grow into its shape?</p>\n  <div class=\"ps-meter\" role=\"group\" aria-label=\"How natural is your plate\">\n    <div class=\"ps-meter-top\">\n      <span class=\"ps-meter-label\">How natural is your plate?</span>\n      <span class=\"ps-meter-val\" id=\"ps-meter-val\">—</span>\n    </div>\n    <div class=\"ps-meter-track\"><div class=\"ps-meter-fill\" id=\"ps-meter-fill\"></div></div>\n  </div>\n</div>\n\n<ol class=\"ps-ladder\" id=\"ps-ladder\"></ol>\n\n<div class=\"ps-tray-wrap\">\n  <p class=\"ps-tray-label\"><span>The tray — drag a food onto its rung</span><span class=\"ps-rule\" aria-hidden=\"true\"></span></p>\n  <div class=\"ps-tray\" id=\"ps-tray\" data-tier=\"tray\" role=\"list\" aria-label=\"Unsorted foods\"></div>\n</div>\n\n<div class=\"ps-foot\">\n  <p class=\"ps-msg\" id=\"ps-msg\" aria-live=\"polite\">Pick up a card and drop it on the rung where it belongs.</p>\n  <button type=\"button\" class=\"ps-reset\" id=\"ps-reset\">Reset</button>\n</div>";
+---
+
+<div class="re-island" id="p-scale" set:html={HTML}></div>
+
+<style is:global>
+#p-scale {
+  --ps-correct: var(--derived);
+  --ps-wrong: var(--contested);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  width: min(960px, 94vw);
+  margin: 3rem 0;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+#p-scale *, #p-scale *::before, #p-scale *::after { box-sizing: border-box; }
+
+#p-scale .ps-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+#p-scale .ps-cue {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+#p-scale .ps-cue-arrow { color: var(--derived); font-size: 0.95rem; line-height: 1; }
+
+/* live read-out */
+#p-scale .ps-meter { min-width: 230px; flex: 0 1 auto; }
+#p-scale .ps-meter-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+#p-scale .ps-meter-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+#p-scale .ps-meter-val {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.5s ease;
+}
+#p-scale .ps-meter-track {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--depth-2);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  position: relative;
+}
+#p-scale .ps-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--contested-chip), var(--derived-chip));
+  transition: width 0.55s cubic-bezier(.22,.61,.36,1);
+}
+
+/* the ladder */
+#p-scale .ps-ladder { display: flex; flex-direction: column; gap: 0.6rem; }
+#p-scale .ps-tier {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0 1rem;
+  align-items: stretch;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--hairline);
+  border-left-width: 3px;
+  border-radius: 9px;
+  background: var(--bg-elevated);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease, background 0.45s ease, transform 0.2s ease;
+}
+#p-scale .ps-tier--derived { border-left-color: var(--derived);
+  background: linear-gradient(90deg, var(--derived-wash), transparent 52%), var(--bg-elevated); }
+#p-scale .ps-tier--contested { border-left-color: var(--contested);
+  background: linear-gradient(90deg, var(--contested-wash), transparent 52%), var(--bg-elevated); }
+
+#p-scale .ps-tier-num {
+  grid-row: 1 / 3;
+  align-self: start;
+  width: 1.9rem; height: 1.9rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1.25px solid var(--hairline);
+  color: var(--text-muted);
+}
+#p-scale .ps-tier--derived .ps-tier-num { border-color: var(--derived); color: var(--derived); }
+#p-scale .ps-tier--contested .ps-tier-num { border-color: var(--contested); color: var(--contested); }
+
+#p-scale .ps-tier-head { grid-column: 2; }
+#p-scale .ps-tier-title {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin: 0;
+}
+#p-scale .ps-tier-sub {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0;
+}
+
+/* drop slot — where placed cards live */
+#p-scale .ps-slot {
+  grid-column: 2;
+  margin-top: 0.6rem;
+  min-height: 2.65rem;
+  border: 1px dashed var(--hairline);
+  border-radius: 7px;
+  padding: 0.32rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-content: flex-start;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+#p-scale .ps-slot::before {
+  content: attr(data-empty);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0.65;
+  align-self: center;
+  padding-left: 0.3rem;
+  pointer-events: none;
+}
+#p-scale .ps-slot:not(:empty)::before { display: none; }
+
+#p-scale .ps-tier.ps-over {
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 0 2px var(--depth-3);
+}
+#p-scale .ps-tier.ps-over .ps-slot { border-color: var(--text-secondary); background: var(--surface); }
+
+#p-scale .ps-tier.ps-flash-ok { box-shadow: 0 0 0 2px var(--derived-chip); }
+#p-scale .ps-tier.ps-flash-no { box-shadow: 0 0 0 2px var(--contested-chip); }
+
+/* the tray of unsorted foods */
+#p-scale .ps-tray-wrap { margin-top: 1.5rem; }
+#p-scale .ps-tray-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+#p-scale .ps-tray-label .ps-rule { flex: 1; height: 1px; background: var(--hairline); }
+#p-scale .ps-tray {
+  min-height: 3.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--depth-1);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+#p-scale .ps-tray.ps-over { border-color: var(--text-secondary); background: var(--surface); }
+#p-scale .ps-tray:empty::after {
+  content: 'All sorted.';
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: auto;
+}
+
+/* food cards */
+#p-scale .ps-card {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 99px;
+  padding: 0.36rem 0.85rem 0.36rem 0.78rem;
+  cursor: grab;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.16s ease, background 0.3s ease;
+  touch-action: none;
+}
+#p-scale .ps-card:hover { border-color: var(--text-muted); transform: translateY(-1px); }
+#p-scale .ps-card:focus-visible { outline: 2px solid var(--established); outline-offset: 2px; }
+#p-scale .ps-card.ps-grabbing { cursor: grabbing; opacity: 0.4; }
+#p-scale .ps-card.ps-selected {
+  border-color: var(--established);
+  box-shadow: 0 0 0 2px var(--established-wash);
+}
+#p-scale .ps-card-dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: var(--text-muted);
+  flex: none;
+  transition: background 0.3s ease;
+}
+#p-scale .ps-card.ps-placed { padding-left: 0.85rem; }
+#p-scale .ps-card.ps-correct { border-color: var(--derived); background: linear-gradient(0deg, var(--derived-wash), var(--surface)); }
+#p-scale .ps-card.ps-correct .ps-card-dot { background: var(--derived); }
+#p-scale .ps-card.ps-misplaced { border-color: var(--contested); background: linear-gradient(0deg, var(--contested-wash), var(--surface)); }
+#p-scale .ps-card.ps-misplaced .ps-card-dot { background: var(--contested); }
+#p-scale .ps-card-mark {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1;
+  font-weight: 600;
+}
+#p-scale .ps-card.ps-correct .ps-card-mark { color: var(--derived); }
+#p-scale .ps-card.ps-misplaced .ps-card-mark { color: var(--contested); }
+
+/* the floating clone while dragging */
+#p-scale .ps-drag-ghost {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.45);
+  transform: translate(-50%, -50%) scale(1.04);
+  opacity: 0.97;
+}
+
+/* footer line: nudge messages + reset */
+#p-scale .ps-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  min-height: 1.6rem;
+}
+#p-scale .ps-msg {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.93rem;
+  color: var(--text-secondary);
+  margin: 0;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+#p-scale .ps-msg.ps-msg-ok { color: var(--derived); font-style: normal; }
+#p-scale .ps-msg.ps-msg-no { color: var(--contested); }
+#p-scale .ps-reset {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: 99px;
+  padding: 0.32rem 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  flex: none;
+}
+#p-scale .ps-reset:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+#p-scale .ps-tier, #p-scale .ps-tray-wrap, #p-scale .ps-head { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  #p-scale .ps-head { animation: ps-rise 0.5s ease both; }
+  #p-scale .ps-tier { animation: ps-rise 0.55s ease both; animation-delay: calc(var(--i) * 80ms + 90ms); }
+  #p-scale .ps-tray-wrap { animation: ps-rise 0.55s ease both; animation-delay: 0.46s; }
+  #p-scale .ps-card.ps-just-placed { animation: ps-pop 0.34s cubic-bezier(.34,1.56,.64,1) both; }
+  #p-scale .ps-tier.ps-nudge { animation: ps-shake 0.4s ease both; }
+  @keyframes ps-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes ps-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  @keyframes ps-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+}
+
+@media (max-width: 560px) {
+  #p-scale .ps-tier { grid-template-columns: 2.1rem 1fr; padding: 0.7rem 0.7rem; }
+  #p-scale .ps-meter { min-width: 100%; }
+}
+</style>
+
+<script>
+(function(){
+const root = document.getElementById('p-scale');
+
+const TIERS = [
+  { n: 1, pigment: 'derived', title: 'Unchanged from its natural state', sub: 'Most natural · best' },
+  { n: 2, pigment: 'derived', title: 'Rearranged, chemically identical', sub: 'Still whole' },
+  { n: 3, pigment: 'contested', title: 'Changed, but structurally intact', sub: 'Cooked · dried · roasted' },
+  { n: 4, pigment: 'contested', title: 'Changed beyond all relation', sub: 'Has an ingredients list · worst' },
+];
+
+// food -> correct tier (per the ladder examples)
+const FOODS = [
+  { id: 'apple',   label: 'Apple',          tier: 1 },
+  { id: 'milk',    label: 'Fresh milk',     tier: 1 },
+  { id: 'slaw',    label: 'Coleslaw',       tier: 2 },
+  { id: 'chicken', label: 'Grilled chicken',tier: 3 },
+  { id: 'nuts',    label: 'Roasted nuts',   tier: 3 },
+  { id: 'bread',   label: 'White bread',    tier: 4 },
+  { id: 'cola',    label: 'Cola',           tier: 4 },
+  { id: 'cake',    label: 'Cake',           tier: 4 },
+];
+
+// naturalness score per tier (1=best ... 4=worst) -> 0..100
+const TIER_SCORE = { 1: 100, 2: 78, 3: 48, 4: 12 };
+
+const ladder = root.querySelector('#ps-ladder');
+const tray = root.querySelector('#ps-tray');
+const msgEl = root.querySelector('#ps-msg');
+const meterVal = root.querySelector('#ps-meter-val');
+const meterFill = root.querySelector('#ps-meter-fill');
+const resetBtn = root.querySelector('#ps-reset');
+
+// state: cardId -> placed tier (number) or null (in tray)
+const placed = Object.create(null);
+FOODS.forEach(f => { placed[f.id] = null; });
+
+let selectedId = null;        // for click-to-place fallback
+let dragId = null;            // pointer-drag in flight
+let ghost = null;
+let pointerMoved = false;
+
+const NUDGES = {
+  up:   ['Nearer the top — this is more natural than that.', 'Closer to natural than you placed it.', 'This grew more into its shape — move it up.'],
+  down: ['Lower down — this has been changed more than that.', 'It is further from natural — nudge it down.', 'More processed than that rung — move it down.'],
+};
+const PRAISE = ['Right rung.', 'Exactly.', 'That is its shape.', 'Spot on.', 'Yes — that belongs there.'];
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+// ---- build the ladder ----
+TIERS.forEach((t, i) => {
+  const li = document.createElement('li');
+  li.className = `ps-tier ps-tier--${t.pigment}`;
+  li.style.setProperty('--i', i);
+  li.dataset.tier = String(t.n);
+  li.innerHTML =
+    `<span class="ps-tier-num" aria-hidden="true">${t.n}</span>` +
+    `<div class="ps-tier-head"><p class="ps-tier-title">${t.title}</p>` +
+    `<p class="ps-tier-sub">${t.sub}</p></div>` +
+    `<div class="ps-slot" data-empty="drop here" data-tier="${t.n}" role="list" aria-label="Tier ${t.n}: ${t.title}"></div>`;
+  ladder.appendChild(li);
+});
+
+const slotFor = tier => tier === 'tray' ? tray : root.querySelector(`.ps-slot[data-tier="${tier}"]`);
+const tierOfEl = el => { const c = el.closest('[data-tier]'); return c ? c.dataset.tier : null; };
+
+// ---- card creation ----
+function makeCard(food) {
+  const el = document.createElement('div');
+  el.className = 'ps-card';
+  el.dataset.id = food.id;
+  el.tabIndex = 0;
+  el.setAttribute('role', 'listitem');
+  el.setAttribute('aria-label', food.label);
+  el.innerHTML = `<span class="ps-card-dot" aria-hidden="true"></span><span class="ps-card-txt">${food.label}</span><span class="ps-card-mark" aria-hidden="true"></span>`;
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('click', onCardClick);
+  el.addEventListener('keydown', onCardKey);
+  return el;
+}
+
+const cards = Object.create(null);
+FOODS.forEach(f => { cards[f.id] = makeCard(f); });
+
+// ---- place / evaluate ----
+function evaluate(id) {
+  const food = FOODS.find(f => f.id === id);
+  const where = placed[id];
+  const el = cards[id];
+  el.classList.remove('ps-correct', 'ps-misplaced');
+  const mark = el.querySelector('.ps-card-mark');
+  if (where == null) { mark.textContent = ''; el.classList.remove('ps-placed'); return; }
+  el.classList.add('ps-placed');
+  if (where === food.tier) { el.classList.add('ps-correct'); mark.textContent = '✓'; }
+  else { el.classList.add('ps-misplaced'); mark.textContent = '·'; }
+}
+
+function moveCard(id, destTier, opts) {
+  opts = opts || {};
+  const food = FOODS.find(f => f.id === id);
+  const el = cards[id];
+  const target = slotFor(destTier);
+  placed[id] = destTier === 'tray' ? null : Number(destTier);
+  target.appendChild(el);
+  evaluate(id);
+  if (opts.animate) {
+    el.classList.remove('ps-just-placed'); void el.offsetWidth; el.classList.add('ps-just-placed');
+  }
+  // feedback
+  if (destTier !== 'tray') {
+    const tier = Number(destTier);
+    const tierEl = root.querySelector(`.ps-tier[data-tier="${destTier}"]`);
+    if (tier === food.tier) {
+      flashTier(tierEl, 'ok');
+      setMsg(pick(PRAISE), 'ok');
+    } else {
+      flashTier(tierEl, 'no');
+      nudge(tierEl);
+      setMsg(pick(tier > food.tier ? NUDGES.up : NUDGES.down), 'no');
+    }
+  } else {
+    setMsg('Back in the tray — try another rung.', null);
+  }
+  updateMeter();
+}
+
+function flashTier(el, kind) {
+  if (!el) return;
+  const cls = kind === 'ok' ? 'ps-flash-ok' : 'ps-flash-no';
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 620);
+}
+function nudge(el) {
+  if (!el) return;
+  el.classList.remove('ps-nudge'); void el.offsetWidth; el.classList.add('ps-nudge');
+  setTimeout(() => el.classList.remove('ps-nudge'), 460);
+}
+function setMsg(text, kind) {
+  msgEl.textContent = text;
+  msgEl.classList.remove('ps-msg-ok', 'ps-msg-no');
+  if (kind === 'ok') msgEl.classList.add('ps-msg-ok');
+  else if (kind === 'no') msgEl.classList.add('ps-msg-no');
+}
+
+// ---- live read-out ----
+function updateMeter() {
+  const ids = FOODS.map(f => f.id).filter(id => placed[id] != null);
+  if (ids.length === 0) {
+    meterVal.textContent = '—';
+    meterFill.style.width = '0%';
+    return;
+  }
+  let sum = 0;
+  ids.forEach(id => { sum += TIER_SCORE[placed[id]]; });
+  const avg = Math.round(sum / ids.length);
+  meterVal.textContent = avg + '%';
+  meterFill.style.width = avg + '%';
+  // colour the number along green<-amber by score
+  meterVal.style.color = avg >= 66 ? 'var(--derived)' : avg >= 40 ? 'var(--text-secondary)' : 'var(--contested)';
+}
+
+// ---- click-to-place fallback ----
+function clearSelection() {
+  if (selectedId && cards[selectedId]) cards[selectedId].classList.remove('ps-selected');
+  selectedId = null;
+}
+function onCardClick(e) {
+  if (pointerMoved) { pointerMoved = false; return; } // was a drag, ignore the synthetic click
+  const id = e.currentTarget.dataset.id;
+  if (selectedId === id) { clearSelection(); setMsg('Cancelled.', null); return; }
+  clearSelection();
+  selectedId = id;
+  cards[id].classList.add('ps-selected');
+  setMsg('Now tap the rung where it belongs.', null);
+}
+function onCardKey(e) {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick({ currentTarget: e.currentTarget }); }
+}
+
+// clicking a tier (or tray) drops the selected card there
+function onZoneClick(e) {
+  if (!selectedId) return;
+  const zone = e.currentTarget;
+  const tier = zone.dataset.tier;
+  const id = selectedId;
+  clearSelection();
+  moveCard(id, tier, { animate: true });
+}
+
+// ---- pointer drag ----
+function onPointerDown(e) {
+  if (e.button != null && e.button !== 0) return;
+  const el = e.currentTarget;
+  dragId = el.dataset.id;
+  pointerMoved = false;
+  const startX = e.clientX, startY = e.clientY;
+  el.setPointerCapture && el.setPointerCapture(e.pointerId);
+
+  function makeGhost() {
+    ghost = el.cloneNode(true);
+    ghost.classList.add('ps-drag-ghost');
+    ghost.style.width = el.offsetWidth + 'px';
+    document.body.appendChild(ghost);
+    el.classList.add('ps-grabbing');
+  }
+  function positionGhost(x, y) { if (ghost) { ghost.style.left = x + 'px'; ghost.style.top = y + 'px'; } }
+  function highlightUnder(x, y) {
+    clearOver();
+    const under = document.elementFromPoint(x, y);
+    const zone = under && under.closest('.ps-tier, .ps-tray');
+    if (zone && root.contains(zone)) zone.classList.add('ps-over');
+    return zone;
+  }
+  let activeZone = null;
+
+  function onMove(ev) {
+    const x = ev.clientX, y = ev.clientY;
+    if (!pointerMoved && Math.hypot(x - startX, y - startY) > 5) { pointerMoved = true; makeGhost(); clearSelection(); }
+    if (!pointerMoved) return;
+    positionGhost(x, y);
+    activeZone = highlightUnder(x, y);
+    ev.preventDefault();
+  }
+  function onUp(ev) {
+    el.releasePointerCapture && el.releasePointerCapture(ev.pointerId);
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    el.classList.remove('ps-grabbing');
+    if (ghost) { ghost.remove(); ghost = null; }
+    clearOver();
+    if (pointerMoved && activeZone) {
+      const tier = activeZone.dataset.tier;
+      moveCard(dragId, tier, { animate: true });
+    }
+    dragId = null;
+  }
+  window.addEventListener('pointermove', onMove, { passive: false });
+  window.addEventListener('pointerup', onUp);
+}
+function clearOver() {
+  root.querySelectorAll('.ps-over').forEach(z => z.classList.remove('ps-over'));
+}
+
+// wire zones for click-to-place
+root.querySelectorAll('.ps-slot, .ps-tray').forEach(z => z.addEventListener('click', onZoneClick));
+// clicking the whole tier row (not just slot) also drops, for a big target
+root.querySelectorAll('.ps-tier').forEach(row => {
+  row.addEventListener('click', e => {
+    if (e.target.closest('.ps-card')) return;
+    if (e.target.closest('.ps-slot')) return; // slot handles its own
+    if (!selectedId) return;
+    onZoneClick({ currentTarget: row });
+  });
+});
+
+// ---- reset / initial fill ----
+function fillTray() {
+  // randomise tray order so it isn't pre-sorted
+  const order = FOODS.slice().sort(() => Math.random() - 0.5);
+  order.forEach(f => { placed[f.id] = null; tray.appendChild(cards[f.id]); evaluate(f.id); });
+}
+function reset() {
+  clearSelection();
+  fillTray();
+  setMsg('Pick up a card and drop it on the rung where it belongs.', null);
+  updateMeter();
+}
+resetBtn.addEventListener('click', reset);
+
+fillTray();
+updateMeter();
+setMsg('Pick up a card and drop it on the rung where it belongs.', null);
+})();
+</script>

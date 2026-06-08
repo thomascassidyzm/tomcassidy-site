@@ -1,0 +1,187 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import GrowIntoShape from '@/components/diagrams/GrowIntoShape.astro';
+import NerdQuadrant from '@/components/diagrams/NerdQuadrant.astro';
+import HungerMeter from '@/components/diagrams/HungerMeter.astro';
+import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
+
+// The applied flagship as a real programme experience: the wheel as navigator,
+// then a handful of its algorithms made into instruments you can drive. Static
+// for now (prerender), not yet linked in the nav — the artifact that tests how
+// far this wants to become its own webapp.
+export const prerender = true;
+
+// Pull focus points out of the program data so headings + wisdom are DRIVEN by
+// the one source of truth, never re-typed.
+const allFocus = program.domains.flatMap((d) =>
+  d.focuses.map((f) => ({ ...f, domain: d.name, question: d.question, pigment: d.pigment })),
+);
+const byWeek = (w: number) => allFocus.find((f) => f.week === w)!;
+
+const cycles = program.cycles;
+const domainCount = program.domains.length;
+const weeks = cycles * domainCount;
+---
+
+<BaseLayout title="Reasonable Eating — Tom Cassidy">
+  <article class="program">
+    <header class="prog-head">
+      <p class="eyebrow">Reason-Ability · an applied programme</p>
+      <h1 class="prog-title">{program.title}</h1>
+      <p class="prog-lede">{program.blurb}</p>
+    </header>
+
+    <!-- The wheel: diagram, navigator and coach in one. -->
+    <ProgramWheel program={program} client:visible />
+
+    <section class="prose">
+      <p>
+        Thirteen reasonable algorithms — one always-on focus at the centre
+        (<strong>{program.hub.algorithmName}</strong>) and twelve that you take
+        <em>one&nbsp;at&nbsp;a&nbsp;time</em>, a week each, cycling the four
+        domains. {weeks} weeks to a lap, four laps to the year. No willpower
+        marathon; just this week's one thing, done reasonably, until it's simply
+        how you eat. Tap any slice above to meet its algorithm; press
+        <strong>Play</strong> to watch the focus walk the weeks.
+      </p>
+    </section>
+
+    <!-- WHAT you eat — two instruments -->
+    <section class="domain" data-pig="established">
+      <p class="domain-kicker">What you eat</p>
+
+      <div class="algo">
+        <h2 class="algo-title"><span class="wk">Week {byWeek(4).week}</span> {byWeek(4).name}</h2>
+        <p class="algo-wisdom">{byWeek(4).coach.wisdom}</p>
+      </div>
+      <GrowIntoShape />
+
+      <div class="algo">
+        <h2 class="algo-title"><span class="wk">Week {byWeek(8).week}</span> {byWeek(8).name}</h2>
+        <p class="algo-wisdom">{byWeek(8).coach.wisdom}</p>
+      </div>
+      <NerdQuadrant />
+    </section>
+
+    <!-- WHEN you eat — one instrument -->
+    <section class="domain" data-pig="contested">
+      <p class="domain-kicker">When you eat</p>
+
+      <div class="algo">
+        <h2 class="algo-title"><span class="wk">Week {byWeek(6).week}</span> {byWeek(6).name}</h2>
+        <p class="algo-wisdom">{byWeek(6).coach.wisdom}</p>
+      </div>
+      <HungerMeter />
+    </section>
+
+    <footer class="prog-foot">
+      <p>
+        That's three of the thirteen made interactive. The other ten — and the
+        “coach in your pocket” that nudges you to this week's focus — are the
+        same wheel, the same data, read different ways.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .program {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  .prog-head { margin-bottom: 1rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+  }
+  .prog-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 7vw, 4rem);
+    font-weight: 420;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0.4rem 0 0.6rem;
+    line-height: 1;
+  }
+  .prog-lede {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+    line-height: 1.45;
+    color: var(--text-secondary);
+    max-width: 40ch;
+  }
+
+  .prose {
+    font-family: var(--font-body);
+    font-size: 1.12rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    max-width: 62ch;
+    margin: 1rem auto 1rem;
+  }
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  .domain {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .domain-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.5rem;
+  }
+  .domain[data-pig='established'] .domain-kicker { color: var(--established); }
+  .domain[data-pig='contested'] .domain-kicker { color: var(--contested); }
+  .domain[data-pig='open'] .domain-kicker { color: var(--open); }
+  .domain[data-pig='derived'] .domain-kicker { color: var(--derived); }
+
+  .algo { max-width: 62ch; margin: 2.5rem auto 0; }
+  .algo-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 3.2vw, 2rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    line-height: 1.15;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .algo-title .wk {
+    font-family: var(--font-mono);
+    font-size: 0.62em;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .algo-wisdom {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-top: 0.6rem;
+  }
+
+  .prog-foot {
+    margin-top: 4.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 62ch;
+  }
+</style>

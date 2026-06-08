@@ -1,0 +1,566 @@
+---
+/**
+ * HungerMeter.astro — Hunger >> Appetite — the meter you drive (vanilla-script island).
+ *
+ * Self-contained imperative SVG/DOM viz, so it ships as a plain Astro <script>
+ * island (no framework runtime) rather than a Svelte component — the lightest
+ * tool for the job. The initial markup is server-rendered via set:html; the
+ * script wires the interactions on the client. Every colour is a design token,
+ * so it re-pigments with the site theme. Ported verbatim from the verified
+ * prototype in prototypes/reasonable-eating-explorer.html.
+ */
+const HTML = "\n<div class=\"ph-head\">\n  <span class=\"ph-kicker\">Hunger &gt;&gt; Appetite</span>\n  <span class=\"ph-week\">Reasonable Eating · wk 02 / 06 · when</span>\n</div>\n\n<svg class=\"ph-plot\" viewBox=\"0 0 860 360\" role=\"group\" aria-label=\"A meter from Starving to Stuffed. Drag along it: the body's hunger falls away early while appetite lingers, and a lit band marks the one reasonable place to stop.\">\n  <desc>Hunger falls to nothing soon after you start eating; appetite stays high much longer. The lit green band — &ldquo;no longer hungry&rdquo; — is where hunger is met but appetite is still talking. Stop there.</desc>\n\n  <!-- floor + frame -->\n  <line class=\"ph-floor ph-anim\" style=\"--d:120\" x1=\"70\" y1=\"252\" x2=\"790\" y2=\"252\"></line>\n\n  <!-- sweet-spot band -->\n  <g id=\"ph-bandg\">\n    <rect class=\"ph-band ph-anim\" style=\"--d:240\" x=\"0\" y=\"64\" width=\"10\" height=\"188\" rx=\"2\"></rect>\n    <text class=\"ph-band-cap ph-anim\" style=\"--d:300\" x=\"0\" y=\"56\" text-anchor=\"middle\">stop here</text>\n  </g>\n\n  <!-- the appetite-beyond-hunger gap fill -->\n  <path id=\"ph-gap\" class=\"ph-gap ph-gap--ok ph-anim\" style=\"--d:560\" d=\"\"></path>\n\n  <!-- the two curves -->\n  <path id=\"ph-hunger\"   class=\"ph-curve ph-curve--hunger ph-draw\"   style=\"--d:420;--len:900\" d=\"\"></path>\n  <path id=\"ph-appetite\" class=\"ph-curve ph-curve--appetite ph-draw\" style=\"--d:520;--len:900\" d=\"\"></path>\n\n  <!-- curve tags -->\n  <text class=\"ph-curve-tag ph-curve-tag--appetite ph-anim\" style=\"--d:760\" x=\"86\" y=\"96\" id=\"ph-tag-app\">appetite</text>\n  <text class=\"ph-curve-tag ph-curve-tag--hunger ph-anim\"   style=\"--d:760\" x=\"86\" y=\"240\" id=\"ph-tag-hun\">hunger</text>\n\n  <!-- moving readout: line + thumb (focusable track group) -->\n  <g class=\"ph-track z-ok\" id=\"ph-track\" tabindex=\"0\" role=\"slider\"\n     aria-label=\"Fullness\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"30\"\n     aria-valuetext=\"No longer hungry\">\n    <rect class=\"ph-focus-ring\" x=\"62\" y=\"50\" width=\"736\" height=\"240\" rx=\"6\"></rect>\n    <line class=\"ph-now ph-anim\" style=\"--d:640\" id=\"ph-now\" x1=\"0\" y1=\"58\" x2=\"0\" y2=\"252\"></line>\n    <circle class=\"ph-thumb ph-anim\" style=\"--d:640\" id=\"ph-thumb\" cx=\"0\" cy=\"252\" r=\"13\"></circle>\n    <text class=\"ph-thumb-core ph-anim\" style=\"--d:640\" id=\"ph-thumb-core\" x=\"0\" y=\"256.5\">●</text>\n    <rect class=\"ph-thumb-hit\" id=\"ph-hit\" x=\"60\" y=\"44\" width=\"740\" height=\"252\"></rect>\n  </g>\n\n  <!-- ticks for the five stops (positions + labels injected) -->\n  <g id=\"ph-ticks\"></g>\n\n  <text class=\"ph-axis-name ph-anim\" style=\"--d:840\" x=\"70\" y=\"320\" text-anchor=\"start\">← less eaten</text>\n  <text class=\"ph-axis-name ph-anim\" style=\"--d:840\" x=\"790\" y=\"320\" text-anchor=\"end\">more eaten →</text>\n</svg>\n\n<div class=\"ph-msg z-ok\" id=\"ph-msg\">\n  <span class=\"ph-verdict\" id=\"ph-verdict\">the reasonable stop</span>\n  <p class=\"ph-say\" id=\"ph-say\"></p>\n  <p class=\"ph-sub\" id=\"ph-sub\"></p>\n  <button class=\"ph-reset\" id=\"ph-reset\" type=\"button\">↺ back to the sweet&nbsp;spot</button>\n</div>\n";
+---
+
+<div class="re-island" id="p-hunger" set:html={HTML}></div>
+
+<style is:global>
+
+#p-hunger {
+  --pad-l: 70;
+  --pad-r: 70;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  width: min(880px, 95vw);
+  margin: 2.5rem 0;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- header line ---- */
+#p-hunger .ph-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0.25rem 0.6rem;
+  flex-wrap: wrap;
+}
+#p-hunger .ph-kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--contested);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+}
+#p-hunger .ph-kicker::before {
+  content: "";
+  width: 1.6em;
+  height: 1px;
+  background: var(--contested);
+  display: inline-block;
+}
+#p-hunger .ph-week {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+/* ---- the plot ---- */
+#p-hunger .ph-plot { display: block; width: 100%; height: auto; overflow: visible; }
+
+#p-hunger .ph-frame { fill: none; stroke: var(--hairline); stroke-width: 1; }
+#p-hunger .ph-grid  { stroke: var(--hairline); stroke-width: 1; opacity: 0.55; }
+#p-hunger .ph-floor { stroke: var(--hairline); stroke-width: 1; }
+
+/* sweet-spot band — the emotional centre */
+#p-hunger .ph-band {
+  fill: var(--derived-wash);
+  stroke: var(--derived);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.35;
+  transition: opacity 0.35s ease, fill 0.35s ease;
+}
+#p-hunger .ph-band.is-live { opacity: 1; stroke-dasharray: none; }
+#p-hunger .ph-band-cap {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--derived);
+  opacity: 0.7;
+  transition: opacity 0.35s ease;
+}
+#p-hunger .ph-band-cap.is-live { opacity: 1; }
+
+/* curves */
+#p-hunger .ph-curve { fill: none; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+#p-hunger .ph-curve--hunger   { stroke: var(--established); }
+#p-hunger .ph-curve--appetite { stroke: var(--contested); }
+
+/* the GAP fill — appetite beyond hunger, the part that is "appetite talking" */
+#p-hunger .ph-gap { transition: fill 0.45s ease; }
+#p-hunger .ph-gap--ok   { fill: var(--derived-wash); }
+#p-hunger .ph-gap--over { fill: var(--contested-wash); }
+#p-hunger .ph-gap--far  { fill: var(--open-wash); }
+
+#p-hunger .ph-curve-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+#p-hunger .ph-curve-tag--hunger   { fill: var(--established); }
+#p-hunger .ph-curve-tag--appetite { fill: var(--contested); }
+
+/* the moving readout line + thumb */
+#p-hunger .ph-now {
+  stroke: var(--text-primary);
+  stroke-width: 1.25;
+  opacity: 0.55;
+}
+#p-hunger .ph-thumb-hit { fill: transparent; cursor: grab; }
+#p-hunger .ph-track.is-drag .ph-thumb-hit { cursor: grabbing; }
+#p-hunger .ph-thumb {
+  fill: var(--bg-elevated);
+  stroke-width: 2;
+  transition: stroke 0.35s ease;
+}
+#p-hunger .ph-thumb-core {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-anchor: middle;
+  transition: fill 0.35s ease;
+}
+#p-hunger .z-ok   .ph-thumb { stroke: var(--derived); }
+#p-hunger .z-ok   .ph-thumb-core { fill: var(--derived); }
+#p-hunger .z-over .ph-thumb { stroke: var(--contested); }
+#p-hunger .z-over .ph-thumb-core { fill: var(--contested); }
+#p-hunger .z-far  .ph-thumb { stroke: var(--open); }
+#p-hunger .z-far  .ph-thumb-core { fill: var(--open); }
+
+#p-hunger .ph-track:focus { outline: none; }
+#p-hunger .ph-track:focus-visible .ph-thumb {
+  stroke-width: 2.5;
+}
+#p-hunger .ph-focus-ring {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+#p-hunger .ph-track:focus-visible .ph-focus-ring { opacity: 0.8; }
+
+/* axis tick labels (the five stops) */
+#p-hunger .ph-tick { stroke: var(--hairline); stroke-width: 1; }
+#p-hunger .ph-tick-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+  transition: fill 0.3s ease, font-weight 0.3s ease;
+}
+#p-hunger .ph-tick-label.is-here { fill: var(--text-primary); }
+#p-hunger .ph-axis-name {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+}
+
+/* ---- message panel ---- */
+#p-hunger .ph-msg {
+  margin: 1.15rem 0.25rem 0;
+  border-top: 1px solid var(--hairline);
+  padding-top: 0.95rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 1rem;
+  align-items: start;
+}
+#p-hunger .ph-verdict {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0.32em 0.7em;
+  border-radius: 2px;
+  transition: background 0.35s ease, color 0.35s ease;
+  align-self: start;
+}
+#p-hunger .z-ok   .ph-verdict { background: var(--derived-chip);   color: var(--bg); }
+#p-hunger .z-over .ph-verdict { background: var(--contested-chip); color: var(--bg); }
+#p-hunger .z-far  .ph-verdict { background: var(--open-chip);      color: var(--bg); }
+
+#p-hunger .ph-say {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.15rem, 1rem + 0.9vw, 1.7rem);
+  line-height: 1.22;
+  font-weight: 420;
+  color: var(--text-primary);
+  margin: 0.05em 0 0;
+  min-height: 2.4em;
+}
+#p-hunger .ph-say em {
+  font-style: italic;
+  transition: color 0.35s ease;
+}
+#p-hunger .z-ok   .ph-say em { color: var(--derived); }
+#p-hunger .z-over .ph-say em { color: var(--contested); }
+#p-hunger .z-far  .ph-say em { color: var(--open); }
+
+#p-hunger .ph-sub {
+  grid-column: 2;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
+  max-width: 46ch;
+}
+
+#p-hunger .ph-reset {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  padding: 0.45em 0.85em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+#p-hunger .ph-reset:hover { color: var(--derived); border-color: var(--derived); }
+
+/* quiet entrance, then stillness */
+@media (prefers-reduced-motion: no-preference) {
+  #p-hunger .ph-anim {
+    opacity: 0;
+    animation: ph-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--d, 0) * 1ms);
+  }
+  #p-hunger .ph-draw {
+    stroke-dasharray: var(--len, 1200);
+    stroke-dashoffset: var(--len, 1200);
+    animation: ph-draw 0.95s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+    animation-delay: calc(var(--d, 0) * 1ms);
+  }
+  @keyframes ph-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes ph-draw { to { stroke-dashoffset: 0; } }
+}
+
+</style>
+
+<script>
+(function(){
+
+const root = document.getElementById('p-hunger');
+if (!root) return;
+
+const $ = (id) => root.querySelector('#' + id);
+
+// ---- geometry (matches the viewBox 860 x 360) ----
+const X0 = 70, X1 = 790;            // plot left / right
+const Y_TOP = 64, Y_FLOOR = 252;    // curve top (value 1) / floor (value 0)
+const W = X1 - X0, H = Y_FLOOR - Y_TOP;
+
+const toX = (v) => X0 + v * W;                  // v in [0,1] -> px
+const toY = (n) => Y_FLOOR - n * H;             // n in [0,1] -> px (1 = top)
+const fromX = (px) => Math.max(0, Math.min(1, (px - X0) / W));
+
+// ---- the two model curves ----
+const SWEET = 0.30;                              // hunger reaches floor here
+// remaining bodily NEED: high -> 0 by the sweet spot
+const hunger = (v) => {
+  const t = Math.min(v / SWEET, 1);
+  return Math.pow(1 - t, 2);                     // 1 at 0, 0 at SWEET, stays 0 after
+};
+// desire to keep eating: lingers high, only collapses near full
+const appetite = (v) => Math.pow(1 - v, 0.6);    // 1 at 0, ~0.81 at SWEET, 0 at 1
+
+// ---- the five stops ----
+const STOPS = [
+  { v: 0.00, label: 'Starving' },
+  { v: 0.30, label: 'No longer hungry' },
+  { v: 0.52, label: 'Comfortable' },
+  { v: 0.78, label: 'Full' },
+  { v: 1.00, label: 'Stuffed' },
+];
+
+// ---- sample curves into smooth paths ----
+const N = 64;
+const sample = (fn) => {
+  const pts = [];
+  for (let i = 0; i <= N; i++) {
+    const v = i / N;
+    pts.push([toX(v), toY(fn(v))]);
+  }
+  return pts;
+};
+const smoothPath = (pts) => {
+  let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    const mx = (x0 + x1) / 2;
+    d += ` Q${x0.toFixed(2)},${y0.toFixed(2)} ${mx.toFixed(2)},${((y0 + y1) / 2).toFixed(2)}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L${last[0].toFixed(2)},${last[1].toFixed(2)}`;
+  return d;
+};
+
+const hPts = sample(hunger);
+const aPts = sample(appetite);
+const hPath = $('ph-hunger');
+const aPath = $('ph-appetite');
+hPath.setAttribute('d', smoothPath(hPts));
+aPath.setAttribute('d', smoothPath(aPts));
+
+// give the entrance-draw the right dash length
+try {
+  hPath.style.setProperty('--len', Math.ceil(hPath.getTotalLength()) + '');
+  aPath.style.setProperty('--len', Math.ceil(aPath.getTotalLength()) + '');
+} catch (e) { /* getTotalLength may be unavailable; harmless */ }
+
+// ---- sweet-spot band (around the "no longer hungry" stop) ----
+const BAND_LO = 0.18, BAND_HI = 0.42;
+const bandX = toX(BAND_LO), bandW = toX(BAND_HI) - toX(BAND_LO);
+const bandRect = root.querySelector('.ph-band');
+const bandCap = root.querySelector('.ph-band-cap');
+bandRect.setAttribute('x', bandX.toFixed(1));
+bandRect.setAttribute('width', bandW.toFixed(1));
+bandCap.setAttribute('x', (bandX + bandW / 2).toFixed(1));
+
+// ---- ticks ----
+const ticksG = $('ph-ticks');
+const tickEls = STOPS.map((s) => {
+  const x = toX(s.v);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('class', 'ph-tick ph-anim');
+  line.style.setProperty('--d', '880');
+  line.setAttribute('x1', x); line.setAttribute('x2', x);
+  line.setAttribute('y1', Y_FLOOR); line.setAttribute('y2', Y_FLOOR + 7);
+  ticksG.appendChild(line);
+
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('class', 'ph-tick-label ph-anim');
+  t.style.setProperty('--d', '880');
+  // first label anchors start, last anchors end, others middle — keep them inside the frame
+  const anchor = s.v === 0 ? 'start' : s.v === 1 ? 'end' : 'middle';
+  t.setAttribute('text-anchor', anchor);
+  t.setAttribute('x', x);
+  t.setAttribute('y', Y_FLOOR + 20);
+  // wrap the long middle label
+  const words = s.label.split(' ');
+  if (words.length > 1 && anchor === 'middle') {
+    const a = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    a.setAttribute('x', x); a.setAttribute('dy', '0'); a.textContent = words[0];
+    const b = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    b.setAttribute('x', x); b.setAttribute('dy', '11'); b.textContent = words.slice(1).join(' ');
+    t.appendChild(a); t.appendChild(b);
+  } else {
+    t.textContent = s.label;
+  }
+  ticksG.appendChild(t);
+  return t;
+});
+
+// ---- live elements ----
+const track = $('ph-track');
+const nowLine = $('ph-now');
+const thumb = $('ph-thumb');
+const thumbCore = $('ph-thumb-core');
+const gap = $('ph-gap');
+const msg = $('ph-msg');
+const verdict = $('ph-verdict');
+const say = $('ph-say');
+const sub = $('ph-sub');
+
+// ---- zones + copy (the emotional centre) ----
+const zoneFor = (v) => {
+  if (v < 0.18) return 'hungry';
+  if (v <= 0.42) return 'sweet';
+  if (v <= 0.62) return 'comfortable';
+  if (v <= 0.86) return 'appetite';
+  return 'stuffed';
+};
+const COPY = {
+  hungry: {
+    cls: 'z-ok', verdict: 'still hungry',
+    say: 'Your body still <em>needs</em> this. Keep going — you are not there yet.',
+    sub: 'Real hunger is the body asking. Honour it. The discipline isn’t to eat less here; it’s to notice the moment it’s answered.',
+  },
+  sweet: {
+    cls: 'z-ok', verdict: 'the reasonable stop',
+    say: 'Hunger is met. <em>Stop here</em> — this is the reasonable place to stop.',
+    sub: 'No longer hungry, well before full. Your body’s need has gone quiet; everything past this is appetite, not hunger. This is the whole algorithm.',
+  },
+  comfortable: {
+    cls: 'z-over', verdict: 'appetite now',
+    say: 'You’re comfortable. That extra bite? <em>Appetite talking</em> — not hunger.',
+    sub: 'The need ended a moment ago. What’s pulling you on now is desire, habit, the taste still on the fork. Reasonable, gentle — but notice the line you just crossed.',
+  },
+  appetite: {
+    cls: 'z-far', verdict: 'past full',
+    say: 'Full, and still eating. This is <em>appetite running the show</em>.',
+    sub: 'Hunger has been at zero for a while. The gap you see lit beneath the curves is exactly how far appetite has carried you past what the body asked for.',
+  },
+  stuffed: {
+    cls: 'z-far', verdict: 'stuffed',
+    say: 'Stuffed. Heavy, slowed, a little sorry. <em>None of this was hunger.</em>',
+    sub: 'The last stretch had nothing to do with need. Next time, the move is small and reasonable: stop one band to the left, where hunger ends and appetite begins.',
+  },
+};
+const zoneClass = (z) => COPY[z].cls;
+
+// ---- gap fill path: area between appetite (top) and hunger (bottom), 0..v ----
+const buildGap = (v) => {
+  const top = [], bot = [];
+  const M = 48;
+  const vClamp = Math.max(0.0001, v);
+  for (let i = 0; i <= M; i++) {
+    const vv = (i / M) * vClamp;
+    top.push([toX(vv), toY(appetite(vv))]);
+    bot.push([toX(vv), toY(hunger(vv))]);
+  }
+  let d = `M${top[0][0].toFixed(2)},${top[0][1].toFixed(2)}`;
+  for (let i = 1; i < top.length; i++) d += ` L${top[i][0].toFixed(2)},${top[i][1].toFixed(2)}`;
+  for (let i = bot.length - 1; i >= 0; i--) d += ` L${bot[i][0].toFixed(2)},${bot[i][1].toFixed(2)}`;
+  d += ' Z';
+  return d;
+};
+
+// ---- render a fullness value ----
+let current = SWEET;
+let entranceDone = false;
+
+const nearestStopLabel = (v) => {
+  let best = STOPS[0], bd = Infinity;
+  for (const s of STOPS) { const d = Math.abs(s.v - v); if (d < bd) { bd = d; best = s; } }
+  return best;
+};
+
+const render = (v, opts) => {
+  opts = opts || {};
+  current = Math.max(0, Math.min(1, v));
+  const x = toX(current);
+  const z = zoneFor(current);
+  const c = COPY[z];
+
+  // move thumb + readout
+  nowLine.setAttribute('x1', x.toFixed(1));
+  nowLine.setAttribute('x2', x.toFixed(1));
+  // thumb rides UP the appetite curve so it sits on the line you're driving
+  const ty = toY(appetite(current));
+  thumb.setAttribute('cx', x.toFixed(1));
+  thumb.setAttribute('cy', ty.toFixed(1));
+  thumbCore.setAttribute('x', x.toFixed(1));
+  thumbCore.setAttribute('y', (ty + 4.5).toFixed(1));
+  nowLine.setAttribute('y1', (ty - 13).toFixed(1));
+
+  // gap fill
+  gap.setAttribute('d', buildGap(current));
+  gap.classList.remove('ph-gap--ok', 'ph-gap--over', 'ph-gap--far');
+  gap.classList.add(z === 'hungry' || z === 'sweet' ? 'ph-gap--ok' : (z === 'comfortable' ? 'ph-gap--over' : 'ph-gap--far'));
+
+  // zone class on track + message panel
+  const zc = zoneClass(z);
+  for (const el of [track, msg]) {
+    el.classList.remove('z-ok', 'z-over', 'z-far');
+    el.classList.add(zc);
+  }
+
+  // band lights when inside it
+  const inBand = current >= BAND_LO && current <= BAND_HI;
+  bandRect.classList.toggle('is-live', inBand);
+  bandCap.classList.toggle('is-live', inBand);
+
+  // message
+  verdict.textContent = c.verdict;
+  say.innerHTML = c.say;
+  sub.textContent = c.sub;
+
+  // tick highlight: nearest stop
+  const near = nearestStopLabel(current);
+  tickEls.forEach((t, i) => t.classList.toggle('is-here', STOPS[i] === near));
+
+  // a11y
+  track.setAttribute('aria-valuenow', Math.round(current * 100) + '');
+  track.setAttribute('aria-valuetext', near.label + (z === 'sweet' ? ' — the reasonable stop' : ''));
+};
+
+// ---- pointer drag ----
+const svg = root.querySelector('.ph-plot');
+const hit = $('ph-hit');
+let dragging = false;
+
+const clientToV = (clientX) => {
+  const r = svg.getBoundingClientRect();
+  const px = ((clientX - r.left) / r.width) * 860; // back into viewBox space
+  return fromX(px);
+};
+const onMove = (e) => {
+  if (!dragging) return;
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  render(clientToV(cx));
+  if (e.cancelable) e.preventDefault();
+};
+const startDrag = (e) => {
+  dragging = true;
+  track.classList.add('is-drag');
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  render(clientToV(cx));
+  track.focus({ preventScroll: true });
+  if (e.cancelable) e.preventDefault();
+};
+const endDrag = () => { dragging = false; track.classList.remove('is-drag'); };
+
+hit.addEventListener('mousedown', startDrag);
+hit.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('mousemove', onMove);
+window.addEventListener('touchmove', onMove, { passive: false });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+// click-to-set anywhere on the plot too
+svg.addEventListener('click', (e) => {
+  if (dragging) return;
+  // ignore clicks on the reset button (it's outside the svg anyway)
+  render(clientToV(e.clientX));
+});
+
+// ---- keyboard ----
+track.addEventListener('keydown', (e) => {
+  const step = e.shiftKey ? 0.1 : 0.02;
+  let handled = true;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') render(current + step);
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') render(current - step);
+  else if (e.key === 'Home') render(0);
+  else if (e.key === 'End') render(1);
+  else if (e.key === 'PageUp') render(current + 0.1);
+  else if (e.key === 'PageDown') render(current - 0.1);
+  else if (e.key === 'Enter' || e.key === ' ') render(SWEET);
+  else handled = false;
+  if (handled && e.cancelable) e.preventDefault();
+});
+
+// ---- reset ----
+$('ph-reset').addEventListener('click', () => {
+  render(SWEET);
+  track.focus({ preventScroll: true });
+});
+
+// ---- initial paint (sits at the sweet spot — the emotional centre) ----
+render(SWEET);
+
+})();
+</script>

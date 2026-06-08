@@ -1,0 +1,86 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import { reasonableEating } from '@/lib/programs/reasonable-eating';
+
+// Static preview, not linked from the site — the production proof of the
+// interactive kit: a Svelte island, hydrated only when scrolled into view,
+// driven entirely by the typed program data + the shared wheel geometry.
+export const prerender = true;
+---
+
+<BaseLayout title="Program preview — the interactive wheel">
+  <section class="preview">
+    <p class="eyebrow">Program preview · Svelte island · not linked from the site</p>
+    <h1 class="title">The wheel as a living object</h1>
+    <p class="lede">
+      The same diagram as the static 13×4, now a navigator and a coach surface.
+      Click a slice to read its algorithm and its word of wisdom; press
+      <strong>Play rotation</strong> to watch the focus walk the weeks and cycle
+      the four domains. It is driven entirely by one typed
+      <code>Program</code> object and the shared <code>wheel-geometry</code> helper —
+      so a new “Reasonable&nbsp;X” is data, not code. Flip the site theme to see it
+      re-pigment; every colour is a token.
+    </p>
+
+    <ProgramWheel program={reasonableEating} client:visible />
+
+    <hr class="rule" />
+
+    <p class="note">
+      This island hydrates with <code>client:visible</code> — zero JavaScript ships
+      until the wheel scrolls into view. The static
+      <code>ReasonableEating.astro</code> figure remains the no-JS / print baseline;
+      interactivity is progressive enhancement, drawn from the same geometry so the
+      two can never drift.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .preview {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 460;
+    color: var(--text-primary);
+    margin: 0.4rem 0 0.6rem;
+  }
+  .lede {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 62ch;
+  }
+  .lede code,
+  .note code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    color: var(--text-secondary);
+  }
+  .rule {
+    border: none;
+    border-top: 1px solid var(--hairline);
+    margin: 3.5rem 0 2rem;
+  }
+  .note {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 62ch;
+  }
+</style>
