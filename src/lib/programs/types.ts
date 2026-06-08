@@ -50,18 +50,33 @@ export interface Program {
   title: string;
   /** One-line description for the page. */
   blurb: string;
-  /** Algorithm Zero — the always-on central focus that never rotates. */
+  /** The central focus at the hub (Algorithm Zero for eating; the keystone for 9×4). */
   hub: {
     /** Hub label, multi-line, e.g. ['EAT', 'MORE']. */
     label: string[];
-    /** Algorithm Zero's name, e.g. 'Eat more'. */
+    /** The hub algorithm's name, e.g. 'Eat more' or 'Self-Belief'. */
     algorithmName: string;
+    /** Numeral shown in the hub well. Default '0' (Algorithm Zero). 9×4 uses '1'. */
+    numeral?: string;
+    /** Coach-panel kicker for the hub. Default 'Algorithm Zero · always on'. */
+    kicker?: string;
+    /** If set, the hub takes this pigment (9×4's blue keystone); absent → neutral. */
+    pigment?: Pigment;
+    /** True when the hub is itself a weekly stop in the rotation (9×4 week 1). */
+    inRotation?: boolean;
     coach: Coach;
   };
-  /** Cycles per domain: 3 → a 13×4 (4×3 + hub), over 13 weeks × 4 = the year. */
+  /** Focus points per domain: 3 → a 13×4 (4 domains × 3); 4 → a 9×4 (2 halves × 4). */
   cycles: number;
-  /** Exactly four domains, one per pigment, in clockwise order from the top. */
-  domains: [Domain, Domain, Domain, Domain];
+  /**
+   * How Play / the week-readout walk the wheel:
+   *  - 'interleaved' (default): week W sits in domain (W-1)%domains — the
+   *    Franklin rotation that cycles the domains (Reasonable Eating).
+   *  - 'sequential': the numerals run in order (the 9×4's 1..9).
+   */
+  rotationStyle?: 'interleaved' | 'sequential';
+  /** Two domains (halves) or four (quadrants), in clockwise order from the top. */
+  domains: [Domain, Domain] | [Domain, Domain, Domain, Domain];
   /** Optional link to the essay that introduces the programme. */
   essaySlug?: string;
 }

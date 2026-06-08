@@ -3,21 +3,20 @@
    * ProgramWheel.svelte — the Reason-Ability wheel as a living object: diagram,
    * navigator, and coach surface in one. Driven entirely by a Program data
    * object + the shared wheel-geometry helper, so the SAME component draws any
-   * four-domain programme (eating now; wealth, faith, shape later) from data
-   * alone. Theme-aware: every colour is a design token via the `--pig` channel,
-   * so it flips light/dark untouched — and so Svelte's CSS pruner never strips a
-   * dynamically-chosen pigment class.
+   * programme from data alone — a four-domain 13×4 (Reasonable Eating) or a
+   * two-half 9×4 (Exceptional Teaching) with a keystone hub. Theme-aware: every
+   * colour is a design token via the `--pig` channel, so it flips light/dark
+   * untouched — and so Svelte's CSS pruner never strips a pigment class.
    *
-   * "This week" coach mode: once you Begin a programme, today becomes Week 1 and
-   * the wheel opens each visit on the week you're actually on — the reason to
-   * re-open it. Enrolment is a single localStorage date; no account.
+   * "This week" coach mode: once you Begin a programme, today becomes week 1 and
+   * the wheel opens each visit on the week you're actually on.
    *
    * Hydrate as an island with `client:visible`; the static .astro figure remains
    * the no-JS / print baseline.
    */
   import { onMount } from 'svelte';
   import { buildWheel, DEFAULT_DIMS, type WheelDims } from '@/lib/wheel-geometry';
-  import type { Program } from '@/lib/programs/types';
+  import type { Program, Pigment } from '@/lib/programs/types';
 
   interface Props {
     program: Program;
@@ -28,27 +27,48 @@
   let { program, dims = DEFAULT_DIMS, interval = 1500 }: Props = $props();
 
   const layout = $derived(buildWheel(program, dims));
-  const domainCount = $derived(program.domains.length);
   const vbW = $derived(dims.cx * 2);
   const vbH = $derived(dims.cy * 2 + 60);
 
-  // null = the hub (Algorithm Zero) is selected; a number = that week.
+  const hubNumeral = $derived(program.hub.numeral ?? '0');
+  const hubPigment = $derived(program.hub.pigment as Pigment | undefined);
+  const hubKicker = $derived(program.hub.kicker ?? 'Algorithm Zero · always on');
+  const isSequential = $derived((program.rotationStyle ?? 'interleaved') === 'sequential');
+  const domainCount = $derived(program.domains.length);
+  const maxNumeral = $derived(Math.max(...layout.slices.map((s) => s.week)));
+
+  // The ordered list of stops the rotation walks. Slices by numeral, plus the
+  // hub (as null) when it is itself a weekly stop (9×4: Self-Belief = week 1).
+  const rotationOrder = $derived.by<(number | null)[]>(() => {
+    const nums: (number | null)[] = layout.slices.map((s) => s.week).sort((a, b) => a - b);
+    if (program.hub.inRotation) {
+      const hubNum = Number(program.hub.numeral ?? '0');
+      let idx = nums.findIndex((w) => (w as number) > hubNum);
+      if (idx < 0) idx = nums.length;
+      nums.splice(idx, 0, null);
+    }
+    return nums;
+  });
+
+  // null = the hub is selected; a number = that week's slice.
   let selectedWeek = $state<number | null>(null);
   let playing = $state(false);
 
   // "This week" enrolment — today-as-week-1, persisted as one date.
   let currentWeek = $state<number | null>(null);
+  let enrolled = $state(false);
   const enrollKey = `re-enrol:${program.slug}`;
 
   function select(week: number | null) {
     selectedWeek = week;
   }
   function step(dir: 1 | -1) {
-    const n = layout.n;
-    if (selectedWeek == null) {
-      selectedWeek = dir === 1 ? 1 : n;
+    const order = rotationOrder;
+    const i = order.indexOf(selectedWeek);
+    if (i < 0) {
+      selectedWeek = order[dir === 1 ? 0 : order.length - 1];
     } else {
-      selectedWeek = ((selectedWeek - 1 + dir + n) % n) + 1;
+      selectedWeek = order[(i + dir + order.length) % order.length];
     }
   }
   function togglePlay() {
@@ -61,8 +81,9 @@
     } catch (e) {
       /* private mode — fine, just no persistence */
     }
-    currentWeek = 1;
-    selectedWeek = 1;
+    enrolled = true;
+    currentWeek = rotationOrder[0];
+    selectedWeek = currentWeek;
     playing = false;
   }
   function leave() {
@@ -71,6 +92,7 @@
     } catch (e) {
       /* noop */
     }
+    enrolled = false;
     currentWeek = null;
     selectedWeek = null;
   }
@@ -81,8 +103,10 @@
       if (raw) {
         const start = parseInt(raw, 10);
         if (!Number.isNaN(start)) {
+          const order = rotationOrder;
           const days = Math.floor((Date.now() - start) / 86_400_000);
-          currentWeek = (Math.floor(days / 7) % layout.n) + 1;
+          enrolled = true;
+          currentWeek = order[Math.floor(days / 7) % order.length];
           selectedWeek = currentWeek; // open on the week you're actually on
         }
       }
@@ -96,8 +120,9 @@
   $effect(() => {
     if (!playing) return;
     const id = setInterval(() => {
-      const n = layout.n;
-      selectedWeek = selectedWeek == null ? 1 : (selectedWeek % n) + 1;
+      const order = rotationOrder;
+      const i = order.indexOf(selectedWeek);
+      selectedWeek = order[(i + 1 + order.length) % order.length];
     }, interval);
     return () => clearInterval(id);
   });
@@ -109,22 +134,22 @@
     selectedWeek == null ? null : Math.floor((selectedWeek - 1) / domainCount) + 1,
   );
   const cycleCount = $derived(program.cycles);
-  const isThisWeek = $derived(selectedWeek != null && selectedWeek === currentWeek);
+  const isThisWeek = $derived(enrolled && selectedWeek === currentWeek);
 
   // The coach payload shown in the side panel — hub when nothing is selected.
   const coachView = $derived(
     selectedSlice
       ? {
-          kicker: `${isThisWeek ? 'This week · ' : ''}Week ${selectedSlice.week} · ${selectedSlice.domainQuestion}`,
+          kicker: `${isThisWeek ? 'This week · ' : ''}${selectedSlice.week} · ${selectedSlice.domainQuestion}`,
           name: selectedSlice.name,
           wisdom: selectedSlice.coach.wisdom,
           pigment: selectedSlice.pigment as string,
         }
       : {
-          kicker: 'Algorithm Zero · always on',
+          kicker: `${isThisWeek ? 'This week · ' : ''}${hubKicker}`,
           name: program.hub.algorithmName,
           wisdom: program.hub.coach.wisdom,
-          pigment: '' as string,
+          pigment: (hubPigment ?? '') as string,
         },
   );
 
@@ -148,14 +173,14 @@
       class="pw-svg"
       viewBox={`0 0 ${vbW} ${vbH}`}
       role="group"
-      aria-label={`${program.title} — interactive ${program.domains.length}×${program.cycles} wheel`}
+      aria-label={`${program.title} — interactive ${program.domains.length === 2 ? '9' : '13'}×${program.cycles} wheel`}
     >
       <!-- segments -->
       {#each layout.slices as s (s.week)}
         <path
           class="seg"
           class:is-selected={selectedWeek === s.week}
-          class:is-current={currentWeek === s.week}
+          class:is-current={enrolled && currentWeek === s.week}
           class:dim={selectedWeek != null && selectedWeek !== s.week}
           d={s.path}
           style={`--i:${s.order}; --pig: var(--${s.pigment}); --pig-wash: var(--${s.pigment}-wash); --pig-chip: var(--${s.pigment}-chip)`}
@@ -176,23 +201,26 @@
         <text class="quad-label" x={q.lx} y={q.ly} text-anchor="middle" style={`--pig: var(--${q.pigment})`}>{q.name}</text>
       {/each}
 
-      <!-- hub: Algorithm Zero -->
+      <!-- hub -->
       <circle
         class="hub"
+        class:has-pig={!!hubPigment}
         class:is-selected={selectedWeek == null}
+        class:is-current={enrolled && currentWeek == null}
         cx={dims.cx}
         cy={dims.cy}
         r={dims.ri - 3}
+        style={hubPigment ? `--hp: var(--${hubPigment}); --hp-wash: var(--${hubPigment}-wash)` : ''}
         tabindex="0"
         role="button"
         aria-pressed={selectedWeek == null}
-        aria-label={`Algorithm Zero: ${program.hub.algorithmName}`}
+        aria-label={`Hub: ${program.hub.algorithmName}`}
         onclick={() => select(null)}
         onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(null); } }}
       ></circle>
-      <g class="num num--hub">
+      <g class="num num--hub" class:has-pig={!!hubPigment} style={hubPigment ? `--pig: var(--${hubPigment})` : ''}>
         <circle class="num-dot" cx={dims.cx} cy={dims.cy - 28} r="10.5"></circle>
-        <text class="num-text" x={dims.cx} y={dims.cy - 24} text-anchor="middle">0</text>
+        <text class="num-text" x={dims.cx} y={dims.cy - 24} text-anchor="middle">{hubNumeral}</text>
       </g>
       {#each program.hub.label as line, k (line)}
         <text class="hub-label" x={dims.cx} y={dims.cy + 6 + k * 21} text-anchor="middle">{line}</text>
@@ -210,7 +238,7 @@
       <!-- numerals -->
       {#each layout.slices as s (s.week)}
         <g class="num" style={`--pig: var(--${s.pigment})`}>
-          <circle class="num-dot" class:is-selected={selectedWeek === s.week} class:is-current={currentWeek === s.week} cx={s.nx} cy={s.ny} r="10"></circle>
+          <circle class="num-dot" class:is-selected={selectedWeek === s.week} class:is-current={enrolled && currentWeek === s.week} cx={s.nx} cy={s.ny} r="10"></circle>
           <text class="num-text" x={s.nx} y={s.ny + 3.5} text-anchor="middle">{s.week}</text>
         </g>
       {/each}
@@ -226,20 +254,26 @@
 
   <!-- controls -->
   <div class="pw-controls">
-    {#if currentWeek == null}
+    {#if !enrolled}
       <button class="ctl-btn ctl-begin" type="button" onclick={begin}>● Begin — make today Week 1</button>
     {:else}
-      <span class="ctl-week">● This week · Week {currentWeek}</span>
+      <span class="ctl-week">● This week · {currentWeek == null ? hubNumeral : currentWeek}</span>
       <button class="ctl-btn ctl-here" type="button" onclick={() => select(currentWeek)}>Take me to this week</button>
       <button class="ctl-x" type="button" onclick={leave} aria-label="Leave the programme">✕</button>
     {/if}
     <button class="ctl-btn ctl-play" class:is-on={playing} type="button" onclick={togglePlay} aria-pressed={playing}>
       {playing ? '❚❚ Pause' : '▶ Play rotation'}
     </button>
-    <button class="ctl-btn" type="button" onclick={() => step(-1)} aria-label="Previous week">◀ Prev</button>
-    <button class="ctl-btn" type="button" onclick={() => step(1)} aria-label="Next week">Next ▶</button>
+    <button class="ctl-btn" type="button" onclick={() => step(-1)} aria-label="Previous">◀ Prev</button>
+    <button class="ctl-btn" type="button" onclick={() => step(1)} aria-label="Next">Next ▶</button>
     <span class="ctl-readout">
-      {#if selectedWeek == null}
+      {#if isSequential}
+        {#if selectedWeek == null}
+          {program.hub.algorithmName} · the keystone
+        {:else}
+          {selectedSlice?.domain} · {selectedWeek} of {maxNumeral}
+        {/if}
+      {:else if selectedWeek == null}
         Algorithm Zero
       {:else}
         Cycle {cycleNum} of {cycleCount} · Week {selectedWeek}/{layout.n} · {selectedSlice?.domain}
@@ -248,7 +282,7 @@
   </div>
 
   <figcaption class="pw-caption">
-    Click any slice to read its algorithm and word of wisdom; press Play to watch the focus walk the weeks and cycle the four domains in Franklin rotation. Begin the programme and the wheel opens on the week you're on.
+    Click any slice to read its focus and word of wisdom; press Play to walk the programme. Begin it and the wheel opens on the week you're on.
   </figcaption>
 </figure>
 
@@ -301,7 +335,7 @@
     fill: var(--pig);
   }
 
-  /* Hub — Algorithm Zero */
+  /* Hub — neutral by default, or a pigment keystone (9×4 Self-Belief) */
   .hub {
     fill: var(--depth-3);
     stroke: var(--hairline);
@@ -310,8 +344,12 @@
     transition: stroke 0.3s ease;
     outline: none;
   }
+  .hub.has-pig { fill: var(--hp-wash); stroke: var(--hp); }
   .hub:hover { stroke: var(--text-muted); }
+  .hub.has-pig:hover { stroke: var(--hp); }
   .hub.is-selected { stroke: var(--text-secondary); stroke-width: 1.75; }
+  .hub.has-pig.is-selected { stroke: var(--hp); stroke-width: 1.9; }
+  .hub.is-current { stroke-width: 2.5; }
   .hub:focus-visible { stroke: var(--text-secondary); stroke-width: 1.75; }
   .hub-label {
     font-family: var(--font-display);
@@ -335,6 +373,8 @@
   .num-text { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; fill: var(--pig); }
   .num--hub .num-dot { stroke: var(--text-muted); }
   .num--hub .num-text { fill: var(--text-secondary); }
+  .num--hub.has-pig .num-dot { stroke: var(--pig); }
+  .num--hub.has-pig .num-text { fill: var(--pig); }
 
   /* Coach panel */
   .pw-coach {
