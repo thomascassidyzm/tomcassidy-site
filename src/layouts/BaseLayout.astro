@@ -57,6 +57,9 @@ const {
         }
       })();
     </script>
+
+    <!-- Per-page head injection (PWA manifest, page-specific meta, etc.). -->
+    <slot name="head" />
   </head>
   <body data-with-guide={withGuide ? 'true' : undefined}>
     <SiteHeader currentPage={currentPage} />

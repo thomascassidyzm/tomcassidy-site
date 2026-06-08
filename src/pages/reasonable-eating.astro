@@ -25,11 +25,25 @@ const weeks = cycles * domainCount;
 ---
 
 <BaseLayout title="Reasonable Eating — Tom Cassidy">
+  <Fragment slot="head">
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#16140f" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Eating" />
+  </Fragment>
+
   <article class="program">
     <header class="prog-head">
       <p class="eyebrow">Reason-Ability · an applied programme</p>
       <h1 class="prog-title">{program.title}</h1>
       <p class="prog-lede">{program.blurb}</p>
+      <div class="install-row">
+        <button id="pwa-install" class="install-cta" type="button" hidden>↓ Install as an app</button>
+        <p id="ios-hint" class="ios-hint" hidden>Add to Home Screen: tap <strong>Share</strong>, then <strong>“Add to Home Screen.”</strong></p>
+      </div>
     </header>
 
     <!-- The wheel: diagram, navigator and coach in one. -->
@@ -83,6 +97,45 @@ const weeks = cycles * domainCount;
       </p>
     </footer>
   </article>
+
+  <script>
+    // Tier-0 PWA: register the offline service worker (scoped to this
+    // programme only) and wire a quiet install affordance.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/reasonable-eating' })
+          .catch(() => {});
+      });
+    }
+    (function () {
+      const btn = document.getElementById('pwa-install');
+      const iosHint = document.getElementById('ios-hint');
+      let deferred: any = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferred = e;
+        if (btn) btn.hidden = false;
+      });
+      btn?.addEventListener('click', async () => {
+        if (!deferred) return;
+        deferred.prompt();
+        await deferred.userChoice;
+        deferred = null;
+        if (btn) btn.hidden = true;
+      });
+      window.addEventListener('appinstalled', () => {
+        if (btn) btn.hidden = true;
+      });
+      // iOS Safari has no beforeinstallprompt — show a manual hint instead,
+      // unless already running installed (standalone).
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as any).standalone === true;
+      if (isIOS && !standalone && iosHint) iosHint.hidden = false;
+    })();
+  </script>
 </BaseLayout>
 
 <style>
@@ -118,6 +171,33 @@ const weeks = cycles * domainCount;
     color: var(--text-secondary);
     max-width: 40ch;
   }
+
+  .install-row { margin-top: 1.1rem; min-height: 1px; }
+  .install-cta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--derived);
+    background: var(--derived-wash);
+    border: 1px solid var(--derived);
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .install-cta:hover { background: var(--derived-chip); }
+  .ios-hint {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    border: 1px dashed var(--hairline);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    max-width: 40ch;
+  }
+  .ios-hint strong { color: var(--text-secondary); font-weight: 500; }
 
   .prose {
     font-family: var(--font-body);
