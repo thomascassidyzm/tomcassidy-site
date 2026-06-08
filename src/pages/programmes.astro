@@ -1,0 +1,127 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramShowcase from '@/components/diagrams/ProgramShowcase.svelte';
+import { reasonableEating } from '@/lib/programs/reasonable-eating';
+import { exceptionalTeaching } from '@/lib/programs/exceptional-teaching';
+import { reasonableSuccess } from '@/lib/programs/reasonable-success';
+import { reasonableLeadership } from '@/lib/programs/reasonable-leadership';
+
+export const prerender = true;
+
+const family = [
+  { program: reasonableEating, href: '/reasonable-eating', accent: 'derived' as const },
+  { program: exceptionalTeaching, href: '/exceptional-teaching', accent: 'established' as const },
+  { program: reasonableSuccess, href: '/reasonable-success', accent: 'open' as const },
+  { program: reasonableLeadership, href: '/reasonable-leadership', accent: 'contested' as const },
+];
+const programs = family.map((f) => f.program);
+const accents = family.map((f) => f.accent);
+---
+
+<BaseLayout title="Programmes — Tom Cassidy" currentPage="programmes">
+  <section class="programmes">
+    <header class="page-head">
+      <p class="eyebrow">Reason-Ability · applied</p>
+      <h1 class="page-title">The Programmes</h1>
+      <p class="page-sub">
+        Reasonable algorithms for mastering anything — one focus a week, four laps
+        a year, in Benjamin Franklin's “one thing at a time.” Minimum willpower,
+        maximum effect. Each programme is the same wheel, driven by its own data.
+      </p>
+    </header>
+
+    <!-- One wheel, the whole family: switch the programme, watch the data change. -->
+    <ProgramShowcase programs={programs} accents={accents} client:visible />
+
+    <div class="family-grid">
+      {family.map(({ program, href, accent }) => (
+        <a class={`fam-card is-${accent}`} href={href}>
+          <span class="fam-domains">{program.domains.map((d) => d.name).join(' · ')}</span>
+          <h2 class="fam-title">{program.title}</h2>
+          <p class="fam-blurb">{program.blurb}</p>
+          <span class="fam-open">Open the programme →</span>
+        </a>
+      ))}
+    </div>
+
+    <footer class="fam-foot">
+      <p>
+        This is the “13 Family Robinson”: a growing family of programmes that all
+        share one engine. A new one is a data file, not a rebuild — so each can
+        grow up, in time, into its own installable app. Win the inner game a week
+        at a time.
+      </p>
+    </footer>
+  </section>
+</BaseLayout>
+
+<style>
+  .programmes { max-width: 1040px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+
+  .page-head { max-width: 64ch; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+  }
+  .page-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 6vw, 3.8rem); font-weight: 420; letter-spacing: -0.02em;
+    color: var(--text-primary); margin: 0.4rem 0 0.7rem; line-height: 1;
+  }
+  .page-sub {
+    font-family: var(--font-body); font-size: 1.18rem; line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .family-grid {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .fam-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--hairline);
+    border-top: 3px solid var(--text-muted);
+    border-radius: 12px;
+    padding: 1.6rem 1.5rem;
+    color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .fam-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .is-derived { border-top-color: var(--derived); }
+  .is-established { border-top-color: var(--established); }
+  .is-open { border-top-color: var(--open); }
+  .is-contested { border-top-color: var(--contested); }
+
+  .fam-domains {
+    font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+  .fam-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.6rem; font-weight: 460; color: var(--text-primary); line-height: 1.1;
+  }
+  .fam-blurb {
+    font-family: var(--font-body); font-size: 1.0rem; line-height: 1.55;
+    color: var(--text-secondary); flex: 1;
+  }
+  .fam-open {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.03em;
+    color: var(--text-muted); margin-top: 0.3rem;
+  }
+  .is-derived:hover .fam-open { color: var(--derived); }
+  .is-established:hover .fam-open { color: var(--established); }
+  .is-open:hover .fam-open { color: var(--open); }
+  .is-contested:hover .fam-open { color: var(--contested); }
+
+  .fam-foot {
+    margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
+    font-family: var(--font-body); font-style: italic; font-size: 1.05rem;
+    line-height: 1.6; color: var(--text-muted); max-width: 64ch;
+  }
+</style>

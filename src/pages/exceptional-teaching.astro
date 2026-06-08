@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
-import { reasonableSuccess as program } from '@/lib/programs/reasonable-success';
+import { exceptionalTeaching as program } from '@/lib/programs/exceptional-teaching';
 
-// A whole 13×4 framework built entirely from a text summary — no component or
-// schema changes, just one data file. Static preview, not linked in the nav.
+// The 9×4 as a programme page — two halves of four around the Self-Belief
+// keystone (week 1). Same template family as the other programmes.
 export const prerender = true;
 
 const pigClass: Record<string, string> = {
@@ -13,12 +13,13 @@ const pigClass: Record<string, string> = {
   open: 'is-open',
   contested: 'is-contested',
 };
+const hubPig = program.hub.pigment ?? 'established';
 ---
 
-<BaseLayout title="Reasonable Success — Tom Cassidy" currentPage="programmes">
+<BaseLayout title="The 9×4 — Tom Cassidy" currentPage="programmes">
   <article class="program">
     <header class="prog-head">
-      <p class="eyebrow">Reason-Ability · an applied programme</p>
+      <p class="eyebrow">Reason-Ability · the teaching original</p>
       <h1 class="prog-title">{program.title}</h1>
       <p class="prog-lede">{program.blurb}</p>
     </header>
@@ -27,12 +28,29 @@ const pigClass: Record<string, string> = {
 
     <section class="prose">
       <p>
-        Four domains — <strong>mind, body, soul and people</strong> — with an
-        always-on centre: <strong>{program.hub.algorithmName}</strong>. You take
-        one focus a week, cycling the four, for the year. Win the inner game and
-        the outer game follows. Tap a slice on the wheel to meet its focus; press
-        <strong>Play</strong> to walk the weeks.
+        Nine characteristics of exceptional teaching, taken one a week across the
+        academic year. At the centre, the keystone the other eight rest on —
+        <strong>{program.hub.algorithmName}</strong>. Tap a slice to meet its
+        characteristic; press <strong>Play</strong> to walk the nine. (The full
+        story is in the essay <a href="/writing/the-9x4">The 9×4</a>.)
       </p>
+    </section>
+
+    <!-- The keystone — Self-Belief (week 1). -->
+    <section class="domain keystone">
+      <div class="domain-head">
+        <h2 class={`domain-name ${pigClass[hubPig]}`}>{program.hub.algorithmName}</h2>
+        <p class="domain-q">{program.hub.kicker}</p>
+      </div>
+      <ol class="focuses">
+        <li class="focus">
+          <span class={`focus-wk ${pigClass[hubPig]}`}>Week {program.hub.numeral}</span>
+          <div class="focus-body">
+            <h3 class="focus-name">The keystone</h3>
+            <p class="focus-wisdom">{program.hub.coach.wisdom}</p>
+          </div>
+        </li>
+      </ol>
     </section>
 
     {program.domains.map((domain) => (
@@ -57,10 +75,10 @@ const pigClass: Record<string, string> = {
 
     <footer class="prog-foot">
       <p>
-        Every word here is Tom's; the framework was assembled from a plain text
-        summary into this interactive wheel with no new code — the same
-        <code>ProgramWheel</code> that draws Reasonable Eating and the 9×4, driven
-        by one data file. That is the whole idea of the family.
+        The teaching original that the whole family grew from — Franklin's “one
+        thing at a time,” used to train over 130,000 teachers since 1994. Rendered
+        here through the same <code>ProgramWheel</code> as every other programme,
+        from one data file. The wisdom lines are draft coach copy.
       </p>
     </footer>
   </article>
@@ -68,7 +86,6 @@ const pigClass: Record<string, string> = {
 
 <style>
   .program { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
-
   .prog-head { margin-bottom: 1rem; }
   .eyebrow {
     font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
@@ -82,25 +99,20 @@ const pigClass: Record<string, string> = {
   .prog-lede {
     font-family: var(--font-body); font-style: italic;
     font-size: clamp(1.2rem, 2.4vw, 1.5rem); line-height: 1.45;
-    color: var(--text-secondary); max-width: 42ch;
+    color: var(--text-secondary); max-width: 46ch;
   }
-
-  .prose {
-    font-family: var(--font-body); font-size: 1.12rem; line-height: 1.7;
-    color: var(--text-secondary); max-width: 62ch; margin: 1rem auto;
-  }
+  .prose { font-family: var(--font-body); font-size: 1.1rem; line-height: 1.7; color: var(--text-secondary); max-width: 62ch; margin: 1rem auto; }
   .prose strong { color: var(--text-primary); font-weight: 600; }
+  .prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 
   .domain { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .keystone { border-top-width: 2px; }
   .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .domain-name {
     font-family: var(--font-display); font-optical-sizing: auto;
-    font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 460; letter-spacing: 0.02em;
+    font-size: clamp(1.5rem, 3.6vw, 2rem); font-weight: 460; letter-spacing: 0.02em; color: var(--text-primary);
   }
-  .domain-q {
-    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--text-muted);
-  }
+  .domain-q { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
   .is-established { color: var(--established); }
   .is-derived { color: var(--derived); }
   .is-open { color: var(--open); }
@@ -109,23 +121,14 @@ const pigClass: Record<string, string> = {
   .focuses { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; }
   .focus { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.5rem 1rem; align-items: start; }
   @media (max-width: 520px) { .focus { grid-template-columns: 1fr; gap: 0.2rem; } }
-  .focus-wk {
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em;
-    padding-top: 0.35rem; white-space: nowrap;
-  }
-  .focus-name {
-    font-family: var(--font-display); font-optical-sizing: auto;
-    font-size: 1.3rem; font-weight: 480; color: var(--text-primary); line-height: 1.15;
-  }
-  .focus-wisdom {
-    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6;
-    color: var(--text-secondary); margin-top: 0.3rem;
-  }
+  .focus-wk { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; color: var(--text-muted); padding-top: 0.35rem; white-space: nowrap; }
+  .focus-name { font-family: var(--font-display); font-optical-sizing: auto; font-size: 1.3rem; font-weight: 480; color: var(--text-primary); line-height: 1.15; }
+  .focus-wisdom { font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6; color: var(--text-secondary); margin-top: 0.3rem; }
 
   .prog-foot {
     margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
-    font-family: var(--font-body); font-style: italic; font-size: 1.02rem;
-    line-height: 1.6; color: var(--text-muted); max-width: 62ch;
+    font-family: var(--font-body); font-style: italic; font-size: 1.02rem; line-height: 1.6;
+    color: var(--text-muted); max-width: 62ch;
   }
   .prog-foot code { font-family: var(--font-mono); font-size: 0.82em; font-style: normal; }
 </style>

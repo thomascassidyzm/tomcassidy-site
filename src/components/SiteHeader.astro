@@ -7,7 +7,7 @@
 import ThemeToggle from '@/components/ThemeToggle.astro';
 
 interface Props {
-  currentPage?: 'home' | 'format' | 'writing' | 'projects' | 'about';
+  currentPage?: 'home' | 'format' | 'writing' | 'programmes' | 'projects' | 'about';
 }
 
 const { currentPage } = Astro.props;
@@ -27,6 +27,7 @@ const { currentPage } = Astro.props;
     <a href="/" class:list={['nav-link', { active: currentPage === 'home' }]}>Home</a>
     <a href="/writing/the-format" class:list={['nav-link', { active: currentPage === 'format' }]}>The Format</a>
     <a href="/writing" class:list={['nav-link', { active: currentPage === 'writing' }]}>Writing</a>
+    <a href="/programmes" class:list={['nav-link', { active: currentPage === 'programmes' }]}>Programmes</a>
     <a href="/projects" class:list={['nav-link', { active: currentPage === 'projects' }]}>Projects</a>
     <a href="/about" class:list={['nav-link', { active: currentPage === 'about' }]}>About</a>
   </nav>
