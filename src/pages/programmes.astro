@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProgramShowcase from '@/components/diagrams/ProgramShowcase.svelte';
 import { reasonableEating } from '@/lib/programs/reasonable-eating';
-import { exceptionalTeaching } from '@/lib/programs/exceptional-teaching';
+import { reasonableTeaching } from '@/lib/programs/reasonable-teaching';
 import { reasonableSuccess } from '@/lib/programs/reasonable-success';
 import { reasonableLeadership } from '@/lib/programs/reasonable-leadership';
 
@@ -10,7 +10,7 @@ export const prerender = true;
 
 const family = [
   { program: reasonableEating, href: '/reasonable-eating', accent: 'derived' as const },
-  { program: exceptionalTeaching, href: '/exceptional-teaching', accent: 'established' as const },
+  { program: reasonableTeaching, href: '/reasonable-teaching', accent: 'established' as const },
   { program: reasonableSuccess, href: '/reasonable-success', accent: 'open' as const },
   { program: reasonableLeadership, href: '/reasonable-leadership', accent: 'contested' as const },
 ];

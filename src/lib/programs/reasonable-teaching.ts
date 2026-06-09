@@ -1,21 +1,21 @@
 import type { Program } from './types';
 
 /**
- * The 9×4 — developing the nine characteristics of exceptional teaching, one a
- * week, cycling for the 36-week academic year. The PROOF that the kit is a kit:
- * a genuinely different shape from Reasonable Eating (two halves of four, a
- * Self-Belief keystone that is itself week 1, numerals that run 1..9) rendered
- * through the SAME ProgramWheel from data alone. The teaching content is Tom's
- * (see the essay "The 9×4"); the `coach.wisdom` lines are DRAFT coach copy in
- * his register, for him to finesse.
+ * Reasonable Teaching — developing the nine characteristics of exceptional
+ * teaching, one a week, cycling for the 36-week academic year. The programme
+ * runs on THE 9×4 engine (its wheel): a genuinely different shape from
+ * Reasonable Eating (two halves of four, a Self-Belief keystone that is itself
+ * week 1, numerals that run 1..9) rendered through the SAME ProgramWheel from
+ * data alone. The teaching content is Tom's (see the essay "The 9×4"); the
+ * `coach.wisdom` lines are DRAFT coach copy in his register, for him to finesse.
  *
  * Geometry: domain 0 is the right half (Philosophy), domain 1 the left half
  * (Action) — matching the original wheel's Action-left / Philosophy-right split.
  */
-export const exceptionalTeaching: Program = {
-  slug: 'exceptional-teaching',
-  title: 'The 9×4',
-  blurb: 'The nine characteristics of exceptional teaching — one focus a week, across the academic year.',
+export const reasonableTeaching: Program = {
+  slug: 'reasonable-teaching',
+  title: 'Reasonable Teaching',
+  blurb: 'Developing the nine characteristics of exceptional teaching — one focus a week, across the academic year. Run on the 9×4 engine.',
   essaySlug: 'the-9x4',
   cycles: 4,
   rotationStyle: 'sequential',

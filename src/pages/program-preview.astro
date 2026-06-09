@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
 import { reasonableEating } from '@/lib/programs/reasonable-eating';
-import { exceptionalTeaching } from '@/lib/programs/exceptional-teaching';
+import { reasonableTeaching } from '@/lib/programs/reasonable-teaching';
 
 // Static preview, not linked from the site — the production proof of the
 // interactive kit: a Svelte island, hydrated only when scrolled into view,
@@ -30,14 +30,14 @@ export const prerender = true;
 
     <h2 class="title2">A different shape, same kit</h2>
     <p class="lede">
-      The 9×4 — exceptional teaching — is a genuinely different programme: two
-      halves of four, numerals that run 1–9, and a blue Self-Belief keystone that
-      is itself week&nbsp;1. It renders through the <em>same</em>
+      Reasonable Teaching runs on a different engine — the 9×4: two halves of
+      four, numerals that run 1–9, and a blue Self-Belief keystone that is itself
+      week&nbsp;1. It renders through the <em>same</em>
       <code>ProgramWheel</code>, from one data file — no new component code. That is
       the whole thesis of the family: a new programme is data, not engineering.
     </p>
 
-    <ProgramWheel program={exceptionalTeaching} client:visible />
+    <ProgramWheel program={reasonableTeaching} client:visible />
 
     <hr class="rule" />
 

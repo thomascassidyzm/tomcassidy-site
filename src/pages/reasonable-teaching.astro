@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
-import { exceptionalTeaching as program } from '@/lib/programs/exceptional-teaching';
+import { reasonableTeaching as program } from '@/lib/programs/reasonable-teaching';
 
-// The 9×4 as a programme page — two halves of four around the Self-Belief
-// keystone (week 1). Same template family as the other programmes.
+// Reasonable Teaching — the programme, run on the 9×4 engine: two halves of four
+// around the Self-Belief keystone (week 1). Same template family as the others.
 export const prerender = true;
 
 const pigClass: Record<string, string> = {
@@ -16,7 +16,7 @@ const pigClass: Record<string, string> = {
 const hubPig = program.hub.pigment ?? 'established';
 ---
 
-<BaseLayout title="The 9×4 — Tom Cassidy" currentPage="programmes">
+<BaseLayout title="Reasonable Teaching — Tom Cassidy" currentPage="programmes">
   <article class="program">
     <header class="prog-head">
       <p class="eyebrow">Reason-Ability · the teaching original</p>
@@ -28,11 +28,12 @@ const hubPig = program.hub.pigment ?? 'established';
 
     <section class="prose">
       <p>
-        Nine characteristics of exceptional teaching, taken one a week across the
+        The programme runs on <strong>the 9×4</strong> — its engine: nine
+        characteristics of exceptional teaching, taken one a week across the
         academic year. At the centre, the keystone the other eight rest on —
         <strong>{program.hub.algorithmName}</strong>. Tap a slice to meet its
         characteristic; press <strong>Play</strong> to walk the nine. (The full
-        story is in the essay <a href="/writing/the-9x4">The 9×4</a>.)
+        story of the engine is in the essay <a href="/writing/the-9x4">The 9×4</a>.)
       </p>
     </section>
 

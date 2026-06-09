@@ -22,6 +22,11 @@ export default defineConfig({
   output: 'server',
   adapter: vercel(),
   integrations: [svelte()],
+  // The teaching programme was briefly live at /exceptional-teaching before the
+  // rebrand to Reasonable Teaching; keep the old URL pointing at the new one.
+  redirects: {
+    '/exceptional-teaching': '/reasonable-teaching',
+  },
   vite: {
     define: {
       '__BUILD_NUMBER__': JSON.stringify(buildNumber),
