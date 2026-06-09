@@ -1,0 +1,2501 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reasonable Eating — interactive prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..600;1,9..144,360..560&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..520&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ===== design tokens — copied verbatim from src/styles/tokens.css so this
+     prototype re-pigments itself light/dark exactly like the site ===== */
+  :root, :root[data-theme='dark'] {
+    --void:#16140f; --depth-1:#201e18; --depth-2:#272420; --depth-3:#322e27; --surface:#3a352d;
+    --established:#5b9fd6; --derived:#57b481; --contested:#e08545; --open:#a981c9;
+    --established-wash:rgba(91,159,214,0.08); --derived-wash:rgba(87,180,129,0.08);
+    --contested-wash:rgba(224,133,69,0.08); --open-wash:rgba(169,129,201,0.08);
+    --established-chip:rgba(91,159,214,0.16); --derived-chip:rgba(87,180,129,0.16);
+    --contested-chip:rgba(224,133,69,0.16); --open-chip:rgba(169,129,201,0.16);
+    --text-primary:#ece5d8; --text-secondary:#b8ad9c; --text-muted:#8a8071;
+    --accent:#5b9fd6; --accent-glow:rgba(91,159,214,0.14);
+    --bg:var(--void); --bg-elevated:var(--depth-1);
+    --border:rgba(236,229,216,0.1); --border-soft:rgba(236,229,216,0.06); --hairline:rgba(236,229,216,0.14);
+    --shadow-soft:0 1px 2px rgba(0,0,0,0.3),0 8px 24px rgba(0,0,0,0.32);
+    --shadow-lift:0 4px 8px rgba(0,0,0,0.34),0 24px 48px rgba(0,0,0,0.44);
+    --grain-opacity:0.035; color-scheme:dark;
+  }
+  :root[data-theme='light'] {
+    --void:#f3eee4; --depth-1:#ece4d6; --depth-2:#e7dece; --depth-3:#ddd2bf; --surface:#d6c9b3;
+    --established:#2e5a86; --derived:#3c7a58; --contested:#b8601d; --open:#6f4a86;
+    --established-wash:rgba(46,90,134,0.06); --derived-wash:rgba(60,122,88,0.06);
+    --contested-wash:rgba(184,96,29,0.06); --open-wash:rgba(111,74,134,0.06);
+    --established-chip:rgba(46,90,134,0.12); --derived-chip:rgba(60,122,88,0.12);
+    --contested-chip:rgba(184,96,29,0.12); --open-chip:rgba(111,74,134,0.12);
+    --text-primary:#1c1a17; --text-secondary:#4a443c; --text-muted:#857c70;
+    --accent:#2e5a86; --accent-glow:rgba(46,90,134,0.09);
+    --bg:var(--void); --bg-elevated:var(--depth-1);
+    --border:rgba(28,26,23,0.12); --border-soft:rgba(28,26,23,0.07); --hairline:rgba(28,26,23,0.16);
+    --shadow-soft:0 1px 2px rgba(72,58,38,0.06),0 8px 22px rgba(72,58,38,0.1);
+    --shadow-lift:0 4px 10px rgba(72,58,38,0.1),0 22px 44px rgba(72,58,38,0.16);
+    --grain-opacity:0.06; color-scheme:light;
+  }
+  :root {
+    --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-body:'Newsreader',Georgia,serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { font-size:16px; scroll-behavior:smooth; }
+  body {
+    font-family:var(--font-body); font-optical-sizing:auto;
+    background:var(--bg); color:var(--text-primary); min-height:100vh; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    transition:background .3s ease,color .3s ease;
+  }
+  .wrap { max-width:860px; margin:0 auto; padding:3.5rem 1.5rem 6rem; position:relative; z-index:2; }
+
+  .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+  .eyebrow { font-family:var(--font-mono); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); }
+  .h1 { font-family:var(--font-display); font-optical-sizing:auto; font-size:clamp(2.2rem,5.5vw,3.2rem); font-weight:460; color:var(--text-primary); margin:0.5rem 0 0.7rem; line-height:1.05; }
+  .lede { font-family:var(--font-body); font-size:1.12rem; line-height:1.62; color:var(--text-secondary); max-width:60ch; }
+  .lede em { color:var(--text-primary); font-style:italic; }
+
+  .toggle {
+    flex:0 0 auto; font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--text-secondary); background:var(--bg-elevated);
+    border:1px solid var(--hairline); border-radius:999px; padding:0.5rem 0.9rem; cursor:pointer;
+    transition:border-color .2s ease,color .2s ease;
+  }
+  .toggle:hover { border-color:var(--accent); color:var(--text-primary); }
+
+  .prototype-note {
+    margin-top:1.6rem; font-family:var(--font-mono); font-size:0.72rem; line-height:1.6;
+    color:var(--text-muted); border-left:2px solid var(--hairline); padding:0.4rem 0 0.4rem 0.9rem;
+  }
+
+  .comp {
+    margin-top:4.5rem; padding-top:2.5rem; border-top:1px solid var(--hairline);
+  }
+  .comp-eyebrow { font-family:var(--font-mono); font-size:0.66rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); }
+  .comp-title { font-family:var(--font-display); font-optical-sizing:auto; font-size:clamp(1.5rem,3.6vw,2.05rem); font-weight:460; color:var(--text-primary); margin:0.35rem 0 0.4rem; }
+  .comp-blurb { font-family:var(--font-body); font-style:italic; font-size:1.02rem; line-height:1.55; color:var(--text-secondary); max-width:58ch; margin-bottom:1.6rem; }
+  .mount { margin-top:0.5rem; }
+
+  .footer { margin-top:5rem; padding-top:2rem; border-top:1px solid var(--hairline); font-family:var(--font-body); font-size:0.95rem; color:var(--text-muted); line-height:1.6; }
+
+  /* paper grain — same fractal-noise overlay as the site */
+  body::before {
+    content:''; position:fixed; inset:0; z-index:1; pointer-events:none; opacity:var(--grain-opacity);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat:repeat; mix-blend-mode:var(--grain-blend,multiply);
+  }
+  :root:not([data-theme='light']) body::before { --grain-blend:screen; }
+
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+
+  /* ===== COMPONENT STYLES (injected) ===== */
+
+/* --- p-wheel --- */
+
+#p-wheel {
+  --ring-ms: 45ms;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  width: min(960px, 94vw);
+  margin: 2rem auto;
+  position: relative;
+}
+
+#p-wheel * { box-sizing: border-box; }
+
+#p-wheel .pw-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.85fr);
+  gap: clamp(1rem, 3vw, 2.25rem);
+  align-items: center;
+}
+@media (max-width: 720px) {
+  #p-wheel .pw-stage { grid-template-columns: 1fr; }
+}
+
+/* ---- the wheel ---- */
+#p-wheel .pw-wheel { display: block; width: 100%; height: auto; overflow: visible; }
+
+#p-wheel .seg {
+  stroke: var(--hairline);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill 0.28s ease, transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.28s ease;
+  transform-box: fill-box;
+  transform-origin: 360px 300px;
+}
+#p-wheel .seg--derived { fill: var(--derived-wash); }
+#p-wheel .seg--contested { fill: var(--contested-wash); }
+#p-wheel .seg--open { fill: var(--open-wash); }
+#p-wheel .seg--established { fill: var(--established-wash); }
+
+/* hover hint — subtle pigment lift */
+#p-wheel .seg:hover { filter: brightness(1.06); }
+
+/* selected — lift outward + brighten to the legible chip fill */
+#p-wheel .seg.is-active--derived { fill: var(--derived-chip); }
+#p-wheel .seg.is-active--contested { fill: var(--contested-chip); }
+#p-wheel .seg.is-active--open { fill: var(--open-chip); }
+#p-wheel .seg.is-active--established { fill: var(--established-chip); }
+#p-wheel .seg.is-active {
+  stroke-width: 1.4;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.22)) brightness(1.02);
+}
+
+/* dimmed siblings while one is active, so the choice reads */
+#p-wheel .pw-svg.has-active .seg:not(.is-active) { opacity: 0.62; }
+
+/* quadrant rim arcs */
+#p-wheel .quad-arc { stroke-width: 2.5; stroke-linecap: round; fill: none; transition: stroke-width 0.28s ease; }
+#p-wheel .quad--derived { stroke: var(--derived); }
+#p-wheel .quad--contested { stroke: var(--contested); }
+#p-wheel .quad--open { stroke: var(--open); }
+#p-wheel .quad--established { stroke: var(--established); }
+#p-wheel .quad-arc.is-domain-active { stroke-width: 4; }
+
+/* quadrant labels */
+#p-wheel text.quad-label {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: 19px;
+  font-weight: 480;
+  letter-spacing: 0.06em;
+  dominant-baseline: middle;
+  transition: opacity 0.28s ease;
+}
+#p-wheel text.quad--derived { fill: var(--derived); }
+#p-wheel text.quad--contested { fill: var(--contested); }
+#p-wheel text.quad--open { fill: var(--open); }
+#p-wheel text.quad--established { fill: var(--established); }
+
+/* hub */
+#p-wheel .hub { fill: var(--depth-3); stroke: var(--hairline); stroke-width: 1.25; cursor: pointer; transition: fill 0.28s ease, filter 0.28s ease; }
+#p-wheel .hub.is-active { filter: drop-shadow(0 3px 9px rgba(0,0,0,0.25)); }
+#p-wheel .hub-label {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: 17px;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+  fill: var(--text-primary);
+  pointer-events: none;
+}
+
+/* segment labels */
+#p-wheel .label { font-family: var(--font-body); font-size: 10px; fill: var(--text-secondary); pointer-events: none; transition: fill 0.28s ease; }
+#p-wheel .seg.is-active + .label,
+#p-wheel .label.is-active { fill: var(--text-primary); }
+
+/* numerals — mono, pigment, in a hairline well */
+#p-wheel .num { pointer-events: none; }
+#p-wheel .num-dot { fill: var(--bg-elevated); stroke-width: 1.25; transition: stroke-width 0.2s ease; }
+#p-wheel .num-text { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
+#p-wheel .num--derived .num-dot { stroke: var(--derived); }
+#p-wheel .num--derived .num-text { fill: var(--derived); }
+#p-wheel .num--contested .num-dot { stroke: var(--contested); }
+#p-wheel .num--contested .num-text { fill: var(--contested); }
+#p-wheel .num--open .num-dot { stroke: var(--open); }
+#p-wheel .num--open .num-text { fill: var(--open); }
+#p-wheel .num--established .num-dot { stroke: var(--established); }
+#p-wheel .num--established .num-text { fill: var(--established); }
+#p-wheel .num--hub .num-dot { stroke: var(--text-muted); }
+#p-wheel .num--hub .num-text { fill: var(--text-secondary); }
+#p-wheel .num.is-active .num-dot { stroke-width: 2; }
+
+/* the walking "this-week" marker ring around the numeral */
+#p-wheel .week-ring {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+#p-wheel .week-ring.is-on { opacity: 1; }
+#p-wheel .week-ring--derived { stroke: var(--derived); }
+#p-wheel .week-ring--contested { stroke: var(--contested); }
+#p-wheel .week-ring--open { stroke: var(--open); }
+#p-wheel .week-ring--established { stroke: var(--established); }
+
+/* ---- side panel ---- */
+#p-wheel .pw-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 1.25rem 1.25rem 1.1rem;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+#p-wheel .pw-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--accent, var(--text-muted));
+  transition: background 0.3s ease;
+}
+
+#p-wheel .pw-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+#p-wheel .pw-domain-chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--bg);
+  background: var(--accent, var(--text-muted));
+}
+#p-wheel .pw-week {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+#p-wheel .pw-name {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 540;
+  font-size: clamp(1.35rem, 3.2vw, 1.7rem);
+  line-height: 1.12;
+  margin: 0.6rem 0 0.5rem;
+  color: var(--text-primary);
+}
+#p-wheel .pw-wisdom {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+#p-wheel .pw-domain-line {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--hairline);
+}
+#p-wheel .pw-domain-line b { color: var(--accent, var(--text-secondary)); font-weight: 600; font-style: normal; }
+
+/* quiet content swap */
+#p-wheel .pw-fade { animation: pw-fade 0.3s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pw-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- controls ---- */
+#p-wheel .pw-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--hairline);
+}
+#p-wheel .pw-controls .pw-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 0.15rem;
+}
+#p-wheel button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 0.42rem 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+#p-wheel button:hover { background: var(--depth-1); }
+#p-wheel button:focus-visible { outline: 2px solid var(--established); outline-offset: 2px; }
+#p-wheel button.pw-play.is-playing { color: var(--bg); }
+#p-wheel button .pw-glyph { font-size: 11px; line-height: 1; }
+
+#p-wheel .pw-weekread {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
+  white-space: nowrap;
+}
+#p-wheel .pw-weekread .pw-cycle { color: var(--text-muted); }
+#p-wheel .pw-weekread b { color: var(--accent, var(--text-primary)); font-weight: 600; }
+
+/* one quiet entrance — slices bloom around the clock */
+@media (prefers-reduced-motion: no-preference) {
+  #p-wheel .seg {
+    animation: pw-bloom 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(var(--i) * var(--ring-ms));
+  }
+  @keyframes pw-bloom {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+
+/* --- p-scale --- */
+#p-scale {
+  --ps-correct: var(--derived);
+  --ps-wrong: var(--contested);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  width: min(960px, 94vw);
+  margin: 3rem 0;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+#p-scale *, #p-scale *::before, #p-scale *::after { box-sizing: border-box; }
+
+#p-scale .ps-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+#p-scale .ps-cue {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+#p-scale .ps-cue-arrow { color: var(--derived); font-size: 0.95rem; line-height: 1; }
+
+/* live read-out */
+#p-scale .ps-meter { min-width: 230px; flex: 0 1 auto; }
+#p-scale .ps-meter-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+#p-scale .ps-meter-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+#p-scale .ps-meter-val {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.5s ease;
+}
+#p-scale .ps-meter-track {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--depth-2);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  position: relative;
+}
+#p-scale .ps-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--contested-chip), var(--derived-chip));
+  transition: width 0.55s cubic-bezier(.22,.61,.36,1);
+}
+
+/* the ladder */
+#p-scale .ps-ladder { display: flex; flex-direction: column; gap: 0.6rem; }
+#p-scale .ps-tier {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0 1rem;
+  align-items: stretch;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--hairline);
+  border-left-width: 3px;
+  border-radius: 9px;
+  background: var(--bg-elevated);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease, background 0.45s ease, transform 0.2s ease;
+}
+#p-scale .ps-tier--derived { border-left-color: var(--derived);
+  background: linear-gradient(90deg, var(--derived-wash), transparent 52%), var(--bg-elevated); }
+#p-scale .ps-tier--contested { border-left-color: var(--contested);
+  background: linear-gradient(90deg, var(--contested-wash), transparent 52%), var(--bg-elevated); }
+
+#p-scale .ps-tier-num {
+  grid-row: 1 / 3;
+  align-self: start;
+  width: 1.9rem; height: 1.9rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1.25px solid var(--hairline);
+  color: var(--text-muted);
+}
+#p-scale .ps-tier--derived .ps-tier-num { border-color: var(--derived); color: var(--derived); }
+#p-scale .ps-tier--contested .ps-tier-num { border-color: var(--contested); color: var(--contested); }
+
+#p-scale .ps-tier-head { grid-column: 2; }
+#p-scale .ps-tier-title {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin: 0;
+}
+#p-scale .ps-tier-sub {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0.2rem 0 0;
+}
+
+/* drop slot — where placed cards live */
+#p-scale .ps-slot {
+  grid-column: 2;
+  margin-top: 0.6rem;
+  min-height: 2.65rem;
+  border: 1px dashed var(--hairline);
+  border-radius: 7px;
+  padding: 0.32rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-content: flex-start;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+#p-scale .ps-slot::before {
+  content: attr(data-empty);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0.65;
+  align-self: center;
+  padding-left: 0.3rem;
+  pointer-events: none;
+}
+#p-scale .ps-slot:not(:empty)::before { display: none; }
+
+#p-scale .ps-tier.ps-over {
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 0 2px var(--depth-3);
+}
+#p-scale .ps-tier.ps-over .ps-slot { border-color: var(--text-secondary); background: var(--surface); }
+
+#p-scale .ps-tier.ps-flash-ok { box-shadow: 0 0 0 2px var(--derived-chip); }
+#p-scale .ps-tier.ps-flash-no { box-shadow: 0 0 0 2px var(--contested-chip); }
+
+/* the tray of unsorted foods */
+#p-scale .ps-tray-wrap { margin-top: 1.5rem; }
+#p-scale .ps-tray-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+#p-scale .ps-tray-label .ps-rule { flex: 1; height: 1px; background: var(--hairline); }
+#p-scale .ps-tray {
+  min-height: 3.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--depth-1);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+#p-scale .ps-tray.ps-over { border-color: var(--text-secondary); background: var(--surface); }
+#p-scale .ps-tray:empty::after {
+  content: 'All sorted.';
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: auto;
+}
+
+/* food cards */
+#p-scale .ps-card {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 99px;
+  padding: 0.36rem 0.85rem 0.36rem 0.78rem;
+  cursor: grab;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.16s ease, background 0.3s ease;
+  touch-action: none;
+}
+#p-scale .ps-card:hover { border-color: var(--text-muted); transform: translateY(-1px); }
+#p-scale .ps-card:focus-visible { outline: 2px solid var(--established); outline-offset: 2px; }
+#p-scale .ps-card.ps-grabbing { cursor: grabbing; opacity: 0.4; }
+#p-scale .ps-card.ps-selected {
+  border-color: var(--established);
+  box-shadow: 0 0 0 2px var(--established-wash);
+}
+#p-scale .ps-card-dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: var(--text-muted);
+  flex: none;
+  transition: background 0.3s ease;
+}
+#p-scale .ps-card.ps-placed { padding-left: 0.85rem; }
+#p-scale .ps-card.ps-correct { border-color: var(--derived); background: linear-gradient(0deg, var(--derived-wash), var(--surface)); }
+#p-scale .ps-card.ps-correct .ps-card-dot { background: var(--derived); }
+#p-scale .ps-card.ps-misplaced { border-color: var(--contested); background: linear-gradient(0deg, var(--contested-wash), var(--surface)); }
+#p-scale .ps-card.ps-misplaced .ps-card-dot { background: var(--contested); }
+#p-scale .ps-card-mark {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1;
+  font-weight: 600;
+}
+#p-scale .ps-card.ps-correct .ps-card-mark { color: var(--derived); }
+#p-scale .ps-card.ps-misplaced .ps-card-mark { color: var(--contested); }
+
+/* the floating clone while dragging */
+#p-scale .ps-drag-ghost {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.45);
+  transform: translate(-50%, -50%) scale(1.04);
+  opacity: 0.97;
+}
+
+/* footer line: nudge messages + reset */
+#p-scale .ps-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  min-height: 1.6rem;
+}
+#p-scale .ps-msg {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.93rem;
+  color: var(--text-secondary);
+  margin: 0;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+#p-scale .ps-msg.ps-msg-ok { color: var(--derived); font-style: normal; }
+#p-scale .ps-msg.ps-msg-no { color: var(--contested); }
+#p-scale .ps-reset {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: 99px;
+  padding: 0.32rem 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  flex: none;
+}
+#p-scale .ps-reset:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+#p-scale .ps-tier, #p-scale .ps-tray-wrap, #p-scale .ps-head { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  #p-scale .ps-head { animation: ps-rise 0.5s ease both; }
+  #p-scale .ps-tier { animation: ps-rise 0.55s ease both; animation-delay: calc(var(--i) * 80ms + 90ms); }
+  #p-scale .ps-tray-wrap { animation: ps-rise 0.55s ease both; animation-delay: 0.46s; }
+  #p-scale .ps-card.ps-just-placed { animation: ps-pop 0.34s cubic-bezier(.34,1.56,.64,1) both; }
+  #p-scale .ps-tier.ps-nudge { animation: ps-shake 0.4s ease both; }
+  @keyframes ps-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes ps-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  @keyframes ps-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+}
+
+@media (max-width: 560px) {
+  #p-scale .ps-tier { grid-template-columns: 2.1rem 1fr; padding: 0.7rem 0.7rem; }
+  #p-scale .ps-meter { min-width: 100%; }
+}
+
+/* --- p-nerd --- */
+
+#p-nerd {
+  --nerd-pad: clamp(1rem, 3vw, 1.75rem);
+  width: min(680px, 94vw);
+  margin: 2.5rem auto;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+#p-nerd .nerd-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: clamp(0.9rem, 2.4vw, 1.6rem);
+  align-items: stretch;
+}
+@media (max-width: 560px) {
+  #p-nerd .nerd-stage { grid-template-columns: 1fr; }
+}
+
+/* ---- the plot ---- */
+#p-nerd .nerd-plot-wrap {
+  position: relative;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+#p-nerd svg.nerd-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: grab;
+}
+#p-nerd svg.nerd-plot.is-grabbing { cursor: grabbing; }
+
+#p-nerd .win-cell { fill: var(--derived-wash); }
+#p-nerd .frame, #p-nerd .axis { stroke: var(--hairline); stroke-width: 1; }
+#p-nerd .axis-tick { stroke: var(--hairline); stroke-width: 1; opacity: 0.55; }
+
+#p-nerd .win-label {
+  font-family: var(--font-mono);
+  font-size: 8.4px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--derived);
+}
+#p-nerd .axis-label {
+  font-family: var(--font-mono);
+  font-size: 8.6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+}
+#p-nerd .axis-name {
+  font-family: var(--font-mono);
+  font-size: 8.2px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  fill: var(--text-secondary);
+}
+
+/* ghost food dots on the plane */
+#p-nerd .ghost {
+  fill: var(--surface);
+  stroke: var(--hairline);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: r 0.18s ease, fill 0.18s ease;
+}
+#p-nerd .ghost:hover { fill: var(--depth-3); r: 5.4px; }
+#p-nerd .ghost.is-active { fill: var(--text-muted); stroke: none; }
+
+/* the marker */
+#p-nerd .lead-line { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
+#p-nerd .marker-halo { fill: var(--bg-elevated); stroke-width: 1.25; }
+#p-nerd .marker-core { stroke: var(--bg-elevated); stroke-width: 1.5; }
+#p-nerd .marker-score {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  fill: var(--bg-elevated);
+  pointer-events: none;
+}
+
+/* pigment helpers (set on marker by JS) */
+#p-nerd .tint-win   .marker-halo { stroke: var(--derived); }
+#p-nerd .tint-win   .marker-core { fill: var(--derived); }
+#p-nerd .tint-mid   .marker-halo { stroke: var(--contested); }
+#p-nerd .tint-mid   .marker-core { fill: var(--contested); }
+#p-nerd .tint-lose  .marker-halo { stroke: var(--open); }
+#p-nerd .tint-lose  .marker-core { fill: var(--open); }
+
+/* ---- readout panel ---- */
+#p-nerd .nerd-readout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: var(--nerd-pad);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+}
+
+#p-nerd .ro-kicker {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+}
+
+#p-nerd .ro-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  line-height: 0.92;
+  color: var(--score-tint, var(--text-primary));
+  transition: color 0.25s ease;
+}
+#p-nerd .ro-score .big { font-size: clamp(3rem, 11vw, 4.3rem); }
+#p-nerd .ro-score .deno { font-size: 1.2rem; color: var(--text-muted); font-weight: 500; }
+
+#p-nerd .ro-verdict-word {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4vw, 1.7rem);
+  font-weight: 500;
+  color: var(--score-tint, var(--text-primary));
+  margin: 0.1rem 0 0.15rem;
+  transition: color 0.25s ease;
+}
+#p-nerd .ro-verdict-line {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+  min-height: 2.6em;
+}
+#p-nerd .ro-verdict-line .food-name {
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+/* the two component bars */
+#p-nerd .ro-bars { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.2rem; }
+#p-nerd .ro-bar { display: grid; grid-template-columns: 4.5em 1fr 2.2em; align-items: center; gap: 0.55rem; }
+#p-nerd .ro-bar .lab {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+#p-nerd .ro-bar .track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--depth-3);
+  overflow: hidden;
+}
+#p-nerd .ro-bar .fill { height: 100%; width: 0; border-radius: 3px; transition: width 0.32s cubic-bezier(.2,.7,.2,1); }
+#p-nerd .ro-bar.nutrition .fill { background: var(--established); }
+#p-nerd .ro-bar.energy .fill { background: var(--contested); }
+#p-nerd .ro-bar .num {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* ---- food chips ---- */
+#p-nerd .nerd-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+#p-nerd .chip {
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 0.34rem 0.78rem;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.1s ease;
+}
+#p-nerd .chip:hover { background: var(--depth-3); color: var(--text-primary); }
+#p-nerd .chip:active { transform: translateY(1px); }
+#p-nerd .chip.is-active {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  background: var(--depth-3);
+}
+#p-nerd .chip .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 0.45rem; vertical-align: middle; }
+
+#p-nerd .nerd-hint {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0.9rem 0 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #p-nerd .nerd-plot-wrap,
+  #p-nerd .nerd-readout { animation: pn-rise 0.6s cubic-bezier(.2,.7,.2,1) backwards; }
+  #p-nerd .nerd-readout { animation-delay: 0.08s; }
+  #p-nerd .chip { animation: pn-rise 0.5s ease backwards; animation-delay: calc(0.18s + var(--ci, 0) * 0.04s); }
+  @keyframes pn-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+
+/* --- p-hunger --- */
+
+#p-hunger {
+  --pad-l: 70;
+  --pad-r: 70;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  width: min(880px, 95vw);
+  margin: 2.5rem 0;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- header line ---- */
+#p-hunger .ph-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0.25rem 0.6rem;
+  flex-wrap: wrap;
+}
+#p-hunger .ph-kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--contested);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+}
+#p-hunger .ph-kicker::before {
+  content: "";
+  width: 1.6em;
+  height: 1px;
+  background: var(--contested);
+  display: inline-block;
+}
+#p-hunger .ph-week {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+/* ---- the plot ---- */
+#p-hunger .ph-plot { display: block; width: 100%; height: auto; overflow: visible; }
+
+#p-hunger .ph-frame { fill: none; stroke: var(--hairline); stroke-width: 1; }
+#p-hunger .ph-grid  { stroke: var(--hairline); stroke-width: 1; opacity: 0.55; }
+#p-hunger .ph-floor { stroke: var(--hairline); stroke-width: 1; }
+
+/* sweet-spot band — the emotional centre */
+#p-hunger .ph-band {
+  fill: var(--derived-wash);
+  stroke: var(--derived);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.35;
+  transition: opacity 0.35s ease, fill 0.35s ease;
+}
+#p-hunger .ph-band.is-live { opacity: 1; stroke-dasharray: none; }
+#p-hunger .ph-band-cap {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--derived);
+  opacity: 0.7;
+  transition: opacity 0.35s ease;
+}
+#p-hunger .ph-band-cap.is-live { opacity: 1; }
+
+/* curves */
+#p-hunger .ph-curve { fill: none; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+#p-hunger .ph-curve--hunger   { stroke: var(--established); }
+#p-hunger .ph-curve--appetite { stroke: var(--contested); }
+
+/* the GAP fill — appetite beyond hunger, the part that is "appetite talking" */
+#p-hunger .ph-gap { transition: fill 0.45s ease; }
+#p-hunger .ph-gap--ok   { fill: var(--derived-wash); }
+#p-hunger .ph-gap--over { fill: var(--contested-wash); }
+#p-hunger .ph-gap--far  { fill: var(--open-wash); }
+
+#p-hunger .ph-curve-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+#p-hunger .ph-curve-tag--hunger   { fill: var(--established); }
+#p-hunger .ph-curve-tag--appetite { fill: var(--contested); }
+
+/* the moving readout line + thumb */
+#p-hunger .ph-now {
+  stroke: var(--text-primary);
+  stroke-width: 1.25;
+  opacity: 0.55;
+}
+#p-hunger .ph-thumb-hit { fill: transparent; cursor: grab; }
+#p-hunger .ph-track.is-drag .ph-thumb-hit { cursor: grabbing; }
+#p-hunger .ph-thumb {
+  fill: var(--bg-elevated);
+  stroke-width: 2;
+  transition: stroke 0.35s ease;
+}
+#p-hunger .ph-thumb-core {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-anchor: middle;
+  transition: fill 0.35s ease;
+}
+#p-hunger .z-ok   .ph-thumb { stroke: var(--derived); }
+#p-hunger .z-ok   .ph-thumb-core { fill: var(--derived); }
+#p-hunger .z-over .ph-thumb { stroke: var(--contested); }
+#p-hunger .z-over .ph-thumb-core { fill: var(--contested); }
+#p-hunger .z-far  .ph-thumb { stroke: var(--open); }
+#p-hunger .z-far  .ph-thumb-core { fill: var(--open); }
+
+#p-hunger .ph-track:focus { outline: none; }
+#p-hunger .ph-track:focus-visible .ph-thumb {
+  stroke-width: 2.5;
+}
+#p-hunger .ph-focus-ring {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+#p-hunger .ph-track:focus-visible .ph-focus-ring { opacity: 0.8; }
+
+/* axis tick labels (the five stops) */
+#p-hunger .ph-tick { stroke: var(--hairline); stroke-width: 1; }
+#p-hunger .ph-tick-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+  transition: fill 0.3s ease, font-weight 0.3s ease;
+}
+#p-hunger .ph-tick-label.is-here { fill: var(--text-primary); }
+#p-hunger .ph-axis-name {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+}
+
+/* ---- message panel ---- */
+#p-hunger .ph-msg {
+  margin: 1.15rem 0.25rem 0;
+  border-top: 1px solid var(--hairline);
+  padding-top: 0.95rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 1rem;
+  align-items: start;
+}
+#p-hunger .ph-verdict {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0.32em 0.7em;
+  border-radius: 2px;
+  transition: background 0.35s ease, color 0.35s ease;
+  align-self: start;
+}
+#p-hunger .z-ok   .ph-verdict { background: var(--derived-chip);   color: var(--bg); }
+#p-hunger .z-over .ph-verdict { background: var(--contested-chip); color: var(--bg); }
+#p-hunger .z-far  .ph-verdict { background: var(--open-chip);      color: var(--bg); }
+
+#p-hunger .ph-say {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.15rem, 1rem + 0.9vw, 1.7rem);
+  line-height: 1.22;
+  font-weight: 420;
+  color: var(--text-primary);
+  margin: 0.05em 0 0;
+  min-height: 2.4em;
+}
+#p-hunger .ph-say em {
+  font-style: italic;
+  transition: color 0.35s ease;
+}
+#p-hunger .z-ok   .ph-say em { color: var(--derived); }
+#p-hunger .z-over .ph-say em { color: var(--contested); }
+#p-hunger .z-far  .ph-say em { color: var(--open); }
+
+#p-hunger .ph-sub {
+  grid-column: 2;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
+  max-width: 46ch;
+}
+
+#p-hunger .ph-reset {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  padding: 0.45em 0.85em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+#p-hunger .ph-reset:hover { color: var(--derived); border-color: var(--derived); }
+
+/* quiet entrance, then stillness */
+@media (prefers-reduced-motion: no-preference) {
+  #p-hunger .ph-anim {
+    opacity: 0;
+    animation: ph-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--d, 0) * 1ms);
+  }
+  #p-hunger .ph-draw {
+    stroke-dasharray: var(--len, 1200);
+    stroke-dashoffset: var(--len, 1200);
+    animation: ph-draw 0.95s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+    animation-delay: calc(var(--d, 0) * 1ms);
+  }
+  @keyframes ph-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes ph-draw { to { stroke-dashoffset: 0; } }
+}
+
+
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">Reasonable Eating · interactive prototype</p>
+        <h1 class="h1">Beyond the book</h1>
+      </div>
+      <button class="toggle" id="theme-toggle" type="button" aria-label="Toggle light / dark">◐ theme</button>
+    </div>
+    <p class="lede">
+      The book's diagrams were the best static pictures of these ideas. On the web they don't
+      have to <em>stay</em> pictures. Here the 13×4 wheel becomes the program's navigator, and
+      four of the eating algorithms become things you can <em>drive</em> — drag, sort, simulate,
+      feel the principle land. Same theme-token language as the site; flip the theme, top-right.
+    </p>
+    <p class="prototype-note">
+      Scratch prototype · not wired into the site · built to decide the architecture by feel.
+      Every colour is a design token, so it re-pigments with the theme — no separate art.
+    </p>
+
+    <!-- ===== COMPONENT SECTIONS (injected) ===== -->
+    <section class="comp">
+      <p class="comp-eyebrow">The navigator · all 13 algorithms</p>
+      <h2 class="comp-title">The Reasonable Eating 13×4 — the program navigator</h2>
+      <p class="comp-blurb">Click any slice to read its algorithm and word of wisdom; press Play (or step) to watch the focus walk the weeks and cycle the four domains in Franklin rotation.</p>
+      <div class="mount" id="p-wheel">
+<div class="pw-stage">
+  <div class="pw-wheel-wrap">
+    <svg class="pw-wheel pw-svg" viewBox="0 0 720 660" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Interactive Reasonable Eating 13 by 4 wheel">
+      <title>The Reasonable Eating 13×4 navigator</title>
+      <desc>An annular wheel: the EAT MORE central focus at the hub, surrounded by four pigment-coded domains — How, When, Why and What you eat — each holding three weekly focus points, twelve in all. Click a slice to read its algorithm, or play the weekly rotation.</desc>
+      <g class="pw-segs"></g>
+      <g class="pw-arcs"></g>
+      <g class="pw-quadlabels"></g>
+      <circle class="hub" cx="360" cy="300" r="83" tabindex="0" role="button" aria-label="Algorithm Zero: Eat More"></circle>
+      <g class="num num--hub">
+        <circle class="num-dot" cx="360" cy="272" r="10.5"></circle>
+        <text class="num-text" x="360" y="276" text-anchor="middle">0</text>
+      </g>
+      <text class="hub-label" x="360" y="306" text-anchor="middle">EAT</text>
+      <text class="hub-label" x="360" y="327" text-anchor="middle">MORE</text>
+      <g class="pw-labels"></g>
+      <g class="pw-nums"></g>
+    </svg>
+  </div>
+
+  <aside class="pw-panel" aria-live="polite">
+    <div class="pw-eyebrow">
+      <span class="pw-domain-chip">HUB</span>
+      <span class="pw-week">Algorithm Zero · always on</span>
+    </div>
+    <h3 class="pw-name">Eat More</h3>
+    <p class="pw-wisdom">Start from abundance, not restriction. Reasonable eating adds good things; it doesn't police you. Eat more — of the right things, in the right way.</p>
+    <div class="pw-domain-line">The neutral centre that holds every week — <b>the one rule that never rotates</b>.</div>
+  </aside>
+
+  <div class="pw-controls">
+    <span class="pw-label">This week</span>
+    <button class="pw-play" type="button" aria-pressed="false"><span class="pw-glyph">▶</span><span class="pw-playtext">Play rotation</span></button>
+    <button class="pw-prev" type="button" aria-label="Previous week"><span class="pw-glyph">◀</span> Prev</button>
+    <button class="pw-next" type="button" aria-label="Next week">Next <span class="pw-glyph">▶</span></button>
+    <span class="pw-weekread"><span class="pw-cycle">Cycle 1</span> · Week <b class="pw-wk">1</b> / 12 · <b class="pw-dom">HOW</b></span>
+  </div>
+</div>
+</div>
+    </section>
+    <section class="comp">
+      <p class="comp-eyebrow">Week 4 · WHAT you eat</p>
+      <h2 class="comp-title">Did it grow into its shape?</h2>
+      <p class="comp-blurb">Drag (or tap, then tap a rung) each food onto the ladder rung you think it belongs to — the rung glows green-to-amber and ticks when you place it right; your plate's naturalness reads out live.</p>
+      <div class="mount" id="p-scale"><div class="ps-head">
+  <p class="ps-cue"><span class="ps-cue-arrow" aria-hidden="true">↑</span> Eat nearer the top — did it grow into its shape?</p>
+  <div class="ps-meter" role="group" aria-label="How natural is your plate">
+    <div class="ps-meter-top">
+      <span class="ps-meter-label">How natural is your plate?</span>
+      <span class="ps-meter-val" id="ps-meter-val">—</span>
+    </div>
+    <div class="ps-meter-track"><div class="ps-meter-fill" id="ps-meter-fill"></div></div>
+  </div>
+</div>
+
+<ol class="ps-ladder" id="ps-ladder"></ol>
+
+<div class="ps-tray-wrap">
+  <p class="ps-tray-label"><span>The tray — drag a food onto its rung</span><span class="ps-rule" aria-hidden="true"></span></p>
+  <div class="ps-tray" id="ps-tray" data-tier="tray" role="list" aria-label="Unsorted foods"></div>
+</div>
+
+<div class="ps-foot">
+  <p class="ps-msg" id="ps-msg" aria-live="polite">Pick up a card and drop it on the rung where it belongs.</p>
+  <button type="button" class="ps-reset" id="ps-reset">Reset</button>
+</div></div>
+    </section>
+    <section class="comp">
+      <p class="comp-eyebrow">Week 8 · WHAT you eat</p>
+      <h2 class="comp-title">The NERD Quadrant — an instrument for the Nutrition-to-Energy Ratio</h2>
+      <p class="comp-blurb">Drag the marker anywhere on the plane — or tap a food — and the NERD score, verdict, and win-zone read out live.</p>
+      <div class="mount" id="p-nerd">
+<div class="nerd-stage">
+  <div class="nerd-plot-wrap">
+    <svg class="nerd-plot" viewBox="0 0 320 320" role="application"
+         aria-label="NERD quadrant. Drag the marker to set energy on the horizontal axis and nutrition on the vertical axis; the Nutrition-to-Energy Ratio score updates live.">
+      <desc>A two-by-two plot. The horizontal axis is energy, low on the left to high on the right. The vertical axis is nutrition, low at the bottom to high at the top. The winning zone is the top-left: high nutrition for low energy.</desc>
+
+      <!-- win wash: top-left quadrant (low energy, high nutrition) -->
+      <rect class="win-cell" x="48" y="40" width="112" height="112" rx="2"/>
+
+      <!-- frame + cross axes -->
+      <rect class="frame" x="48" y="40" width="224" height="224" rx="3" fill="none"/>
+      <line class="axis" x1="160" y1="40"  x2="160" y2="264"/>
+      <line class="axis" x1="48"  y1="152" x2="272" y2="152"/>
+
+      <!-- quarter ticks -->
+      <line class="axis-tick" x1="104" y1="262" x2="104" y2="266"/>
+      <line class="axis-tick" x1="216" y1="262" x2="216" y2="266"/>
+      <line class="axis-tick" x1="46"  y1="96"  x2="50"  y2="96"/>
+      <line class="axis-tick" x1="46"  y1="208" x2="50"  y2="208"/>
+
+      <!-- win label -->
+      <text class="win-label" x="56" y="55">High NERD</text>
+
+      <!-- axis pole labels -->
+      <text class="axis-label" x="48"  y="280" text-anchor="start">Low</text>
+      <text class="axis-label" x="272" y="280" text-anchor="end">High</text>
+      <text class="axis-name"  x="160" y="293" text-anchor="middle">Energy · calories</text>
+
+      <text class="axis-label" x="40" y="44"  text-anchor="end">High</text>
+      <text class="axis-label" x="40" y="264" text-anchor="end">Low</text>
+      <text class="axis-name"  x="20" y="152" text-anchor="middle" transform="rotate(-90 20 152)">Nutrition</text>
+
+      <!-- ghost food positions injected by JS -->
+      <g class="ghosts"></g>
+
+      <!-- lead lines + marker injected/positioned by JS -->
+      <line class="lead-line lead-v" x1="0" y1="0" x2="0" y2="264"/>
+      <line class="lead-line lead-h" x1="48" y1="0" x2="0" y2="0"/>
+      <g class="marker tint-win">
+        <circle class="marker-halo" r="17"/>
+        <circle class="marker-core" r="13"/>
+        <text class="marker-score" text-anchor="middle" dy="4.2">7</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="nerd-readout">
+    <div>
+      <p class="ro-kicker">NERD · nutrition ÷ energy</p>
+      <div class="ro-score"><span class="big js-score">7.0</span><span class="deno">/ 10</span></div>
+      <p class="ro-verdict-word js-word">Decent</p>
+      <p class="ro-verdict-line js-line">Drag the marker, or pick a food below.</p>
+    </div>
+
+    <div class="ro-bars">
+      <div class="ro-bar nutrition">
+        <span class="lab">Nutrition</span>
+        <span class="track"><span class="fill js-nut-fill"></span></span>
+        <span class="num js-nut-num">50</span>
+      </div>
+      <div class="ro-bar energy">
+        <span class="lab">Energy</span>
+        <span class="track"><span class="fill js-en-fill"></span></span>
+        <span class="num js-en-num">50</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nerd-chips js-chips"></div>
+<p class="nerd-hint">Drag the dot anywhere · tap a food to fly it there</p>
+</div>
+    </section>
+    <section class="comp">
+      <p class="comp-eyebrow">Week 6 · WHEN you eat</p>
+      <h2 class="comp-title">Hunger &gt;&gt; Appetite — the meter</h2>
+      <p class="comp-blurb">Drag along the plate from Starving to Stuffed: the body's hunger falls away early, but appetite lingers — and the lit band shows the one reasonable place to stop.</p>
+      <div class="mount" id="p-hunger">
+<div class="ph-head">
+  <span class="ph-kicker">Hunger &gt;&gt; Appetite</span>
+  <span class="ph-week">Reasonable Eating · wk 02 / 06 · when</span>
+</div>
+
+<svg class="ph-plot" viewBox="0 0 860 360" role="group" aria-label="A meter from Starving to Stuffed. Drag along it: the body's hunger falls away early while appetite lingers, and a lit band marks the one reasonable place to stop.">
+  <desc>Hunger falls to nothing soon after you start eating; appetite stays high much longer. The lit green band — &ldquo;no longer hungry&rdquo; — is where hunger is met but appetite is still talking. Stop there.</desc>
+
+  <!-- floor + frame -->
+  <line class="ph-floor ph-anim" style="--d:120" x1="70" y1="252" x2="790" y2="252"></line>
+
+  <!-- sweet-spot band -->
+  <g id="ph-bandg">
+    <rect class="ph-band ph-anim" style="--d:240" x="0" y="64" width="10" height="188" rx="2"></rect>
+    <text class="ph-band-cap ph-anim" style="--d:300" x="0" y="56" text-anchor="middle">stop here</text>
+  </g>
+
+  <!-- the appetite-beyond-hunger gap fill -->
+  <path id="ph-gap" class="ph-gap ph-gap--ok ph-anim" style="--d:560" d=""></path>
+
+  <!-- the two curves -->
+  <path id="ph-hunger"   class="ph-curve ph-curve--hunger ph-draw"   style="--d:420;--len:900" d=""></path>
+  <path id="ph-appetite" class="ph-curve ph-curve--appetite ph-draw" style="--d:520;--len:900" d=""></path>
+
+  <!-- curve tags -->
+  <text class="ph-curve-tag ph-curve-tag--appetite ph-anim" style="--d:760" x="86" y="96" id="ph-tag-app">appetite</text>
+  <text class="ph-curve-tag ph-curve-tag--hunger ph-anim"   style="--d:760" x="86" y="240" id="ph-tag-hun">hunger</text>
+
+  <!-- moving readout: line + thumb (focusable track group) -->
+  <g class="ph-track z-ok" id="ph-track" tabindex="0" role="slider"
+     aria-label="Fullness" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30"
+     aria-valuetext="No longer hungry">
+    <rect class="ph-focus-ring" x="62" y="50" width="736" height="240" rx="6"></rect>
+    <line class="ph-now ph-anim" style="--d:640" id="ph-now" x1="0" y1="58" x2="0" y2="252"></line>
+    <circle class="ph-thumb ph-anim" style="--d:640" id="ph-thumb" cx="0" cy="252" r="13"></circle>
+    <text class="ph-thumb-core ph-anim" style="--d:640" id="ph-thumb-core" x="0" y="256.5">●</text>
+    <rect class="ph-thumb-hit" id="ph-hit" x="60" y="44" width="740" height="252"></rect>
+  </g>
+
+  <!-- ticks for the five stops (positions + labels injected) -->
+  <g id="ph-ticks"></g>
+
+  <text class="ph-axis-name ph-anim" style="--d:840" x="70" y="320" text-anchor="start">← less eaten</text>
+  <text class="ph-axis-name ph-anim" style="--d:840" x="790" y="320" text-anchor="end">more eaten →</text>
+</svg>
+
+<div class="ph-msg z-ok" id="ph-msg">
+  <span class="ph-verdict" id="ph-verdict">the reasonable stop</span>
+  <p class="ph-say" id="ph-say"></p>
+  <p class="ph-sub" id="ph-sub"></p>
+  <button class="ph-reset" id="ph-reset" type="button">↺ back to the sweet&nbsp;spot</button>
+</div>
+</div>
+    </section>
+
+
+    <p class="footer">
+      A proof of direction, not a finished feature. The point: this whole family of
+      interactions can ride on one reusable kit, and the wheel can double as the
+      “coach in your pocket” surface. See <code>INTERACTIVE-ARCHITECTURE.md</code> for the plan.
+    </p>
+  </main>
+
+  <script>
+    // Theme toggle — mirrors the site's ThemeToggle (attribute flip + persist).
+    (function () {
+      var root = document.documentElement;
+      var btn = document.getElementById('theme-toggle');
+      var KEY = 're-explorer-theme';
+      try { var saved = localStorage.getItem(KEY); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+      btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+      });
+    })();
+  </script>
+
+  <!-- ===== COMPONENT SCRIPTS (injected) ===== -->
+  <script>
+(function(){
+
+const root = document.getElementById('p-wheel');
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+// ---- geometry (clockwise from 12 o'clock), matching the house wheels ----
+const cx = 360, cy = 300, ro = 206, ri = 86, rArc = 214, rLab = 150, rNum = 190;
+const NUM_INSET = 6; // deg into a slice from its leading edge
+
+const pt = (r, deg) => {
+  const a = (deg * Math.PI) / 180;
+  return [+(cx + r * Math.sin(a)).toFixed(2), +(cy - r * Math.cos(a)).toFixed(2)];
+};
+const sector = (a1, a2) => {
+  const [ox1, oy1] = pt(ro, a1), [ox2, oy2] = pt(ro, a2);
+  const [ix2, iy2] = pt(ri, a2), [ix1, iy1] = pt(ri, a1);
+  return `M${ox1},${oy1} A${ro},${ro} 0 0,1 ${ox2},${oy2} L${ix2},${iy2} A${ri},${ri} 0 0,0 ${ix1},${iy1} Z`;
+};
+const arcPath = (a1, a2, r) => {
+  const [x1, y1] = pt(r, a1), [x2, y2] = pt(r, a2);
+  return `M${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2}`;
+};
+
+// ---- the real 13 algorithms (domains map 1:1 to pigments) ----
+const QUADS = [
+  { name: 'HOW', pigment: 'derived', question: 'How you eat', base: 0, segs: [
+    { n: 1, name: 'Chew until liquid', lines: ['Chew until', 'liquid'],
+      wisdom: 'Let your teeth do the work your gut shouldn’t have to. Chew it to a drink and digestion is half done before you swallow.' },
+    { n: 5, name: 'Eat slow', lines: ['Eat slow'],
+      wisdom: 'There’s no prize for finishing first. Slow down and the meal lasts longer, satisfies sooner, and you taste all of it.' },
+    { n: 9, name: 'Savour the flavour', lines: ['Savour the', 'flavour'],
+      wisdom: 'Actually notice what’s in your mouth. Pleasure paid attention to goes a very long way — and a little becomes plenty.' },
+  ] },
+  { name: 'WHEN', pigment: 'contested', question: 'When you eat', base: 90, segs: [
+    { n: 2, name: 'Hunger >> Appetite', lines: ['Hunger >>', 'Appetite'],
+      wisdom: 'Appetite is the menu in your head; hunger is the signal in your body. Wait for the body to ask, and let it lead.' },
+    { n: 6, name: 'Stop when no longer hungry', lines: ['Stop when', 'no longer', 'hungry'],
+      wisdom: 'Aim for “not hungry,” not “full.” Lay the fork down a few bites early and your body catches up grateful, never stuffed.' },
+    { n: 10, name: 'Eat naturally, not continuously', lines: ['Eat naturally', 'not', 'continuously'],
+      wisdom: 'You’re built to eat in rhythm, not to graze all day. Give the body real gaps and meals mean something again.' },
+  ] },
+  { name: 'WHY', pigment: 'open', question: 'Why you eat', base: 180, segs: [
+    { n: 3, name: 'Eat for the body & the taste buds', lines: ['Eat for the', 'body & the', 'taste buds'],
+      wisdom: 'You don’t have to choose between good-for-you and good-tasting. Aim for both — the best food earns its place on both counts.' },
+    { n: 7, name: 'Eat for a long life', lines: ['Eat for a', 'long life'],
+      wisdom: 'Ask of a plate: would this carry me to a strong old age? Eat as if you intend to be here, and well, for the long run.' },
+    { n: 11, name: 'Eat for fun', lines: ['Eat for fun'],
+      wisdom: 'Joy is a real reason to eat — guilt is not. Choose the treat openly, enjoy it fully, and move on lightly.' },
+  ] },
+  { name: 'WHAT', pigment: 'established', question: 'What you eat', base: 270, segs: [
+    { n: 4, name: 'Did it grow into its shape?', lines: ['Did it grow', 'into its', 'shape?'],
+      wisdom: 'An apple looks like an apple; a crisp looks like a factory. The closer a food is to how it grew, the better it tends to be.' },
+    { n: 8, name: 'Eat a high NERD', lines: ['Eat a high', 'NERD'],
+      wisdom: 'NERD = Nutrition-to-Energy Ratio. Broccoli scores ten, a doughnut scores one. Chase the high-NERD foods and the rest takes care of itself.' },
+    { n: 12, name: 'Eat what YOU control', lines: ['Eat what', 'YOU control'],
+      wisdom: 'When you make it, you own every ingredient. Cook it yourself more often and you quietly decide what your body gets.' },
+  ] },
+];
+
+// flatten to 12 segments, keeping draw order around the clock
+const pigments = {};
+let order = 0;
+const segs = [];
+QUADS.forEach((q) => {
+  pigments[q.name] = q.pigment;
+  q.segs.forEach((s, i) => {
+    const a1 = q.base + i * 30, a2 = a1 + 30, mid = a1 + 15;
+    const [lx, ly] = pt(rLab, mid);
+    const [nx, ny] = pt(rNum, a1 + NUM_INSET);
+    segs.push({ ...s, domain: q.name, pigment: q.pigment, question: q.question,
+      order: order++, path: sector(a1, a2), lx, ly, nx, ny });
+  });
+});
+// index by week number for the rotation walk
+const byWeek = {}; segs.forEach((s) => { byWeek[s.n] = s; });
+
+// ---- build SVG ----
+const gSegs = root.querySelector('.pw-segs');
+const gArcs = root.querySelector('.pw-arcs');
+const gQL = root.querySelector('.pw-quadlabels');
+const gLabels = root.querySelector('.pw-labels');
+const gNums = root.querySelector('.pw-nums');
+const svg = root.querySelector('.pw-svg');
+
+const el = (tag, attrs) => {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+};
+
+// segments (clickable)
+segs.forEach((s) => {
+  const p = el('path', { class: `seg seg--${s.pigment}`, d: s.path, style: `--i:${s.order}`,
+    tabindex: '0', role: 'button', 'aria-label': `Week ${s.n}: ${s.name}` });
+  p.dataset.week = s.n;
+  gSegs.appendChild(p);
+});
+
+// quadrant rim arcs + labels
+QUADS.forEach((q) => {
+  gArcs.appendChild(el('path', { class: `quad-arc quad--${q.pigment}`, d: arcPath(q.base + 1.2, q.base + 88.8, rArc) }));
+  const [qlx, qly] = pt(rArc + 30, q.base + 45);
+  const t = el('text', { class: `quad-label quad--${q.pigment}`, x: qlx, y: qly, 'text-anchor': 'middle' });
+  t.textContent = q.name; t.dataset.domain = q.name;
+  gQL.appendChild(t);
+});
+
+// segment labels (multi-line, centred)
+segs.forEach((s) => {
+  const t = el('text', { class: 'label', x: s.lx, y: s.ly, 'text-anchor': 'middle' });
+  t.dataset.week = s.n;
+  s.lines.forEach((line, k) => {
+    const ts = el('tspan', { x: s.lx, dy: k === 0 ? (-((s.lines.length - 1) * 11) / 2 + 3.5) : 11 });
+    ts.textContent = line; t.appendChild(ts);
+  });
+  gLabels.appendChild(t);
+});
+
+// numerals (mono, circled well) + a walking "this-week" ring
+segs.forEach((s) => {
+  const g = el('g', { class: `num num--${s.pigment}` });
+  g.dataset.week = s.n;
+  g.appendChild(el('circle', { class: `week-ring week-ring--${s.pigment}`, cx: s.nx, cy: s.ny, r: 14 }));
+  g.appendChild(el('circle', { class: 'num-dot', cx: s.nx, cy: s.ny, r: 10 }));
+  const t = el('text', { class: 'num-text', x: s.nx, y: s.ny + 3.5, 'text-anchor': 'middle' });
+  t.textContent = s.n; g.appendChild(t);
+  gNums.appendChild(g);
+});
+
+// ---- panel + state ----
+const tokenOf = { derived: 'var(--derived)', contested: 'var(--contested)', open: 'var(--open)', established: 'var(--established)' };
+const panel = root.querySelector('.pw-panel');
+const elChip = root.querySelector('.pw-domain-chip');
+const elWeekTag = root.querySelector('.pw-week');
+const elName = root.querySelector('.pw-name');
+const elWisdom = root.querySelector('.pw-wisdom');
+const elDomLine = root.querySelector('.pw-domain-line');
+const hub = root.querySelector('.hub');
+const wkRead = root.querySelector('.pw-wk');
+const domRead = root.querySelector('.pw-dom');
+const cycleRead = root.querySelector('.pw-weekread .pw-cycle');
+
+const HUB = {
+  domain: 'HUB', pigment: null, name: 'Eat More',
+  wisdom: 'Start from abundance, not restriction. Reasonable eating adds good things; it doesn’t police you. Eat more — of the right things, in the right way.',
+  domLine: 'The neutral centre that holds every week — <b>the one rule that never rotates</b>.',
+};
+
+let selectedWeek = null; // null = hub
+let week = 1;            // 1..12, the "this week" pointer
+let cycle = 1;          // Franklin year cycle 1..4
+let playing = false;
+let timer = null;
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function setAccent(pigment) {
+  panel.style.setProperty('--accent', pigment ? tokenOf[pigment] : 'var(--text-muted)');
+}
+
+function fade(node) {
+  if (reduceMotion) return;
+  node.classList.remove('pw-fade'); void node.offsetWidth; node.classList.add('pw-fade');
+}
+
+function renderPanel(data) {
+  setAccent(data.pigment);
+  if (data === HUB) {
+    elChip.textContent = 'HUB';
+    elWeekTag.textContent = 'Algorithm Zero · always on';
+    elDomLine.innerHTML = data.domLine;
+  } else {
+    elChip.textContent = data.domain;
+    elWeekTag.textContent = `Week ${data.n} · ${data.question}`;
+    elDomLine.innerHTML = `<b>${data.domain}</b> — ${data.question.toLowerCase()}. One of three ${data.domain} weeks (${data.domain === 'HOW' ? '1, 5, 9' : data.domain === 'WHEN' ? '2, 6, 10' : data.domain === 'WHY' ? '3, 7, 11' : '4, 8, 12'}).`;
+  }
+  elName.textContent = data.name;
+  elWisdom.textContent = data.wisdom;
+  elChip.style.background = data.pigment ? tokenOf[data.pigment] : 'var(--text-muted)';
+  fade(elName); fade(elWisdom);
+}
+
+function clearActive() {
+  svg.classList.remove('has-active');
+  root.querySelectorAll('.seg.is-active').forEach((p) => {
+    p.classList.remove('is-active');
+    p.classList.remove('is-active--derived', 'is-active--contested', 'is-active--open', 'is-active--established');
+  });
+  root.querySelectorAll('.num.is-active').forEach((n) => n.classList.remove('is-active'));
+  root.querySelectorAll('.label.is-active').forEach((n) => n.classList.remove('is-active'));
+  hub.classList.remove('is-active');
+}
+
+function selectWeek(n) {
+  clearActive();
+  selectedWeek = n;
+  if (n === null) {
+    hub.classList.add('is-active');
+    renderPanel(HUB);
+    return;
+  }
+  const s = byWeek[n];
+  svg.classList.add('has-active');
+  const seg = root.querySelector(`.seg[data-week="${n}"]`);
+  seg.classList.add('is-active', `is-active--${s.pigment}`);
+  root.querySelector(`.num[data-week="${n}"]`).classList.add('is-active');
+  root.querySelector(`.label[data-week="${n}"]`).classList.add('is-active');
+  renderPanel(s);
+}
+
+// the walking "this week" marker (independent of selection)
+function paintWeekMarker() {
+  root.querySelectorAll('.week-ring.is-on').forEach((r) => r.classList.remove('is-on'));
+  root.querySelectorAll('.quad-arc.is-domain-active').forEach((a) => a.classList.remove('is-domain-active'));
+  const ring = root.querySelector(`.num[data-week="${week}"] .week-ring`);
+  if (ring) ring.classList.add('is-on');
+  const dom = byWeek[week].domain;
+  const arc = root.querySelector(`.quad-arc.quad--${pigments[dom]}`);
+  if (arc) arc.classList.add('is-domain-active');
+  wkRead.textContent = week;
+  domRead.textContent = dom;
+  domRead.style.color = tokenOf[byWeek[week].pigment];
+  cycleRead.textContent = `Cycle ${cycle}`;
+}
+
+function gotoWeek(n) {
+  // advance cycle when wrapping past 12 / before 1 (the Franklin 13×4 year)
+  if (n > 12) { n = 1; cycle = cycle % 4 + 1; }
+  else if (n < 1) { n = 12; cycle = (cycle + 2) % 4 + 1; }
+  week = n;
+  paintWeekMarker();
+  selectWeek(week); // walking the rotation also selects, so the panel reads along
+}
+
+// ---- interactions ----
+gSegs.addEventListener('click', (e) => {
+  const p = e.target.closest('.seg'); if (!p) return;
+  stopPlay();
+  selectWeek(+p.dataset.week);
+});
+gSegs.addEventListener('keydown', (e) => {
+  const p = e.target.closest('.seg'); if (!p) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stopPlay(); selectWeek(+p.dataset.week); }
+});
+hub.addEventListener('click', () => { stopPlay(); selectWeek(null); });
+hub.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stopPlay(); selectWeek(null); }
+});
+
+const playBtn = root.querySelector('.pw-play');
+const playText = root.querySelector('.pw-playtext');
+const playGlyph = playBtn.querySelector('.pw-glyph');
+
+function startPlay() {
+  playing = true;
+  playBtn.classList.add('is-playing');
+  playBtn.setAttribute('aria-pressed', 'true');
+  playText.textContent = 'Pause';
+  playGlyph.textContent = '❚❚';
+  playBtn.style.background = tokenOf[byWeek[week].pigment];
+  timer = setInterval(() => {
+    gotoWeek(week + 1);
+    playBtn.style.background = tokenOf[byWeek[week].pigment];
+  }, 1150);
+}
+function stopPlay() {
+  if (!playing && !timer) return;
+  playing = false;
+  clearInterval(timer); timer = null;
+  playBtn.classList.remove('is-playing');
+  playBtn.setAttribute('aria-pressed', 'false');
+  playText.textContent = 'Play rotation';
+  playGlyph.textContent = '▶';
+  playBtn.style.background = '';
+}
+playBtn.addEventListener('click', () => { playing ? stopPlay() : startPlay(); });
+root.querySelector('.pw-next').addEventListener('click', () => { stopPlay(); gotoWeek(week + 1); });
+root.querySelector('.pw-prev').addEventListener('click', () => { stopPlay(); gotoWeek(week - 1); });
+
+// ---- initial state: hub selected, week-1 marker lit ----
+paintWeekMarker();
+selectWeek(null);
+
+})();
+  </script>
+  <script>
+(function(){
+const root = document.getElementById('p-scale');
+
+const TIERS = [
+  { n: 1, pigment: 'derived', title: 'Unchanged from its natural state', sub: 'Most natural · best' },
+  { n: 2, pigment: 'derived', title: 'Rearranged, chemically identical', sub: 'Still whole' },
+  { n: 3, pigment: 'contested', title: 'Changed, but structurally intact', sub: 'Cooked · dried · roasted' },
+  { n: 4, pigment: 'contested', title: 'Changed beyond all relation', sub: 'Has an ingredients list · worst' },
+];
+
+// food -> correct tier (per the ladder examples)
+const FOODS = [
+  { id: 'apple',   label: 'Apple',          tier: 1 },
+  { id: 'milk',    label: 'Fresh milk',     tier: 1 },
+  { id: 'slaw',    label: 'Coleslaw',       tier: 2 },
+  { id: 'chicken', label: 'Grilled chicken',tier: 3 },
+  { id: 'nuts',    label: 'Roasted nuts',   tier: 3 },
+  { id: 'bread',   label: 'White bread',    tier: 4 },
+  { id: 'cola',    label: 'Cola',           tier: 4 },
+  { id: 'cake',    label: 'Cake',           tier: 4 },
+];
+
+// naturalness score per tier (1=best ... 4=worst) -> 0..100
+const TIER_SCORE = { 1: 100, 2: 78, 3: 48, 4: 12 };
+
+const ladder = root.querySelector('#ps-ladder');
+const tray = root.querySelector('#ps-tray');
+const msgEl = root.querySelector('#ps-msg');
+const meterVal = root.querySelector('#ps-meter-val');
+const meterFill = root.querySelector('#ps-meter-fill');
+const resetBtn = root.querySelector('#ps-reset');
+
+// state: cardId -> placed tier (number) or null (in tray)
+const placed = Object.create(null);
+FOODS.forEach(f => { placed[f.id] = null; });
+
+let selectedId = null;        // for click-to-place fallback
+let dragId = null;            // pointer-drag in flight
+let ghost = null;
+let pointerMoved = false;
+
+const NUDGES = {
+  up:   ['Nearer the top — this is more natural than that.', 'Closer to natural than you placed it.', 'This grew more into its shape — move it up.'],
+  down: ['Lower down — this has been changed more than that.', 'It is further from natural — nudge it down.', 'More processed than that rung — move it down.'],
+};
+const PRAISE = ['Right rung.', 'Exactly.', 'That is its shape.', 'Spot on.', 'Yes — that belongs there.'];
+const pick = a => a[Math.floor(Math.random() * a.length)];
+
+// ---- build the ladder ----
+TIERS.forEach((t, i) => {
+  const li = document.createElement('li');
+  li.className = `ps-tier ps-tier--${t.pigment}`;
+  li.style.setProperty('--i', i);
+  li.dataset.tier = String(t.n);
+  li.innerHTML =
+    `<span class="ps-tier-num" aria-hidden="true">${t.n}</span>` +
+    `<div class="ps-tier-head"><p class="ps-tier-title">${t.title}</p>` +
+    `<p class="ps-tier-sub">${t.sub}</p></div>` +
+    `<div class="ps-slot" data-empty="drop here" data-tier="${t.n}" role="list" aria-label="Tier ${t.n}: ${t.title}"></div>`;
+  ladder.appendChild(li);
+});
+
+const slotFor = tier => tier === 'tray' ? tray : root.querySelector(`.ps-slot[data-tier="${tier}"]`);
+const tierOfEl = el => { const c = el.closest('[data-tier]'); return c ? c.dataset.tier : null; };
+
+// ---- card creation ----
+function makeCard(food) {
+  const el = document.createElement('div');
+  el.className = 'ps-card';
+  el.dataset.id = food.id;
+  el.tabIndex = 0;
+  el.setAttribute('role', 'listitem');
+  el.setAttribute('aria-label', food.label);
+  el.innerHTML = `<span class="ps-card-dot" aria-hidden="true"></span><span class="ps-card-txt">${food.label}</span><span class="ps-card-mark" aria-hidden="true"></span>`;
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('click', onCardClick);
+  el.addEventListener('keydown', onCardKey);
+  return el;
+}
+
+const cards = Object.create(null);
+FOODS.forEach(f => { cards[f.id] = makeCard(f); });
+
+// ---- place / evaluate ----
+function evaluate(id) {
+  const food = FOODS.find(f => f.id === id);
+  const where = placed[id];
+  const el = cards[id];
+  el.classList.remove('ps-correct', 'ps-misplaced');
+  const mark = el.querySelector('.ps-card-mark');
+  if (where == null) { mark.textContent = ''; el.classList.remove('ps-placed'); return; }
+  el.classList.add('ps-placed');
+  if (where === food.tier) { el.classList.add('ps-correct'); mark.textContent = '✓'; }
+  else { el.classList.add('ps-misplaced'); mark.textContent = '·'; }
+}
+
+function moveCard(id, destTier, opts) {
+  opts = opts || {};
+  const food = FOODS.find(f => f.id === id);
+  const el = cards[id];
+  const target = slotFor(destTier);
+  placed[id] = destTier === 'tray' ? null : Number(destTier);
+  target.appendChild(el);
+  evaluate(id);
+  if (opts.animate) {
+    el.classList.remove('ps-just-placed'); void el.offsetWidth; el.classList.add('ps-just-placed');
+  }
+  // feedback
+  if (destTier !== 'tray') {
+    const tier = Number(destTier);
+    const tierEl = root.querySelector(`.ps-tier[data-tier="${destTier}"]`);
+    if (tier === food.tier) {
+      flashTier(tierEl, 'ok');
+      setMsg(pick(PRAISE), 'ok');
+    } else {
+      flashTier(tierEl, 'no');
+      nudge(tierEl);
+      setMsg(pick(tier > food.tier ? NUDGES.up : NUDGES.down), 'no');
+    }
+  } else {
+    setMsg('Back in the tray — try another rung.', null);
+  }
+  updateMeter();
+}
+
+function flashTier(el, kind) {
+  if (!el) return;
+  const cls = kind === 'ok' ? 'ps-flash-ok' : 'ps-flash-no';
+  el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 620);
+}
+function nudge(el) {
+  if (!el) return;
+  el.classList.remove('ps-nudge'); void el.offsetWidth; el.classList.add('ps-nudge');
+  setTimeout(() => el.classList.remove('ps-nudge'), 460);
+}
+function setMsg(text, kind) {
+  msgEl.textContent = text;
+  msgEl.classList.remove('ps-msg-ok', 'ps-msg-no');
+  if (kind === 'ok') msgEl.classList.add('ps-msg-ok');
+  else if (kind === 'no') msgEl.classList.add('ps-msg-no');
+}
+
+// ---- live read-out ----
+function updateMeter() {
+  const ids = FOODS.map(f => f.id).filter(id => placed[id] != null);
+  if (ids.length === 0) {
+    meterVal.textContent = '—';
+    meterFill.style.width = '0%';
+    return;
+  }
+  let sum = 0;
+  ids.forEach(id => { sum += TIER_SCORE[placed[id]]; });
+  const avg = Math.round(sum / ids.length);
+  meterVal.textContent = avg + '%';
+  meterFill.style.width = avg + '%';
+  // colour the number along green<-amber by score
+  meterVal.style.color = avg >= 66 ? 'var(--derived)' : avg >= 40 ? 'var(--text-secondary)' : 'var(--contested)';
+}
+
+// ---- click-to-place fallback ----
+function clearSelection() {
+  if (selectedId && cards[selectedId]) cards[selectedId].classList.remove('ps-selected');
+  selectedId = null;
+}
+function onCardClick(e) {
+  if (pointerMoved) { pointerMoved = false; return; } // was a drag, ignore the synthetic click
+  const id = e.currentTarget.dataset.id;
+  if (selectedId === id) { clearSelection(); setMsg('Cancelled.', null); return; }
+  clearSelection();
+  selectedId = id;
+  cards[id].classList.add('ps-selected');
+  setMsg('Now tap the rung where it belongs.', null);
+}
+function onCardKey(e) {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick({ currentTarget: e.currentTarget }); }
+}
+
+// clicking a tier (or tray) drops the selected card there
+function onZoneClick(e) {
+  if (!selectedId) return;
+  const zone = e.currentTarget;
+  const tier = zone.dataset.tier;
+  const id = selectedId;
+  clearSelection();
+  moveCard(id, tier, { animate: true });
+}
+
+// ---- pointer drag ----
+function onPointerDown(e) {
+  if (e.button != null && e.button !== 0) return;
+  const el = e.currentTarget;
+  dragId = el.dataset.id;
+  pointerMoved = false;
+  const startX = e.clientX, startY = e.clientY;
+  el.setPointerCapture && el.setPointerCapture(e.pointerId);
+
+  function makeGhost() {
+    ghost = el.cloneNode(true);
+    ghost.classList.add('ps-drag-ghost');
+    ghost.style.width = el.offsetWidth + 'px';
+    document.body.appendChild(ghost);
+    el.classList.add('ps-grabbing');
+  }
+  function positionGhost(x, y) { if (ghost) { ghost.style.left = x + 'px'; ghost.style.top = y + 'px'; } }
+  function highlightUnder(x, y) {
+    clearOver();
+    const under = document.elementFromPoint(x, y);
+    const zone = under && under.closest('.ps-tier, .ps-tray');
+    if (zone && root.contains(zone)) zone.classList.add('ps-over');
+    return zone;
+  }
+  let activeZone = null;
+
+  function onMove(ev) {
+    const x = ev.clientX, y = ev.clientY;
+    if (!pointerMoved && Math.hypot(x - startX, y - startY) > 5) { pointerMoved = true; makeGhost(); clearSelection(); }
+    if (!pointerMoved) return;
+    positionGhost(x, y);
+    activeZone = highlightUnder(x, y);
+    ev.preventDefault();
+  }
+  function onUp(ev) {
+    el.releasePointerCapture && el.releasePointerCapture(ev.pointerId);
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    el.classList.remove('ps-grabbing');
+    if (ghost) { ghost.remove(); ghost = null; }
+    clearOver();
+    if (pointerMoved && activeZone) {
+      const tier = activeZone.dataset.tier;
+      moveCard(dragId, tier, { animate: true });
+    }
+    dragId = null;
+  }
+  window.addEventListener('pointermove', onMove, { passive: false });
+  window.addEventListener('pointerup', onUp);
+}
+function clearOver() {
+  root.querySelectorAll('.ps-over').forEach(z => z.classList.remove('ps-over'));
+}
+
+// wire zones for click-to-place
+root.querySelectorAll('.ps-slot, .ps-tray').forEach(z => z.addEventListener('click', onZoneClick));
+// clicking the whole tier row (not just slot) also drops, for a big target
+root.querySelectorAll('.ps-tier').forEach(row => {
+  row.addEventListener('click', e => {
+    if (e.target.closest('.ps-card')) return;
+    if (e.target.closest('.ps-slot')) return; // slot handles its own
+    if (!selectedId) return;
+    onZoneClick({ currentTarget: row });
+  });
+});
+
+// ---- reset / initial fill ----
+function fillTray() {
+  // randomise tray order so it isn't pre-sorted
+  const order = FOODS.slice().sort(() => Math.random() - 0.5);
+  order.forEach(f => { placed[f.id] = null; tray.appendChild(cards[f.id]); evaluate(f.id); });
+}
+function reset() {
+  clearSelection();
+  fillTray();
+  setMsg('Pick up a card and drop it on the rung where it belongs.', null);
+  updateMeter();
+}
+resetBtn.addEventListener('click', reset);
+
+fillTray();
+updateMeter();
+setMsg('Pick up a card and drop it on the rung where it belongs.', null);
+})();
+  </script>
+  <script>
+(function(){
+
+const root = document.getElementById('p-nerd');
+if (!root) return;
+
+const svg     = root.querySelector('svg.nerd-plot');
+const ghostsG = root.querySelector('.ghosts');
+const marker  = root.querySelector('.marker');
+const mScore  = root.querySelector('.marker-score');
+const leadV   = root.querySelector('.lead-v');
+const leadH   = root.querySelector('.lead-h');
+
+const elScore = root.querySelector('.js-score');
+const elWord  = root.querySelector('.js-word');
+const elLine  = root.querySelector('.js-line');
+const elNutF  = root.querySelector('.js-nut-fill');
+const elEnF   = root.querySelector('.js-en-fill');
+const elNutN  = root.querySelector('.js-nut-num');
+const elEnN   = root.querySelector('.js-en-num');
+const chipsEl = root.querySelector('.js-chips');
+
+// plot geometry (matches the SVG viewBox)
+const X0 = 48, X1 = 272, Y0 = 40, Y1 = 264;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// energy 0..100 -> x ; nutrition 0..100 -> y (inverted)
+const enToX  = e => X0 + (clamp(e,0,100) / 100) * (X1 - X0);
+const nutToY = n => Y1 - (clamp(n,0,100) / 100) * (Y1 - Y0);
+const xToEn  = x => ((clamp(x,X0,X1) - X0) / (X1 - X0)) * 100;
+const yToNut = y => ((Y1 - clamp(y,Y0,Y1)) / (Y1 - Y0)) * 100;
+
+// THE SCORE: nutrition you get per unit of energy, squashed into 1..10.
+function nerd(nut, en) {
+  const e = Math.max(en, 5) / 100;     // energy floor avoids divide-by-near-zero
+  const n = nut / 100;
+  const ratio = n / e;                  // nutrition per energy
+  const s = 1 + 9 * (1 - Math.exp(-1.05 * ratio));
+  return clamp(s, 1, 10);
+}
+
+// preset foods: [energy 0..100, nutrition 0..100]
+const FOODS = [
+  { name: 'Broccoli',    en: 12, nut: 96 },
+  { name: 'Salmon',      en: 46, nut: 82 },
+  { name: 'Apple',       en: 36, nut: 70 },
+  { name: 'White bread', en: 60, nut: 26 },
+  { name: 'Donut',       en: 92, nut: 10 },
+  { name: 'Soda',        en: 86, nut: 3  },
+];
+
+// verdict copy keyed by score band; {n} is replaced with the food name (or generic)
+function verdict(score, foodName) {
+  const s = score;
+  const subj = foodName ? `<span class="food-name">${foodName}</span>` : 'This';
+  let word, line;
+  if (s >= 9.3) {
+    word = 'A perfect 10';
+    line = `${subj} — heaps of nourishment for almost no energy. This is the corner you want to live in.`;
+  } else if (s >= 7.8) {
+    word = 'Excellent';
+    line = `${subj} pays its way: real nutrition, energy kept in check. Eat freely.`;
+  } else if (s >= 6) {
+    word = 'Decent';
+    line = `${subj} earns its place — good food, just be aware of the energy it carries.`;
+  } else if (s >= 4) {
+    word = 'Middling';
+    line = `${subj} is carrying more energy than nutrition. Fine sometimes; not the foundation.`;
+  } else if (s >= 2.3) {
+    word = 'Poor';
+    line = `${subj} is mostly energy with little to show for it. A treat, not a staple.`;
+  } else {
+    word = 'A 1';
+    line = `${subj} — all energy, no nutrition. The bottom-right corner: everything the NERD warns against.`;
+  }
+  return { word, line };
+}
+
+function tintClass(score) {
+  if (score >= 6.5) return 'tint-win';
+  if (score >= 3.5) return 'tint-mid';
+  return 'tint-lose';
+}
+function tintVar(score) {
+  if (score >= 6.5) return 'var(--derived)';
+  if (score >= 3.5) return 'var(--contested)';
+  return 'var(--open)';
+}
+
+let state = { en: 50, nut: 50 };
+
+function render(foodName) {
+  const en = state.en, nut = state.nut;
+  const score = nerd(nut, en);
+  const s1 = Math.round(score * 10) / 10;
+  const x = enToX(en), y = nutToY(nut);
+
+  // marker + lead lines
+  marker.setAttribute('transform', `translate(${x} ${y})`);
+  marker.setAttribute('class', `marker ${tintClass(score)}`);
+  mScore.textContent = Math.round(score);
+  leadV.setAttribute('x1', x); leadV.setAttribute('x2', x);
+  leadV.setAttribute('y1', y); leadV.setAttribute('y2', Y1);
+  leadH.setAttribute('x1', X0); leadH.setAttribute('x2', x);
+  leadH.setAttribute('y1', y);  leadH.setAttribute('y2', y);
+
+  // readout
+  const tv = tintVar(score);
+  root.querySelector('.ro-score').style.setProperty('--score-tint', tv);
+  elWord.style.setProperty('--score-tint', tv);
+  elScore.textContent = s1.toFixed(1);
+  const v = verdict(score, foodName);
+  elWord.textContent = v.word;
+  elLine.innerHTML = v.line;
+
+  // component bars
+  elNutF.style.width = clamp(nut,0,100) + '%';
+  elEnF.style.width  = clamp(en,0,100) + '%';
+  elNutN.textContent = Math.round(nut);
+  elEnN.textContent  = Math.round(en);
+}
+
+// ---- ghost dots on the plane ----
+const ghostNodes = [];
+FOODS.forEach((f, i) => {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  g.setAttribute('class', 'ghost');
+  g.setAttribute('r', '4.2');
+  g.setAttribute('cx', enToX(f.en));
+  g.setAttribute('cy', nutToY(f.nut));
+  g.addEventListener('click', (e) => { e.stopPropagation(); selectFood(i); });
+  ghostsG.appendChild(g);
+  ghostNodes.push(g);
+});
+
+// ---- food chips ----
+const chipNodes = [];
+FOODS.forEach((f, i) => {
+  const b = document.createElement('button');
+  b.className = 'chip';
+  b.type = 'button';
+  b.style.setProperty('--ci', i);
+  const sc = nerd(f.nut, f.en);
+  const dotColor = sc >= 6.5 ? 'var(--derived)' : sc >= 3.5 ? 'var(--contested)' : 'var(--open)';
+  b.innerHTML = `<span class="dot" style="background:${dotColor}"></span>${f.name}`;
+  b.addEventListener('click', () => selectFood(i));
+  chipsEl.appendChild(b);
+  chipNodes.push(b);
+});
+
+let activeFood = -1;
+function setActiveChrome(i) {
+  chipNodes.forEach((c, k) => c.classList.toggle('is-active', k === i));
+  ghostNodes.forEach((g, k) => g.classList.toggle('is-active', k === i));
+}
+
+// animate the marker flying to a target
+let animId = null;
+function flyTo(targetEn, targetNut, foodName, foodIdx) {
+  const startEn = state.en, startNut = state.nut;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (animId) cancelAnimationFrame(animId);
+  if (reduce) { state.en = targetEn; state.nut = targetNut; render(foodName); return; }
+  const dur = 460, t0 = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function step(now) {
+    const t = clamp((now - t0) / dur, 0, 1);
+    const e = ease(t);
+    state.en  = startEn  + (targetEn  - startEn)  * e;
+    state.nut = startNut + (targetNut - startNut) * e;
+    render(foodName);
+    if (t < 1) animId = requestAnimationFrame(step);
+  }
+  animId = requestAnimationFrame(step);
+}
+
+function selectFood(i) {
+  const f = FOODS[i];
+  activeFood = i;
+  setActiveChrome(i);
+  flyTo(f.en, f.nut, f.name, i);
+}
+
+// ---- dragging ----
+function svgPoint(evt) {
+  const r = svg.getBoundingClientRect();
+  const sx = 320 / r.width, sy = 320 / r.height;
+  return { x: (evt.clientX - r.left) * sx, y: (evt.clientY - r.top) * sy };
+}
+function moveTo(evt) {
+  const p = svgPoint(evt);
+  state.en  = xToEn(p.x);
+  state.nut = yToNut(p.y);
+  // a free drag clears the food identity
+  if (activeFood !== -1) { activeFood = -1; setActiveChrome(-1); }
+  render(null);
+}
+let dragging = false;
+function onDown(evt) {
+  dragging = true;
+  svg.classList.add('is-grabbing');
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+  if (svg.setPointerCapture && evt.pointerId !== undefined) {
+    try { svg.setPointerCapture(evt.pointerId); } catch (e) {}
+  }
+  moveTo(evt);
+  evt.preventDefault();
+}
+function onMove(evt) { if (dragging) { moveTo(evt); evt.preventDefault(); } }
+function onUp() { dragging = false; svg.classList.remove('is-grabbing'); }
+
+svg.addEventListener('pointerdown', onDown);
+svg.addEventListener('pointermove', onMove);
+window.addEventListener('pointerup', onUp);
+window.addEventListener('pointercancel', onUp);
+
+// keyboard nudge for accessibility
+svg.setAttribute('tabindex', '0');
+svg.addEventListener('keydown', (e) => {
+  const step = e.shiftKey ? 10 : 3;
+  let used = true;
+  if (e.key === 'ArrowLeft')  state.en  = clamp(state.en  - step, 0, 100);
+  else if (e.key === 'ArrowRight') state.en  = clamp(state.en  + step, 0, 100);
+  else if (e.key === 'ArrowUp')    state.nut = clamp(state.nut + step, 0, 100);
+  else if (e.key === 'ArrowDown')  state.nut = clamp(state.nut - step, 0, 100);
+  else used = false;
+  if (used) { e.preventDefault(); if (activeFood !== -1){activeFood=-1;setActiveChrome(-1);} render(null); }
+});
+
+// opening pose: land on Broccoli so the win-corner sells itself
+selectFood(0);
+
+})();
+  </script>
+  <script>
+(function(){
+
+const root = document.getElementById('p-hunger');
+if (!root) return;
+
+const $ = (id) => root.querySelector('#' + id);
+
+// ---- geometry (matches the viewBox 860 x 360) ----
+const X0 = 70, X1 = 790;            // plot left / right
+const Y_TOP = 64, Y_FLOOR = 252;    // curve top (value 1) / floor (value 0)
+const W = X1 - X0, H = Y_FLOOR - Y_TOP;
+
+const toX = (v) => X0 + v * W;                  // v in [0,1] -> px
+const toY = (n) => Y_FLOOR - n * H;             // n in [0,1] -> px (1 = top)
+const fromX = (px) => Math.max(0, Math.min(1, (px - X0) / W));
+
+// ---- the two model curves ----
+const SWEET = 0.30;                              // hunger reaches floor here
+// remaining bodily NEED: high -> 0 by the sweet spot
+const hunger = (v) => {
+  const t = Math.min(v / SWEET, 1);
+  return Math.pow(1 - t, 2);                     // 1 at 0, 0 at SWEET, stays 0 after
+};
+// desire to keep eating: lingers high, only collapses near full
+const appetite = (v) => Math.pow(1 - v, 0.6);    // 1 at 0, ~0.81 at SWEET, 0 at 1
+
+// ---- the five stops ----
+const STOPS = [
+  { v: 0.00, label: 'Starving' },
+  { v: 0.30, label: 'No longer hungry' },
+  { v: 0.52, label: 'Comfortable' },
+  { v: 0.78, label: 'Full' },
+  { v: 1.00, label: 'Stuffed' },
+];
+
+// ---- sample curves into smooth paths ----
+const N = 64;
+const sample = (fn) => {
+  const pts = [];
+  for (let i = 0; i <= N; i++) {
+    const v = i / N;
+    pts.push([toX(v), toY(fn(v))]);
+  }
+  return pts;
+};
+const smoothPath = (pts) => {
+  let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    const mx = (x0 + x1) / 2;
+    d += ` Q${x0.toFixed(2)},${y0.toFixed(2)} ${mx.toFixed(2)},${((y0 + y1) / 2).toFixed(2)}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L${last[0].toFixed(2)},${last[1].toFixed(2)}`;
+  return d;
+};
+
+const hPts = sample(hunger);
+const aPts = sample(appetite);
+const hPath = $('ph-hunger');
+const aPath = $('ph-appetite');
+hPath.setAttribute('d', smoothPath(hPts));
+aPath.setAttribute('d', smoothPath(aPts));
+
+// give the entrance-draw the right dash length
+try {
+  hPath.style.setProperty('--len', Math.ceil(hPath.getTotalLength()) + '');
+  aPath.style.setProperty('--len', Math.ceil(aPath.getTotalLength()) + '');
+} catch (e) { /* getTotalLength may be unavailable; harmless */ }
+
+// ---- sweet-spot band (around the "no longer hungry" stop) ----
+const BAND_LO = 0.18, BAND_HI = 0.42;
+const bandX = toX(BAND_LO), bandW = toX(BAND_HI) - toX(BAND_LO);
+const bandRect = root.querySelector('.ph-band');
+const bandCap = root.querySelector('.ph-band-cap');
+bandRect.setAttribute('x', bandX.toFixed(1));
+bandRect.setAttribute('width', bandW.toFixed(1));
+bandCap.setAttribute('x', (bandX + bandW / 2).toFixed(1));
+
+// ---- ticks ----
+const ticksG = $('ph-ticks');
+const tickEls = STOPS.map((s) => {
+  const x = toX(s.v);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('class', 'ph-tick ph-anim');
+  line.style.setProperty('--d', '880');
+  line.setAttribute('x1', x); line.setAttribute('x2', x);
+  line.setAttribute('y1', Y_FLOOR); line.setAttribute('y2', Y_FLOOR + 7);
+  ticksG.appendChild(line);
+
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('class', 'ph-tick-label ph-anim');
+  t.style.setProperty('--d', '880');
+  // first label anchors start, last anchors end, others middle — keep them inside the frame
+  const anchor = s.v === 0 ? 'start' : s.v === 1 ? 'end' : 'middle';
+  t.setAttribute('text-anchor', anchor);
+  t.setAttribute('x', x);
+  t.setAttribute('y', Y_FLOOR + 20);
+  // wrap the long middle label
+  const words = s.label.split(' ');
+  if (words.length > 1 && anchor === 'middle') {
+    const a = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    a.setAttribute('x', x); a.setAttribute('dy', '0'); a.textContent = words[0];
+    const b = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    b.setAttribute('x', x); b.setAttribute('dy', '11'); b.textContent = words.slice(1).join(' ');
+    t.appendChild(a); t.appendChild(b);
+  } else {
+    t.textContent = s.label;
+  }
+  ticksG.appendChild(t);
+  return t;
+});
+
+// ---- live elements ----
+const track = $('ph-track');
+const nowLine = $('ph-now');
+const thumb = $('ph-thumb');
+const thumbCore = $('ph-thumb-core');
+const gap = $('ph-gap');
+const msg = $('ph-msg');
+const verdict = $('ph-verdict');
+const say = $('ph-say');
+const sub = $('ph-sub');
+
+// ---- zones + copy (the emotional centre) ----
+const zoneFor = (v) => {
+  if (v < 0.18) return 'hungry';
+  if (v <= 0.42) return 'sweet';
+  if (v <= 0.62) return 'comfortable';
+  if (v <= 0.86) return 'appetite';
+  return 'stuffed';
+};
+const COPY = {
+  hungry: {
+    cls: 'z-ok', verdict: 'still hungry',
+    say: 'Your body still <em>needs</em> this. Keep going — you are not there yet.',
+    sub: 'Real hunger is the body asking. Honour it. The discipline isn’t to eat less here; it’s to notice the moment it’s answered.',
+  },
+  sweet: {
+    cls: 'z-ok', verdict: 'the reasonable stop',
+    say: 'Hunger is met. <em>Stop here</em> — this is the reasonable place to stop.',
+    sub: 'No longer hungry, well before full. Your body’s need has gone quiet; everything past this is appetite, not hunger. This is the whole algorithm.',
+  },
+  comfortable: {
+    cls: 'z-over', verdict: 'appetite now',
+    say: 'You’re comfortable. That extra bite? <em>Appetite talking</em> — not hunger.',
+    sub: 'The need ended a moment ago. What’s pulling you on now is desire, habit, the taste still on the fork. Reasonable, gentle — but notice the line you just crossed.',
+  },
+  appetite: {
+    cls: 'z-far', verdict: 'past full',
+    say: 'Full, and still eating. This is <em>appetite running the show</em>.',
+    sub: 'Hunger has been at zero for a while. The gap you see lit beneath the curves is exactly how far appetite has carried you past what the body asked for.',
+  },
+  stuffed: {
+    cls: 'z-far', verdict: 'stuffed',
+    say: 'Stuffed. Heavy, slowed, a little sorry. <em>None of this was hunger.</em>',
+    sub: 'The last stretch had nothing to do with need. Next time, the move is small and reasonable: stop one band to the left, where hunger ends and appetite begins.',
+  },
+};
+const zoneClass = (z) => COPY[z].cls;
+
+// ---- gap fill path: area between appetite (top) and hunger (bottom), 0..v ----
+const buildGap = (v) => {
+  const top = [], bot = [];
+  const M = 48;
+  const vClamp = Math.max(0.0001, v);
+  for (let i = 0; i <= M; i++) {
+    const vv = (i / M) * vClamp;
+    top.push([toX(vv), toY(appetite(vv))]);
+    bot.push([toX(vv), toY(hunger(vv))]);
+  }
+  let d = `M${top[0][0].toFixed(2)},${top[0][1].toFixed(2)}`;
+  for (let i = 1; i < top.length; i++) d += ` L${top[i][0].toFixed(2)},${top[i][1].toFixed(2)}`;
+  for (let i = bot.length - 1; i >= 0; i--) d += ` L${bot[i][0].toFixed(2)},${bot[i][1].toFixed(2)}`;
+  d += ' Z';
+  return d;
+};
+
+// ---- render a fullness value ----
+let current = SWEET;
+let entranceDone = false;
+
+const nearestStopLabel = (v) => {
+  let best = STOPS[0], bd = Infinity;
+  for (const s of STOPS) { const d = Math.abs(s.v - v); if (d < bd) { bd = d; best = s; } }
+  return best;
+};
+
+const render = (v, opts) => {
+  opts = opts || {};
+  current = Math.max(0, Math.min(1, v));
+  const x = toX(current);
+  const z = zoneFor(current);
+  const c = COPY[z];
+
+  // move thumb + readout
+  nowLine.setAttribute('x1', x.toFixed(1));
+  nowLine.setAttribute('x2', x.toFixed(1));
+  // thumb rides UP the appetite curve so it sits on the line you're driving
+  const ty = toY(appetite(current));
+  thumb.setAttribute('cx', x.toFixed(1));
+  thumb.setAttribute('cy', ty.toFixed(1));
+  thumbCore.setAttribute('x', x.toFixed(1));
+  thumbCore.setAttribute('y', (ty + 4.5).toFixed(1));
+  nowLine.setAttribute('y1', (ty - 13).toFixed(1));
+
+  // gap fill
+  gap.setAttribute('d', buildGap(current));
+  gap.classList.remove('ph-gap--ok', 'ph-gap--over', 'ph-gap--far');
+  gap.classList.add(z === 'hungry' || z === 'sweet' ? 'ph-gap--ok' : (z === 'comfortable' ? 'ph-gap--over' : 'ph-gap--far'));
+
+  // zone class on track + message panel
+  const zc = zoneClass(z);
+  for (const el of [track, msg]) {
+    el.classList.remove('z-ok', 'z-over', 'z-far');
+    el.classList.add(zc);
+  }
+
+  // band lights when inside it
+  const inBand = current >= BAND_LO && current <= BAND_HI;
+  bandRect.classList.toggle('is-live', inBand);
+  bandCap.classList.toggle('is-live', inBand);
+
+  // message
+  verdict.textContent = c.verdict;
+  say.innerHTML = c.say;
+  sub.textContent = c.sub;
+
+  // tick highlight: nearest stop
+  const near = nearestStopLabel(current);
+  tickEls.forEach((t, i) => t.classList.toggle('is-here', STOPS[i] === near));
+
+  // a11y
+  track.setAttribute('aria-valuenow', Math.round(current * 100) + '');
+  track.setAttribute('aria-valuetext', near.label + (z === 'sweet' ? ' — the reasonable stop' : ''));
+};
+
+// ---- pointer drag ----
+const svg = root.querySelector('.ph-plot');
+const hit = $('ph-hit');
+let dragging = false;
+
+const clientToV = (clientX) => {
+  const r = svg.getBoundingClientRect();
+  const px = ((clientX - r.left) / r.width) * 860; // back into viewBox space
+  return fromX(px);
+};
+const onMove = (e) => {
+  if (!dragging) return;
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  render(clientToV(cx));
+  if (e.cancelable) e.preventDefault();
+};
+const startDrag = (e) => {
+  dragging = true;
+  track.classList.add('is-drag');
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  render(clientToV(cx));
+  track.focus({ preventScroll: true });
+  if (e.cancelable) e.preventDefault();
+};
+const endDrag = () => { dragging = false; track.classList.remove('is-drag'); };
+
+hit.addEventListener('mousedown', startDrag);
+hit.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('mousemove', onMove);
+window.addEventListener('touchmove', onMove, { passive: false });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+// click-to-set anywhere on the plot too
+svg.addEventListener('click', (e) => {
+  if (dragging) return;
+  // ignore clicks on the reset button (it's outside the svg anyway)
+  render(clientToV(e.clientX));
+});
+
+// ---- keyboard ----
+track.addEventListener('keydown', (e) => {
+  const step = e.shiftKey ? 0.1 : 0.02;
+  let handled = true;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') render(current + step);
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') render(current - step);
+  else if (e.key === 'Home') render(0);
+  else if (e.key === 'End') render(1);
+  else if (e.key === 'PageUp') render(current + 0.1);
+  else if (e.key === 'PageDown') render(current - 0.1);
+  else if (e.key === 'Enter' || e.key === ' ') render(SWEET);
+  else handled = false;
+  if (handled && e.cancelable) e.preventDefault();
+});
+
+// ---- reset ----
+$('ph-reset').addEventListener('click', () => {
+  render(SWEET);
+  track.focus({ preventScroll: true });
+});
+
+// ---- initial paint (sits at the sweet spot — the emotional centre) ----
+render(SWEET);
+
+})();
+  </script>
+
+</body>
+</html>
