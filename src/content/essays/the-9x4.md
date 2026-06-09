@@ -8,7 +8,7 @@ topics:
   - education
   - method
   - leadership
-series: Exceptional Teaching
+series: Reasonable Teaching
 featured: true
 ---
 

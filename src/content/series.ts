@@ -57,6 +57,13 @@ export const SERIES: SeriesDef[] = [
     ],
   },
   {
+    name: 'Reasonable Teaching',
+    kind: 'framework',
+    // Editorial — tweak freely.
+    blurb: 'The 9×4 — developing the nine characteristics of exceptional teaching, one focus a week across the year. It predates the Reason-Ability umbrella, and is a founding member of the family.',
+    lead: 'the-9x4',
+  },
+  {
     name: 'Philosophy & Leadership',
     kind: 'collection',
     blurb: 'Standalone essays on how to see, decide, and lead — a collection rather than a single arc.',
