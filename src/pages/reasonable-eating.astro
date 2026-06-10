@@ -1,30 +1,28 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProgramWheel from '@/kit/ProgramWheel.svelte';
-import GrowIntoShape from '@/components/diagrams/GrowIntoShape.astro';
-import NerdQuadrant from '@/components/diagrams/NerdQuadrant.astro';
-import HungerMeter from '@/components/diagrams/HungerMeter.astro';
+import SubDiagram from '@/kit/primitives/SubDiagram.svelte';
 import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
 import { assertValidProgram } from '@/kit';
 
 assertValidProgram(program); // a malformed data file fails the build, not production
 
 // The applied flagship as a real programme experience: the wheel as navigator,
-// then a handful of its algorithms made into instruments you can drive. Static
-// for now (prerender), not yet linked in the nav — the artifact that tests how
-// far this wants to become its own webapp.
+// then its instrumented algorithms rendered straight from the data — any focus
+// point carrying a `diagram` ref appears here, in domain order, with no
+// per-diagram imports. Author a diagram in the data file and it shows up.
 export const prerender = true;
-
-// Pull focus points out of the program data so headings + wisdom are DRIVEN by
-// the one source of truth, never re-typed.
-const allFocus = program.domains.flatMap((d) =>
-  d.focuses.map((f) => ({ ...f, domain: d.name, question: d.question, pigment: d.pigment })),
-);
-const byWeek = (w: number) => allFocus.find((f) => f.week === w)!;
 
 const cycles = program.cycles;
 const domainCount = program.domains.length;
 const weeks = cycles * domainCount;
+
+const instrumented = program.domains
+  .map((d) => ({ ...d, live: d.focuses.filter((f) => f.diagram) }))
+  .filter((d) => d.live.length > 0);
+const instrumentCount = instrumented.reduce((s, d) => s + d.live.length, 0);
+const COUNT_WORDS = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen'];
+const countWord = COUNT_WORDS[instrumentCount] ?? String(instrumentCount);
 ---
 
 <BaseLayout title="Reasonable Eating — Tom Cassidy" currentPage="programmes">
@@ -64,37 +62,33 @@ const weeks = cycles * domainCount;
       </p>
     </section>
 
-    <!-- WHAT you eat — two instruments -->
-    <section class="domain" data-pig="established">
-      <p class="domain-kicker">What you eat</p>
-
-      <div class="algo">
-        <h2 class="algo-title"><span class="wk">Week {byWeek(4).week}</span> {byWeek(4).name}</h2>
-        <p class="algo-wisdom">{byWeek(4).coach.wisdom}</p>
-      </div>
-      <GrowIntoShape />
-
-      <div class="algo">
-        <h2 class="algo-title"><span class="wk">Week {byWeek(8).week}</span> {byWeek(8).name}</h2>
-        <p class="algo-wisdom">{byWeek(8).coach.wisdom}</p>
-      </div>
-      <NerdQuadrant />
-    </section>
-
-    <!-- WHEN you eat — one instrument -->
-    <section class="domain" data-pig="contested">
-      <p class="domain-kicker">When you eat</p>
-
-      <div class="algo">
-        <h2 class="algo-title"><span class="wk">Week {byWeek(6).week}</span> {byWeek(6).name}</h2>
-        <p class="algo-wisdom">{byWeek(6).coach.wisdom}</p>
-      </div>
-      <HungerMeter />
-    </section>
+    <!-- Every instrumented algorithm, straight from the data, in domain order. -->
+    {
+      instrumented.map((d) => (
+        <section class="domain" style={`--pig: var(--${d.pigment})`}>
+          <p class="domain-kicker">{d.question}</p>
+          {d.live.map((f) => (
+            <>
+              <div class="algo">
+                <h2 class="algo-title">
+                  <span class="wk">Week {f.week}</span> {f.name}
+                </h2>
+                <p class="algo-wisdom">{f.coach.wisdom}</p>
+              </div>
+              <SubDiagram
+                client:visible
+                diagram={f.diagram!}
+                context={{ programTitle: program.title, week: f.week, domain: d.name, pigment: d.pigment }}
+              />
+            </>
+          ))}
+        </section>
+      ))
+    }
 
     <footer class="prog-foot">
       <p>
-        That's three of the thirteen made interactive. The other ten — and the
+        That's {countWord} of the thirteen made interactive. The rest — and the
         “coach in your pocket” that nudges you to this week's focus — are the
         same wheel, the same data, read different ways.
       </p>
@@ -223,11 +217,8 @@ const weeks = cycles * domainCount;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     margin-bottom: 0.5rem;
+    color: var(--pig); /* the domain's pigment arrives from data via the --pig channel */
   }
-  .domain[data-pig='established'] .domain-kicker { color: var(--established); }
-  .domain[data-pig='contested'] .domain-kicker { color: var(--contested); }
-  .domain[data-pig='open'] .domain-kicker { color: var(--open); }
-  .domain[data-pig='derived'] .domain-kicker { color: var(--derived); }
 
   .algo { max-width: 62ch; margin: 2.5rem auto 0; }
   .algo-title {
