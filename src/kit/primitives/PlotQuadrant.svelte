@@ -264,8 +264,12 @@
 
 <style>
   .pq {
-    width: min(680px, 94vw);
-    margin: 2.5rem auto;
+    /* An instrument, not an illustration — break out wider than the prose. */
+    width: min(900px, 94vw);
+    margin: 2.5rem 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
     font-family: var(--font-body);
     color: var(--text-primary);
     -webkit-tap-highlight-color: transparent;

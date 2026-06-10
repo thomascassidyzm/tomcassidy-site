@@ -277,7 +277,7 @@
   .zs {
     font-family: var(--font-body);
     color: var(--text-primary);
-    width: min(880px, 95vw);
+    width: min(1020px, 95vw);
     margin: 2.5rem 0;
     position: relative;
     left: 50%;

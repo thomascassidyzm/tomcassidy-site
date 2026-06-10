@@ -288,7 +288,7 @@
   .ps {
     font-family: var(--font-body);
     color: var(--text-primary);
-    width: min(960px, 94vw);
+    width: min(1000px, 94vw);
     margin: 3rem 0;
     position: relative;
     left: 50%;

@@ -199,12 +199,15 @@
         ></path>
       {/each}
 
-      <!-- domain rim arcs + labels -->
+      <!-- domain rim arcs + titles riding their own textPath arcs -->
       {#each layout.domainArcs as q (q.name)}
         <path class="quad-arc" d={q.arc} fill="none" style={`--pig: var(--${q.pigment})`}></path>
       {/each}
-      {#each layout.domainArcs as q (q.name)}
-        <text class="quad-label" x={q.lx} y={q.ly} text-anchor="middle" style={`--pig: var(--${q.pigment})`}>{q.name}</text>
+      {#each layout.domainArcs as q, qi (q.name)}
+        <path id={`${program.slug}-dlabel-${qi}`} d={q.labelPath} fill="none"></path>
+        <text class="quad-label" style={`--pig: var(--${q.pigment})`}>
+          <textPath href={`#${program.slug}-dlabel-${qi}`} startOffset="50%">{q.name}</textPath>
+        </text>
       {/each}
 
       <!-- hub -->
@@ -290,8 +293,9 @@
 
 <style>
   .pw {
-    width: min(960px, 95vw);
-    margin: 2.5rem 0;
+    /* A wheel is the programme's centrepiece — it breaks out HARD. */
+    width: min(1240px, 96vw);
+    margin: 3rem 0;
     position: relative;
     left: 50%;
     transform: translateX(-50%);
@@ -299,11 +303,11 @@
 
   .pw-stage {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(220px, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1.9fr) minmax(250px, 1fr);
+    gap: 2rem;
     align-items: center;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 760px) {
     .pw-stage { grid-template-columns: 1fr; }
   }
 
@@ -332,8 +336,9 @@
     font-optical-sizing: auto;
     font-size: 19px;
     font-weight: 480;
-    letter-spacing: 0.06em;
-    dominant-baseline: middle;
+    letter-spacing: 0.14em;
+    text-anchor: middle;
+    text-transform: uppercase;
     fill: var(--pig);
   }
 

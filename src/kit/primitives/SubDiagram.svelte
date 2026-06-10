@@ -84,7 +84,7 @@
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
-    width: min(880px, 95vw);
+    width: min(1000px, 95vw);
     position: relative;
     left: 50%;
     transform: translateX(-50%);

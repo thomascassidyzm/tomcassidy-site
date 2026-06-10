@@ -57,11 +57,22 @@ export function annularSector(
   return `M${ox1},${oy1} A${ro},${ro} 0 0,1 ${ox2},${oy2} L${ix2},${iy2} A${ri},${ri} 0 0,0 ${ix1},${iy1} Z`;
 }
 
-/** A bare rim arc (for the domain signature stroke). */
-export function arc(cx: number, cy: number, r: number, a1: number, a2: number): string {
+/**
+ * A bare rim arc (for the domain signature stroke). `sweep` 1 draws clockwise
+ * a1 → a2; pass 0 (with swapped endpoints) for a counterclockwise arc — used
+ * to keep bottom-half textPath labels reading upright.
+ */
+export function arc(
+  cx: number,
+  cy: number,
+  r: number,
+  a1: number,
+  a2: number,
+  sweep: 0 | 1 = 1,
+): string {
   const [x1, y1] = pt(cx, cy, r, a1);
   const [x2, y2] = pt(cx, cy, r, a2);
-  return `M${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2}`;
+  return `M${x1},${y1} A${r},${r} 0 0,${sweep} ${x2},${y2}`;
 }
 
 export interface WheelSlice {
@@ -86,6 +97,12 @@ export interface WheelDomainArc {
   name: string;
   pigment: Pigment;
   arc: string;
+  /**
+   * The invisible arc the domain TITLE rides as a textPath — just outside the
+   * rim arc, reversed in the bottom half so the title never reads upside down
+   * (and never overlaps the wheel, whatever its length).
+   */
+  labelPath: string;
   lx: number;
   ly: number;
 }
@@ -146,12 +163,21 @@ export function buildWheel(program: Program, dims: WheelDims = DEFAULT_DIMS): Wh
     const base = d * quadSpan;
     const mid = base + quadSpan / 2;
     const [lx, ly] = pt(cx, cy, rArc + 30, mid);
+    // Titles ride a textPath just outside the rim. Bottom-half titles get a
+    // REVERSED arc (so they read upright); reversed text hangs its ascenders
+    // inward, so the reversed baseline sits a cap-height further out.
+    const flip = mid > 90 && mid < 270;
+    const rText = flip ? rArc + 26 : rArc + 12;
+    const labelPath = flip
+      ? arc(cx, cy, rText, base + quadSpan - 1.2, base + 1.2, 0)
+      : arc(cx, cy, rText, base + 1.2, base + quadSpan - 1.2, 1);
     // inset the arc a touch from the boundaries so the four arcs read as
     // separate signatures, not one continuous ring.
     return {
       name: domain.name,
       pigment: domain.pigment,
       arc: arc(cx, cy, rArc, base + 1.2, base + quadSpan - 1.2),
+      labelPath,
       lx,
       ly,
     };
