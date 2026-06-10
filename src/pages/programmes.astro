@@ -5,6 +5,7 @@ import { reasonableEating } from '@/lib/programs/reasonable-eating';
 import { reasonableTeaching } from '@/lib/programs/reasonable-teaching';
 import { reasonableSuccess } from '@/lib/programs/reasonable-success';
 import { reasonableLeadership } from '@/lib/programs/reasonable-leadership';
+import { assertValidProgram } from '@/kit';
 
 export const prerender = true;
 
@@ -15,6 +16,7 @@ const family = [
   { program: reasonableLeadership, href: '/reasonable-leadership', accent: 'contested' as const },
 ];
 const programs = family.map((f) => f.program);
+programs.forEach(assertValidProgram); // the whole family must be well-formed to build
 const accents = family.map((f) => f.accent);
 ---
 

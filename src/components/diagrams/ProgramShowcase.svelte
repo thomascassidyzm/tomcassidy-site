@@ -5,8 +5,8 @@
    * data" thesis is the interaction itself. Each tab carries the programme's
    * accent pigment. `{#key}` re-mounts the wheel per switch for a clean entrance.
    */
-  import ProgramWheel from './ProgramWheel.svelte';
-  import type { Program, Pigment } from '@/lib/programs/types';
+  import ProgramWheel from '@/kit/ProgramWheel.svelte';
+  import type { Program, Pigment } from '@/kit/types';
 
   interface Props {
     programs: Program[];

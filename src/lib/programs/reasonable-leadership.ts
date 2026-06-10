@@ -1,4 +1,4 @@
-import type { Program } from './types';
+import type { Program } from '@/kit/types';
 
 /**
  * Reasonable Leadership — a science-based programme to develop the

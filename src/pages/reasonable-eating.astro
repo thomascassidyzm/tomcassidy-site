@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
 import GrowIntoShape from '@/components/diagrams/GrowIntoShape.astro';
 import NerdQuadrant from '@/components/diagrams/NerdQuadrant.astro';
 import HungerMeter from '@/components/diagrams/HungerMeter.astro';
 import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program); // a malformed data file fails the build, not production
 
 // The applied flagship as a real programme experience: the wheel as navigator,
 // then a handful of its algorithms made into instruments you can drive. Static

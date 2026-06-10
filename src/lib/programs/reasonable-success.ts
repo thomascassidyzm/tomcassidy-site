@@ -1,4 +1,4 @@
-import type { Program } from './types';
+import type { Program } from '@/kit/types';
 
 /**
  * Reasonable Success — winning the inner game of entrepreneurship. A 13×4:

@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
 import { reasonableSuccess as program } from '@/lib/programs/reasonable-success';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program);
 
 // A whole 13×4 framework built entirely from a text summary — no component or
 // schema changes, just one data file. Static preview, not linked in the nav.

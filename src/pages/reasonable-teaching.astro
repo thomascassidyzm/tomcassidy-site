@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
 import { reasonableTeaching as program } from '@/lib/programs/reasonable-teaching';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program);
 
 // Reasonable Teaching — the programme, run on the 9×4 engine: two halves of four
 // around the Self-Belief keystone (week 1). Same template family as the others.

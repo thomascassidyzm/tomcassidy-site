@@ -10,7 +10,7 @@
  * and horizontal so the structure reads symmetrically.
  */
 
-import type { Program, Pigment, Coach } from './programs/types';
+import type { Program, Pigment, Coach } from './types';
 
 export interface WheelDims {
   cx: number;

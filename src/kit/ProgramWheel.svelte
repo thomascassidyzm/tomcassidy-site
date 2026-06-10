@@ -15,8 +15,8 @@
    * the no-JS / print baseline.
    */
   import { onMount } from 'svelte';
-  import { buildWheel, DEFAULT_DIMS, type WheelDims } from '@/lib/wheel-geometry';
-  import type { Program, Pigment } from '@/lib/programs/types';
+  import { buildWheel, DEFAULT_DIMS, type WheelDims } from '@/kit/wheel-geometry';
+  import type { Program, Pigment } from '@/kit/types';
 
   interface Props {
     program: Program;

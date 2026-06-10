@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import ProgramWheel from '@/components/diagrams/ProgramWheel.svelte';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
 import { reasonableLeadership as program } from '@/lib/programs/reasonable-leadership';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program);
 
 // A canonical Franklin 13×4 built from a text summary — 4 domains × 3 + a 13th
 // in-rotation review hub — entirely as one data file. Not linked in the nav.
