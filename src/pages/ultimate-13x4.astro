@@ -1,0 +1,136 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
+import { ultimate13x4 as program } from '@/lib/programs/ultimate-13x4';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program);
+
+// The original life wheel, transcribed from the book art into the kit — a
+// third wheel SHAPE (3 domains × 4 + a week-1 in-rotation hub) proved by one
+// data file and a two-line geometry generalisation.
+export const prerender = true;
+
+const pigClass: Record<string, string> = {
+  established: 'is-established',
+  derived: 'is-derived',
+  open: 'is-open',
+  contested: 'is-contested',
+};
+---
+
+<BaseLayout title="The Ultimate 13×4 — Tom Cassidy" currentPage="programmes">
+  <article class="program">
+    <header class="prog-head">
+      <p class="eyebrow">Reason-Ability · the original programme</p>
+      <h1 class="prog-title">{program.title}</h1>
+      <p class="prog-lede">{program.blurb}</p>
+    </header>
+
+    <ProgramWheel program={program} client:visible />
+
+    <section class="prose">
+      <p>
+        Three domains — <strong>health, wealth and relationships</strong> — four
+        focuses each, and one keystone at the centre:
+        <strong>{program.hub.algorithmName}</strong>, which is itself week one.
+        Every lap of the year begins by paying attention, then cycles the three
+        domains a week at a time. Tap a slice on the wheel to meet its focus;
+        press <strong>Play</strong> to walk the thirteen.
+      </p>
+    </section>
+
+    {program.domains.map((domain) => (
+      <section class="domain" data-pig={domain.pigment}>
+        <div class="domain-head">
+          <h2 class={`domain-name ${pigClass[domain.pigment]}`}>{domain.name}</h2>
+          <p class="domain-q">{domain.question}</p>
+        </div>
+        <ol class="focuses">
+          {domain.focuses.map((f) => (
+            <li class="focus">
+              <span class={`focus-wk ${pigClass[domain.pigment]}`}>Week {f.week}</span>
+              <div class="focus-body">
+                <h3 class="focus-name">{f.name}</h3>
+                <p class="focus-wisdom">{f.coach.wisdom}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+
+    <footer class="prog-foot">
+      <p>
+        This wheel is a shape the engine had never drawn — three domains, with
+        the hub in the rotation as week one. It cost one data file. The same
+        <code>ProgramWheel</code> that draws the rest of the family read the new
+        shape straight from the data; that is the whole idea.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .program { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+  .prog-head { margin-bottom: 1rem; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+  }
+  .prog-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 7vw, 4rem); font-weight: 420; letter-spacing: -0.02em;
+    color: var(--text-primary); margin: 0.4rem 0 0.6rem; line-height: 1;
+  }
+  .prog-lede {
+    font-family: var(--font-body); font-style: italic;
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem); line-height: 1.45;
+    color: var(--text-secondary); max-width: 42ch;
+  }
+
+  .prose {
+    font-family: var(--font-body); font-size: 1.12rem; line-height: 1.7;
+    color: var(--text-secondary); max-width: 62ch; margin: 1rem auto;
+  }
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  .domain { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .domain-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 460; letter-spacing: 0.02em;
+  }
+  .domain-q {
+    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+  .is-established { color: var(--established); }
+  .is-derived { color: var(--derived); }
+  .is-open { color: var(--open); }
+  .is-contested { color: var(--contested); }
+
+  .focuses { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; }
+  .focus { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.5rem 1rem; align-items: start; }
+  @media (max-width: 520px) { .focus { grid-template-columns: 1fr; gap: 0.2rem; } }
+  .focus-wk {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em;
+    padding-top: 0.35rem; white-space: nowrap;
+  }
+  .focus-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.3rem; font-weight: 480; color: var(--text-primary); line-height: 1.15;
+  }
+  .focus-wisdom {
+    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6;
+    color: var(--text-secondary); margin-top: 0.3rem;
+  }
+
+  .prog-foot {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
+    font-family: var(--font-body); font-style: italic; font-size: 1.02rem;
+    line-height: 1.6; color: var(--text-muted); max-width: 62ch;
+  }
+  .prog-foot code { font-family: var(--font-mono); font-size: 0.82em; font-style: normal; }
+</style>
