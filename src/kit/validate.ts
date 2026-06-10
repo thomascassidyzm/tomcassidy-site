@@ -18,8 +18,8 @@ export function validateProgram(program: Program): string[] {
   // Widen the tuple: these checks guard RUNTIME data that may not honour the types.
   const domainCount = (domains as readonly unknown[]).length;
   if (!program.slug) problems.push('program.slug is required');
-  if (domainCount !== 2 && domainCount !== 4)
-    problems.push(`expected 2 or 4 domains, got ${domainCount}`);
+  if (domainCount < 2 || domainCount > 4)
+    problems.push(`expected 2, 3 or 4 domains, got ${domainCount}`);
 
   // Colour is meaning: a four-domain wheel uses each pigment exactly once;
   // a two-half wheel just needs its halves distinct.

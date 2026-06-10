@@ -214,7 +214,10 @@ export interface Program {
     inRotation?: boolean;
     coach: Coach;
   };
-  /** Focus points per domain: 3 → a 13×4 (4 domains × 3); 4 → a 9×4 (2 halves × 4). */
+  /**
+   * Focus points per domain: 3 → Reasonable Eating's 13 (4 domains × 3);
+   * 4 → a 9×4 (2 halves × 4) or the Ultimate 13×4 (3 domains × 4 + a week-1 hub).
+   */
   cycles: number;
   /**
    * How Play / the week-readout walk the wheel:
@@ -223,8 +226,8 @@ export interface Program {
    *  - 'sequential': the numerals run in order (the 9×4's 1..9).
    */
   rotationStyle?: 'interleaved' | 'sequential';
-  /** Two domains (halves) or four (quadrants), in clockwise order from the top. */
-  domains: [Domain, Domain] | [Domain, Domain, Domain, Domain];
+  /** Two domains (halves), three (thirds) or four (quadrants), clockwise from the top. */
+  domains: [Domain, Domain] | [Domain, Domain, Domain] | [Domain, Domain, Domain, Domain];
   /** Optional link to the essay that introduces the programme. */
   essaySlug?: string;
 }

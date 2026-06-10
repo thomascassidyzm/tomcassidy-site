@@ -34,7 +34,6 @@
   const hubPigment = $derived(program.hub.pigment as Pigment | undefined);
   const hubKicker = $derived(program.hub.kicker ?? 'Algorithm Zero · always on');
   const isSequential = $derived((program.rotationStyle ?? 'interleaved') === 'sequential');
-  const domainCount = $derived(program.domains.length);
   const maxNumeral = $derived(Math.max(...layout.slices.map((s) => s.week)));
 
   // The ordered list of stops the rotation walks. Slices by numeral, plus the
@@ -130,9 +129,9 @@
   const selectedSlice = $derived(
     selectedWeek == null ? null : layout.slices.find((s) => s.week === selectedWeek) ?? null,
   );
-  const cycleNum = $derived(
-    selectedWeek == null ? null : Math.floor((selectedWeek - 1) / domainCount) + 1,
-  );
+  // The slice knows which cycle it is (its position within its domain) — week
+  // arithmetic breaks the moment a hub sits IN the rotation at week 1.
+  const cycleNum = $derived(selectedSlice?.cycle ?? null);
   const cycleCount = $derived(program.cycles);
   const isThisWeek = $derived(enrolled && selectedWeek === currentWeek);
 

@@ -71,6 +71,8 @@ export interface WheelSlice {
   pigment: Pigment;
   domain: string;
   domainQuestion: string;
+  /** 1-based position within its domain (focuses are ordered inner cycle → outer). */
+  cycle: number;
   coach: Coach;
   order: number; // draw order around the clock (entrance sequencing)
   path: string;
@@ -128,6 +130,7 @@ export function buildWheel(program: Program, dims: WheelDims = DEFAULT_DIMS): Wh
         pigment: domain.pigment,
         domain: domain.name,
         domainQuestion: domain.question,
+        cycle: c + 1,
         coach: focus.coach,
         order: order++,
         path: annularSector(cx, cy, ro, ri, a1, a2),
