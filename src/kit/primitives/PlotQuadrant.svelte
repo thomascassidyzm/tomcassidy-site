@@ -223,27 +223,32 @@
       </svg>
     </div>
 
-    <div class="pq-readout" style={`--tint: var(--${tint})`}>
-      <div>
-        <p class="ro-kicker">{spec.score.kicker}</p>
-        <div class="ro-score"><span class="big">{(Math.round(score * 10) / 10).toFixed(1)}</span><span class="deno">/ {MAX}</span></div>
-        <p class="ro-verdict-word">{band.word}</p>
-        <p class="ro-verdict-line" aria-live="polite">
-          {#each lineParts as part, i (i)}{#if i > 0}{#if activeName}<span class="point-name">{activeName}</span>{:else}This{/if}{/if}{part}{/each}
-        </p>
-      </div>
+  </div>
 
-      <div class="ro-bars">
-        <div class="ro-bar bar-y">
-          <span class="lab">{spec.yAxis.name}</span>
-          <span class="track"><span class="fill" style={`width:${clamp(vy, 0, 100)}%`}></span></span>
-          <span class="num">{Math.round(vy)}</span>
-        </div>
-        <div class="ro-bar bar-x">
-          <span class="lab">{spec.xAxis.name}</span>
-          <span class="track"><span class="fill" style={`width:${clamp(vx, 0, 100)}%`}></span></span>
-          <span class="num">{Math.round(vx)}</span>
-        </div>
+  <!-- the readout — never a sidecar; a full-width band beneath the plot -->
+  <div class="pq-readout" style={`--tint: var(--${tint})`}>
+    <div class="ro-main">
+      <p class="ro-kicker">{spec.score.kicker}</p>
+      <div class="ro-score"><span class="big">{(Math.round(score * 10) / 10).toFixed(1)}</span><span class="deno">/ {MAX}</span></div>
+    </div>
+
+    <div class="ro-verdict">
+      <p class="ro-verdict-word">{band.word}</p>
+      <p class="ro-verdict-line" aria-live="polite">
+        {#each lineParts as part, i (i)}{#if i > 0}{#if activeName}<span class="point-name">{activeName}</span>{:else}This{/if}{/if}{part}{/each}
+      </p>
+    </div>
+
+    <div class="ro-bars">
+      <div class="ro-bar bar-y">
+        <span class="lab">{spec.yAxis.name}</span>
+        <span class="track"><span class="fill" style={`width:${clamp(vy, 0, 100)}%`}></span></span>
+        <span class="num">{Math.round(vy)}</span>
+      </div>
+      <div class="ro-bar bar-x">
+        <span class="lab">{spec.xAxis.name}</span>
+        <span class="track"><span class="fill" style={`width:${clamp(vx, 0, 100)}%`}></span></span>
+        <span class="num">{Math.round(vx)}</span>
       </div>
     </div>
   </div>
@@ -275,19 +280,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .pq-stage {
-    display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-    gap: clamp(0.9rem, 2.4vw, 1.6rem);
-    align-items: stretch;
-  }
-  @media (max-width: 560px) {
-    .pq-stage { grid-template-columns: 1fr; }
-  }
-
-  /* ---- the plot ---- */
+  /* ---- the plot — the main story, nothing beside it ---- */
   .pq-plot-wrap {
     position: relative;
+    width: min(100%, 600px);
+    margin: 0 auto;
     border: 1px solid var(--hairline);
     border-radius: 6px;
     background: var(--bg-elevated);
@@ -353,16 +350,20 @@
     pointer-events: none;
   }
 
-  /* ---- readout panel ---- */
+  /* ---- readout band beneath the plot ---- */
   .pq-readout {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.9rem;
-    padding: clamp(1rem, 3vw, 1.75rem);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(220px, 280px);
+    gap: 1rem 2rem;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 1rem clamp(1rem, 3vw, 1.6rem);
     border: 1px solid var(--hairline);
     border-radius: 6px;
     background: var(--bg-elevated);
+  }
+  @media (max-width: 680px) {
+    .pq-readout { grid-template-columns: 1fr; }
   }
 
   .ro-kicker {

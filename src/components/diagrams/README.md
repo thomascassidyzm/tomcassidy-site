@@ -63,11 +63,17 @@ true vertical so the structure reads symmetrically.
 - Wrap all motion in `@media (prefers-reduced-motion: no-preference)`.
 - Give the `<svg>` a `role`, a `<title>` and a descriptive `<desc>`.
 
-## 5. Diagrams are figures — they break out
+## 5. Diagrams are figures — they break out, and NOTHING sits beside them
 
 A wheel is not body text. Break out **wider than the reading column** so it reads
 as a centrepiece, centred on the column's own centre so it overhangs
-symmetrically:
+symmetrically.
+
+**Never the sidecar.** No explainer, readout or coach panel ever shares a row
+with the diagram — a sidecar caps the diagram's size and demotes it to an
+illustration. The diagram is the main story at full width; callouts speak from
+a **full-width band beneath it** (the coach lectern under the ProgramWheel, the
+score band under the PlotQuadrant are the reference patterns).
 
 ```css
 .figure {

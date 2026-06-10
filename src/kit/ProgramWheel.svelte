@@ -253,13 +253,17 @@
       {/each}
     </svg>
 
-    <!-- coach panel — the wheel's third life -->
-    <aside class="pw-coach" class:has-pig={!!coachView.pigment} class:is-week={isThisWeek} aria-live="polite">
+  </div>
+
+  <!-- coach lectern — the wheel's third life. Never a sidecar: the wheel is
+       the story, the coach speaks from a full-width band beneath it. -->
+  <aside class="pw-coach" class:has-pig={!!coachView.pigment} class:is-week={isThisWeek} aria-live="polite">
+    <div class="coach-head">
       <p class="coach-kicker">{coachView.kicker}</p>
       <h3 class="coach-name">{coachView.name}</h3>
-      <p class="coach-wisdom">{coachView.wisdom}</p>
-    </aside>
-  </div>
+    </div>
+    <p class="coach-wisdom">{coachView.wisdom}</p>
+  </aside>
 
   <!-- controls -->
   <div class="pw-controls">
@@ -301,17 +305,14 @@
     transform: translateX(-50%);
   }
 
-  .pw-stage {
-    display: grid;
-    grid-template-columns: minmax(0, 1.9fr) minmax(250px, 1fr);
-    gap: 2rem;
-    align-items: center;
+  /* The wheel stands alone at full size — nothing shares its row. */
+  .pw-svg {
+    display: block;
+    width: min(100%, 920px);
+    height: auto;
+    margin: 0 auto;
+    overflow: visible;
   }
-  @media (max-width: 760px) {
-    .pw-stage { grid-template-columns: 1fr; }
-  }
-
-  .pw-svg { display: block; width: 100%; height: auto; overflow: visible; }
 
   /* Segments — pigment-washed by domain (via the --pig channel), hairline edges */
   .seg {
@@ -383,15 +384,22 @@
   .num--hub.has-pig .num-dot { stroke: var(--pig); }
   .num--hub.has-pig .num-text { fill: var(--pig); }
 
-  /* Coach panel */
+  /* Coach lectern — a full-width band beneath the wheel */
   .pw-coach {
-    align-self: center;
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) 1fr;
+    gap: 0.4rem 2.25rem;
+    align-items: center;
+    margin-top: 1.75rem;
     background: var(--bg-elevated);
     border: 1px solid var(--hairline);
     border-left: 3px solid var(--text-muted);
     border-radius: 10px;
-    padding: 1.1rem 1.25rem 1.25rem;
+    padding: 1.1rem 1.5rem 1.2rem;
     transition: border-color 0.3s ease;
+  }
+  @media (max-width: 680px) {
+    .pw-coach { grid-template-columns: 1fr; }
   }
   .pw-coach.has-pig { border-left-color: var(--pig-current); }
   .pw-coach.is-week { box-shadow: inset 2px 0 0 var(--pig-current); }
@@ -401,22 +409,26 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--pig-current);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.45rem;
   }
   .coach-name {
     font-family: var(--font-display);
     font-optical-sizing: auto;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 480;
     line-height: 1.12;
     color: var(--text-primary);
-    margin-bottom: 0.55rem;
   }
   .coach-wisdom {
     font-family: var(--font-body);
-    font-size: 0.98rem;
+    font-size: 1.02rem;
     line-height: 1.55;
     color: var(--text-secondary);
+    max-width: 72ch;
+    /* hold ~2 lines so the lectern doesn't jump as wisdom lengths change */
+    min-height: 3.1em;
+    display: flex;
+    align-items: center;
   }
 
   /* Controls */
