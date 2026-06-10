@@ -17,6 +17,8 @@ export type {
   FocusPoint,
   Coach,
   Pigment,
+  FastFrame,
+  StoryBeat,
   PrimitiveRef,
   ScaleSpec,
   ScaleTier,

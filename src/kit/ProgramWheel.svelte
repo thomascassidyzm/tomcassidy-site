@@ -34,7 +34,14 @@
   const hubPigment = $derived(program.hub.pigment as Pigment | undefined);
   const hubKicker = $derived(program.hub.kicker ?? 'Algorithm Zero · always on');
   const isSequential = $derived((program.rotationStyle ?? 'interleaved') === 'sequential');
-  const maxNumeral = $derived(Math.max(...layout.slices.map((s) => s.week)));
+  // Highest numeral on the wheel — counting the hub when it is itself a weekly
+  // stop (a week-13 hub makes a 12-slice sequential wheel read "of 13").
+  const maxNumeral = $derived(
+    Math.max(
+      ...layout.slices.map((s) => s.week),
+      program.hub.inRotation ? Number(program.hub.numeral ?? '0') : 0,
+    ),
+  );
 
   // The ordered list of stops the rotation walks. Slices by numeral, plus the
   // hub (as null) when it is itself a weekly stop (9×4: Self-Belief = week 1).

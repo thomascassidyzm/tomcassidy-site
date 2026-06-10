@@ -23,6 +23,39 @@ export interface Coach {
   humour?: string;
 }
 
+/* ————————————————————————————————————————————————————————————————————————
+ * The FAST framework — a full teaching per focus point.
+ *
+ * Some programmes carry more than a wisdom line: each week is a complete
+ * standalone teaching in four movements — Focus (the "well, you know how…"
+ * hook), Approach (the psychology behind it), Story (the telling that lands
+ * it, in the authors' voices), Tool (the one practice for the week). FAST is
+ * also the promise: things happen FAST and stick FAST (the FAST of
+ * steadFAST). The teaching stays the same every cycle; the practice deepens
+ * (see Program.cycleDepths).
+ * ———————————————————————————————————————————————————————————————————————— */
+
+/** One voice's turn in a Story section — a co-authored programme has several. */
+export interface StoryBeat {
+  /** Who tells it, e.g. 'Edward' or 'Tom'; omit for unattributed narration. */
+  voice?: string;
+  /** Paragraphs. */
+  text: string[];
+  /** True while the beat is an outline awaiting the author's telling. */
+  draft?: boolean;
+}
+
+export interface FastFrame {
+  /** F — the hook and what this skill IS. Paragraphs. */
+  focus: string[];
+  /** A — the psychology and the thinking behind it. Paragraphs. */
+  approach: string[];
+  /** S — the stories that land it. */
+  story: StoryBeat[];
+  /** T — the named tool and this week's practice. Paragraphs. */
+  tool: { name?: string; practice: string[] };
+}
+
 export interface FocusPoint {
   /** The programme week — the numeral in the well, and the rotation key. */
   week: number;
@@ -31,6 +64,8 @@ export interface FocusPoint {
   /** The mnemonic as it sits in the slice, multi-line. */
   lines: string[];
   coach: Coach;
+  /** The full FAST teaching for this focus, when the programme carries one. */
+  fast?: FastFrame;
   /**
    * The interactive instrument this focus expands into, named BY DATA — the
    * page renders it through primitives/SubDiagram.svelte, never by import.
@@ -196,8 +231,18 @@ export interface Program {
   /** Permalink + coach-channel id, e.g. 'reasonable-eating'. */
   slug: string;
   title: string;
+  /** Credit line when the programme is co-authored, e.g. 'Edward Orman & Tom Cassidy'. */
+  byline?: string;
   /** One-line description for the page. */
   blurb: string;
+  /**
+   * What each successive lap of the year asks of you (index = cycle − 1),
+   * e.g. Awareness → Minimum Action → Intentional Practice → Integration.
+   * The teaching stays the same; the practice deepens.
+   */
+  cycleDepths?: { name: string; instruction: string }[];
+  /** The standing questions the whole programme keeps returning to. */
+  metaQuestions?: { question: string; gloss?: string }[];
   /** The central focus at the hub (Algorithm Zero for eating; the keystone for 9×4). */
   hub: {
     /** Hub label, multi-line, e.g. ['EAT', 'MORE']. */
@@ -213,6 +258,8 @@ export interface Program {
     /** True when the hub is itself a weekly stop in the rotation (9×4 week 1). */
     inRotation?: boolean;
     coach: Coach;
+    /** The hub's own FAST teaching, when it is a weekly stop with one. */
+    fast?: FastFrame;
   };
   /**
    * Focus points per domain: 3 → Reasonable Eating's 13 (4 domains × 3);

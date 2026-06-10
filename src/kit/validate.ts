@@ -38,6 +38,12 @@ export function validateProgram(program: Program): string[] {
   }
   if (!hub.coach?.wisdom) problems.push('hub needs coach.wisdom');
 
+  // A cycle-depth ladder, when present, must name every lap exactly once.
+  if (program.cycleDepths && program.cycleDepths.length !== program.cycles)
+    problems.push(
+      `cycleDepths names ${program.cycleDepths.length} laps but cycles is ${program.cycles}`,
+    );
+
   // The rotation must be a contiguous run of weeks with no duplicates —
   // counting the hub when it is itself a weekly stop (9×4 keystone week 1,
   // Leadership review week 13).
