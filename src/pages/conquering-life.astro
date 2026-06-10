@@ -1,0 +1,286 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProgramWheel from '@/kit/ProgramWheel.svelte';
+import { conqueringLife as program } from '@/lib/programs/conquering-life';
+import { assertValidProgram } from '@/kit';
+
+assertValidProgram(program);
+
+// The first FAST programme: each week is a complete standalone teaching
+// (Focus · Approach · Story · Tool), rendered straight from the data. The
+// page flattens domains + the week-13 hub into uniform sections so the FAST
+// markup exists exactly once.
+export const prerender = true;
+
+const sections = [
+  ...program.domains.map((d) => ({
+    title: d.name,
+    sub: d.question,
+    pigment: d.pigment,
+    weeks: d.focuses,
+  })),
+  {
+    title: 'INTEGRATION',
+    sub: 'Seeing the whole ocean',
+    pigment: program.hub.pigment ?? 'contested',
+    weeks: [
+      {
+        week: Number(program.hub.numeral ?? '13'),
+        name: program.hub.algorithmName,
+        coach: program.hub.coach,
+        fast: program.hub.fast,
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout title={`${program.title} — ${program.byline}`} currentPage="programmes">
+  <article class="program">
+    <header class="prog-head">
+      <p class="eyebrow">Reason-Ability · a programme by {program.byline}</p>
+      <h1 class="prog-title">{program.title}</h1>
+      <p class="prog-lede">{program.blurb}</p>
+    </header>
+
+    <ProgramWheel program={program} client:visible />
+
+    <section class="prose">
+      <p>
+        Twelve psychological skills in three movements — <strong>Self</strong> (the
+        foundation), <strong>Perception</strong> (the awareness),
+        <strong>Response</strong> (the action) — and a thirteenth week,
+        <strong>Integration</strong>, that steps back to see the whole ocean. Each
+        week is a complete standalone teaching in the
+        <strong>FAST</strong> framework: <strong>F</strong>ocus,
+        <strong>A</strong>pproach, <strong>S</strong>tory, <strong>T</strong>ool.
+        FAST is also the promise — things happen <em>fast</em> and stick
+        <em>fast</em>: the fast of <em>steadfast</em>.
+      </p>
+    </section>
+
+    {program.metaQuestions && (
+      <section class="meta-qs">
+        <p class="meta-kicker">The two questions the whole programme keeps returning to</p>
+        <div class="meta-grid">
+          {program.metaQuestions.map((m) => (
+            <div class="meta-card">
+              <p class="meta-q">{m.question}</p>
+              {m.gloss && <p class="meta-gloss">{m.gloss}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {program.cycleDepths && (
+      <section class="depths">
+        <p class="meta-kicker">The teaching stays the same each lap — the practice deepens</p>
+        <ol class="depth-row">
+          {program.cycleDepths.map((c, i) => (
+            <li class="depth">
+              <span class="depth-n">Cycle {i + 1}</span>
+              <span class="depth-name">{c.name}</span>
+              <span class="depth-line">{c.instruction}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    {sections.map((sec) => (
+      <section class="domain" style={`--pig: var(--${sec.pigment}); --pig-wash: var(--${sec.pigment}-wash)`}>
+        <div class="domain-head">
+          <h2 class="domain-name">{sec.title}</h2>
+          <p class="domain-q">{sec.sub}</p>
+        </div>
+
+        {sec.weeks.map((f) => (
+          <article class="week">
+            <h3 class="week-title"><span class="wk">Week {f.week}</span> {f.name}</h3>
+
+            {f.fast && (
+              <div class="fast">
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">F</span> Focus</p>
+                  {f.fast.focus.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">A</span> Approach</p>
+                  {f.fast.approach.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">S</span> Story</p>
+                  {f.fast.story.map((beat) => (
+                    <div class={`beat${beat.draft ? ' is-draft' : ''}`}>
+                      <p class="beat-voice">
+                        {beat.voice}
+                        {beat.draft && <span class="beat-draft-tag">story outline · to be told</span>}
+                      </p>
+                      {beat.text.map((p) => (
+                        <p class="fast-p">{p}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker">
+                    <span class="fast-letter">T</span> Tool{f.fast.tool.name && <span class="tool-name"> · {f.fast.tool.name}</span>}
+                  </p>
+                  {f.fast.tool.practice.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+        ))}
+      </section>
+    ))}
+
+    <footer class="prog-foot">
+      <p>
+        A co-authored programme with a whole teaching inside every focus point —
+        the FAST framework rode into the schema as data, like everything else.
+        The same wheel, the same engine; the depth is in the file.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .program { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+  .prog-head { margin-bottom: 1rem; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+  }
+  .prog-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 7vw, 4rem); font-weight: 420; letter-spacing: -0.02em;
+    color: var(--text-primary); margin: 0.4rem 0 0.6rem; line-height: 1;
+  }
+  .prog-lede {
+    font-family: var(--font-body); font-style: italic;
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem); line-height: 1.45;
+    color: var(--text-secondary); max-width: 44ch;
+  }
+
+  .prose {
+    font-family: var(--font-body); font-size: 1.12rem; line-height: 1.7;
+    color: var(--text-secondary); max-width: 62ch; margin: 1rem auto;
+  }
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  /* the two meta-questions */
+  .meta-qs { margin-top: 2.5rem; }
+  .meta-kicker {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.8rem;
+  }
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .meta-card {
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--bg-elevated); padding: 1.1rem 1.25rem;
+  }
+  .meta-q {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.35rem; font-weight: 470; color: var(--text-primary); line-height: 1.15;
+  }
+  .meta-gloss {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted); margin-top: 0.45rem;
+  }
+
+  /* cycle depth ladder */
+  .depths { margin-top: 2rem; }
+  .depth-row {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.7rem;
+  }
+  .depth {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    border: 1px solid var(--hairline); border-radius: 9px;
+    background: var(--bg-elevated); padding: 0.85rem 1rem;
+  }
+  .depth-n {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .depth-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.05rem; font-weight: 500; color: var(--text-primary);
+  }
+  .depth-line { font-family: var(--font-body); font-size: 0.88rem; color: var(--text-secondary); }
+
+  /* domain sections — pigment from data via the --pig channel */
+  .domain { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .domain-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 460; letter-spacing: 0.02em;
+    color: var(--pig);
+  }
+  .domain-q {
+    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+
+  .week { margin-top: 2.6rem; }
+  .week-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 460; color: var(--text-primary);
+    line-height: 1.15; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem;
+  }
+  .week-title .wk {
+    font-family: var(--font-mono); font-size: 0.62em; color: var(--pig); letter-spacing: 0.04em;
+  }
+
+  /* the FAST frame */
+  .fast { max-width: 64ch; margin-top: 1rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .fast-part { border-left: 2px solid var(--pig-wash); padding-left: 1.1rem; }
+  .fast-marker {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--pig); margin-bottom: 0.55rem;
+    display: flex; align-items: center; gap: 0.55rem;
+  }
+  .fast-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    border: 1.25px solid var(--pig); background: var(--bg-elevated);
+    font-size: 0.78rem; font-weight: 600;
+  }
+  .tool-name { color: var(--text-secondary); text-transform: none; letter-spacing: 0.04em; }
+  .fast-p {
+    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.65;
+    color: var(--text-secondary); margin-top: 0.55rem;
+  }
+
+  /* story beats — voices, with draft outlines marked honestly */
+  .beat { margin-top: 0.9rem; }
+  .beat:first-of-type { margin-top: 0.55rem; }
+  .beat-voice {
+    font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-primary);
+    display: flex; align-items: baseline; gap: 0.6rem;
+  }
+  .beat-draft-tag {
+    color: var(--text-muted); border: 1px dashed var(--hairline);
+    border-radius: 999px; padding: 0.05rem 0.55rem; letter-spacing: 0.06em;
+  }
+  .beat.is-draft .fast-p { font-style: italic; color: var(--text-muted); }
+
+  .prog-foot {
+    margin-top: 4.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
+    font-family: var(--font-body); font-style: italic; font-size: 1.02rem;
+    line-height: 1.6; color: var(--text-muted); max-width: 62ch;
+  }
+</style>
