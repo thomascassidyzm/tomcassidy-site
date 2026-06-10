@@ -31,7 +31,155 @@ export interface FocusPoint {
   /** The mnemonic as it sits in the slice, multi-line. */
   lines: string[];
   coach: Coach;
+  /**
+   * The interactive instrument this focus expands into, named BY DATA — the
+   * page renders it through primitives/SubDiagram.svelte, never by import.
+   */
+  diagram?: PrimitiveRef;
 }
+
+/* ————————————————————————————————————————————————————————————————————————
+ * Sub-diagram primitives — the standard interactive diagram TYPES.
+ *
+ * A focus point carries a PrimitiveRef: pure declarative data (axes, tiers,
+ * zones, verdict copy, formula parameters) that one of the standard kit
+ * components renders. A new programme gets working instruments by writing
+ * data, not components; `preset` is the escape hatch for the rare kinetic
+ * idea no standard type can carry.
+ * ———————————————————————————————————————————————————————————————————————— */
+
+/** A rung of a SortLadder (kind: 'scale'). Ordered best (top) → worst. */
+export interface ScaleTier {
+  n: number;
+  pigment: Pigment;
+  title: string;
+  /** Small mono subtitle, e.g. "Most natural · best". */
+  sub: string;
+  /** This rung's contribution to the aggregate meter, 0..100. */
+  score: number;
+}
+
+/** A card the learner sorts onto a rung. */
+export interface ScaleCard {
+  id: string;
+  label: string;
+  /** The rung this card truly belongs on (ScaleTier.n). */
+  tier: number;
+}
+
+/** A ladder of tiers + cards to sort onto the right rung, with a live meter. */
+export interface ScaleSpec {
+  kind: 'scale';
+  /** The instruction strip, e.g. "Eat nearer the top — did it grow into its shape?". */
+  cue: string;
+  /** Label over the live aggregate read-out, e.g. "How natural is your plate?". */
+  meterLabel: string;
+  tiers: ScaleTier[];
+  /** Author these pre-mixed — they are dealt into the tray in this order. */
+  cards: ScaleCard[];
+  trayLabel?: string;
+  /** Feedback copy in the programme's voice; the primitive has plain defaults. */
+  praise?: string[];
+  nudgeUp?: string[];
+  nudgeDown?: string[];
+}
+
+export interface QuadrantAxis {
+  /** e.g. "Energy · calories". */
+  name: string;
+  low: string;
+  high: string;
+}
+
+/** Verdict copy for a score band; `{name}` is replaced by the active point's name. */
+export interface QuadrantBand {
+  /** This band applies when score ≥ min (bands ordered highest first). */
+  min: number;
+  word: string;
+  line: string;
+}
+
+/** A preset point on the plane (both values 0..100). */
+export interface QuadrantPoint {
+  name: string;
+  x: number;
+  y: number;
+}
+
+/** A two-axis plane with a draggable marker, preset points and a live score. */
+export interface QuadrantSpec {
+  kind: 'quadrant';
+  xAxis: QuadrantAxis;
+  yAxis: QuadrantAxis;
+  /** The corner that wins (washed + labelled), e.g. 'tl' = low x, high y. */
+  winCorner: 'tl' | 'tr' | 'bl' | 'br';
+  winLabel: string;
+  score: {
+    /** Read-out kicker, e.g. "NERD · nutrition ÷ energy". */
+    kicker: string;
+    max: number;
+    /** score = 1 + (max−1)·(1 − e^(−k·ratio)), ratio = y / max(x, xFloor). */
+    formula: { type: 'ratio'; xFloor?: number; k?: number };
+    /** Ordered highest `min` first. */
+    bands: QuadrantBand[];
+    /** Tint thresholds: ≥ win → derived, ≥ mid → contested, else open. */
+    tones?: { win: number; mid: number };
+  };
+  points: QuadrantPoint[];
+  /** Index into points to open on (sell the win corner). */
+  initialPoint?: number;
+  hint?: string;
+}
+
+export type SliderTone = 'ok' | 'over' | 'far';
+
+/** A stretch of the continuum and what the coach says inside it. */
+export interface SliderZone {
+  /** Zone applies while the value ≤ upTo (zones ordered left to right). */
+  upTo: number;
+  tone: SliderTone;
+  verdict: string;
+  /** May carry <em> for the pigment-tinted emphasis. */
+  say: string;
+  sub: string;
+}
+
+/** A model curve over the continuum: value(v) = max(0, 1 − v/zeroAt)^power. */
+export interface SliderCurve {
+  id: string;
+  label: string;
+  pigment: Pigment;
+  fall: { zeroAt: number; power: number };
+}
+
+/** A pole-to-pole continuum with stops, tone zones and optional model curves. */
+export interface SliderSpec {
+  kind: 'slider';
+  /** e.g. "Hunger >> Appetite". */
+  kicker: string;
+  axis: { low: string; high: string };
+  stops: { v: number; label: string }[];
+  zones: SliderZone[];
+  /** Opening value 0..1 (the emotional centre). */
+  initial: number;
+  /** The lit sweet-spot band. */
+  band?: { lo: number; hi: number; cap: string };
+  curves?: SliderCurve[];
+  /** Fill the area between two curve ids up to the read-out, toned by zone. */
+  gap?: { top: string; bottom: string };
+  /** Curve id the thumb rides; defaults to the floor. */
+  thumbRides?: string;
+  ariaLabel?: string;
+  resetLabel?: string;
+}
+
+/** Escape hatch: a bespoke component registered by name in SubDiagram.svelte. */
+export interface PresetRef {
+  kind: 'preset';
+  name: string;
+}
+
+export type PrimitiveRef = ScaleSpec | QuadrantSpec | SliderSpec | PresetRef;
 
 export interface Domain {
   /** "HOW" | "WHEN" | "WHY" | "WHAT" — the one-word domain label on the rim. */

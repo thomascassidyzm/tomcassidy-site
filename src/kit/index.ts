@@ -17,6 +17,19 @@ export type {
   FocusPoint,
   Coach,
   Pigment,
+  PrimitiveRef,
+  ScaleSpec,
+  ScaleTier,
+  ScaleCard,
+  QuadrantSpec,
+  QuadrantAxis,
+  QuadrantBand,
+  QuadrantPoint,
+  SliderSpec,
+  SliderZone,
+  SliderCurve,
+  SliderTone,
+  PresetRef,
 } from './types';
 
 export {
