@@ -7,6 +7,8 @@ import { reasonableSuccess } from '@/lib/programs/reasonable-success';
 import { reasonableLeadership } from '@/lib/programs/reasonable-leadership';
 import { ultimate13x4 } from '@/lib/programs/ultimate-13x4';
 import { conqueringLife } from '@/lib/programs/conquering-life';
+import { agileResults } from '@/lib/programs/agile-results';
+import { greatTeaching } from '@/lib/programs/great-teaching';
 import { assertValidProgram } from '@/kit';
 
 export const prerender = true;
@@ -18,6 +20,8 @@ const family = [
   { program: reasonableSuccess, href: '/reasonable-success', accent: 'open' as const },
   { program: reasonableLeadership, href: '/reasonable-leadership', accent: 'contested' as const },
   { program: conqueringLife, href: '/conquering-life', accent: 'contested' as const },
+  { program: agileResults, href: '/agile-results', accent: 'established' as const },
+  { program: greatTeaching, href: '/great-teaching', accent: 'open' as const },
 ];
 const programs = family.map((f) => f.program);
 programs.forEach(assertValidProgram); // the whole family must be well-formed to build
