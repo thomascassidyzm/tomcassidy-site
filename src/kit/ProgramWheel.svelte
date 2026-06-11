@@ -27,8 +27,11 @@
   let { program, dims = DEFAULT_DIMS, interval = 1500 }: Props = $props();
 
   const layout = $derived(buildWheel(program, dims));
-  const vbW = $derived(dims.cx * 2);
-  const vbH = $derived(dims.cy * 2 + 60);
+  // Tight square viewBox around the actual content (ring + curved titles +
+  // glyph overhang) — the legacy full-canvas box wasted ~30% of the rendered
+  // width on empty margin, which is wheel size left on the table.
+  const vbR = $derived(dims.rArc + 40);
+  const vb = $derived(`${dims.cx - vbR} ${dims.cy - vbR} ${vbR * 2} ${vbR * 2}`);
 
   const hubNumeral = $derived(program.hub.numeral ?? '0');
   const hubPigment = $derived(program.hub.pigment as Pigment | undefined);
@@ -177,7 +180,7 @@
   <div class="pw-stage">
     <svg
       class="pw-svg"
-      viewBox={`0 0 ${vbW} ${vbH}`}
+      viewBox={vb}
       role="group"
       aria-label={`${program.title} — interactive ${program.domains.length === 2 ? '9' : '13'}×${program.cycles} wheel`}
     >
@@ -308,7 +311,7 @@
   /* The wheel stands alone at full size — nothing shares its row. */
   .pw-svg {
     display: block;
-    width: min(100%, 920px);
+    width: min(100%, 840px);
     height: auto;
     margin: 0 auto;
     overflow: visible;

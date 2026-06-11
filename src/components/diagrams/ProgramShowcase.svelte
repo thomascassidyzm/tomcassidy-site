@@ -51,14 +51,15 @@
     justify-content: center;
   }
   .tab {
+    /* Quiet switcher chips — the wheel is the story, the pills are furniture. */
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
     background: var(--bg-elevated);
     border: 1px solid var(--hairline);
     border-radius: 999px;
-    padding: 0.5rem 1rem;
+    padding: 0.32rem 0.7rem;
     cursor: pointer;
     transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
   }
