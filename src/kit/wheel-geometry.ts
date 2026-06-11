@@ -86,6 +86,8 @@ export interface WheelSlice {
   domainQuestion: string;
   /** 1-based position within its domain (focuses are ordered inner cycle → outer). */
   cycle: number;
+  /** True when the focus carries a full FAST teaching (pages anchor it as #week-N). */
+  hasFast: boolean;
   coach: Coach;
   order: number; // draw order around the clock (entrance sequencing)
   path: string;
@@ -160,6 +162,7 @@ export function buildWheel(program: Program, dims: WheelDims = DEFAULT_DIMS): Wh
         domain: domain.name,
         domainQuestion: domain.question,
         cycle: c + 1,
+        hasFast: !!focus.fast,
         coach: focus.coach,
         order: order++,
         path: annularSector(cx, cy, ro, ri, a1, a2),

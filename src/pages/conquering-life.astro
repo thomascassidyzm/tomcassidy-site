@@ -96,7 +96,7 @@ const sections = [
         </div>
 
         {sec.weeks.map((f) => (
-          <article class="week">
+          <article class="week" id={`week-${f.week}`}>
             <h3 class="week-title"><span class="wk">Week {f.week}</span> {f.name}</h3>
 
             {f.fast && (
@@ -234,7 +234,7 @@ const sections = [
     letter-spacing: 0.1em; color: var(--text-muted);
   }
 
-  .week { margin-top: 2.6rem; }
+  .week { margin-top: 2.6rem; scroll-margin-top: 1.5rem; }
   .week-title {
     font-family: var(--font-display); font-optical-sizing: auto;
     font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 460; color: var(--text-primary);

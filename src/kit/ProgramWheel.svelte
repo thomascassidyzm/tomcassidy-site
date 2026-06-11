@@ -145,7 +145,8 @@
   const cycleCount = $derived(program.cycles);
   const isThisWeek = $derived(enrolled && selectedWeek === currentWeek);
 
-  // The coach payload shown in the side panel — hub when nothing is selected.
+  // The coach payload shown in the lectern — hub when nothing is selected.
+  // `deepDive` anchors the week's full FAST teaching further down the page.
   const coachView = $derived(
     selectedSlice
       ? {
@@ -153,12 +154,14 @@
           name: selectedSlice.name,
           wisdom: selectedSlice.coach.wisdom,
           pigment: selectedSlice.pigment as string,
+          deepDive: selectedSlice.hasFast ? `#week-${selectedSlice.week}` : null,
         }
       : {
           kicker: `${isThisWeek ? 'This week · ' : ''}${hubKicker}`,
           name: program.hub.algorithmName,
           wisdom: program.hub.coach.wisdom,
           pigment: (hubPigment ?? '') as string,
+          deepDive: program.hub.fast ? `#week-${hubNumeral}` : null,
         },
   );
 
@@ -266,6 +269,9 @@
       <h3 class="coach-name">{coachView.name}</h3>
     </div>
     <p class="coach-wisdom">{coachView.wisdom}</p>
+    {#if coachView.deepDive}
+      <a class="coach-more" href={coachView.deepDive}>Read this week's full teaching — Focus · Approach · Story · Tool ↓</a>
+    {/if}
   </aside>
 
   <!-- controls -->
@@ -433,6 +439,20 @@
     display: flex;
     align-items: center;
   }
+  .coach-more {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--pig-current);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--pig-current);
+    padding-bottom: 0.1rem;
+  }
+  .coach-more:hover { border-bottom-style: solid; }
 
   /* Controls */
   .pw-controls {
