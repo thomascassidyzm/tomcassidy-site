@@ -6,9 +6,33 @@ import { assertValidProgram } from '@/kit';
 
 assertValidProgram(program);
 
-// JD Meier's Agile Results as a 13×4 — the kit's first SINGLE-domain wheel:
-// one continuous ring of twelve practices, the Review Cycle at week 13.
+// JD Meier's Agile Results as a 13×4 — the kit's first SINGLE-domain wheel,
+// now carrying full FAST deep dives for every practice. The page flattens
+// the ring + the week-13 hub into uniform sections so the FAST markup
+// exists exactly once.
 export const prerender = true;
+
+const sections = [
+  ...program.domains.map((d) => ({
+    title: d.name,
+    sub: d.question,
+    pigment: d.pigment,
+    weeks: d.focuses,
+  })),
+  {
+    title: 'REVIEW CYCLE',
+    sub: 'The system that improves the system',
+    pigment: program.hub.pigment ?? 'established',
+    weeks: [
+      {
+        week: Number(program.hub.numeral ?? '13'),
+        name: program.hub.algorithmName,
+        coach: program.hub.coach,
+        fast: program.hub.fast,
+      },
+    ],
+  },
+];
 ---
 
 <BaseLayout title="Agile Results — JD Meier & Tom Cassidy" currentPage="programmes">
@@ -27,39 +51,79 @@ export const prerender = true;
         done — built on the Rule of 3, the Monday-Vision / Daily-Wins /
         Friday-Reflection rhythm, and wins at every scale. Here it runs as a
         13×4: twelve practices taken <em>one a week</em>, straight round the
-        ring, then the <strong>{program.hub.algorithmName}</strong> — the
-        system that improves the system — before the next lap. Four laps a
-        year. Tap a slice to meet its practice; press <strong>Play</strong> to
-        walk the thirteen.
+        ring, then the <strong>{program.hub.algorithmName}</strong> before the
+        next lap. Each week below is a complete standalone teaching in the
+        <strong>FAST</strong> frame — <strong>F</strong>ocus,
+        <strong>A</strong>pproach, <strong>S</strong>tory,
+        <strong>T</strong>ool: things happen <em>fast</em> and stick
+        <em>fast</em>. Tap a slice above to meet a practice; press
+        <strong>Play</strong> to walk the thirteen.
       </p>
     </section>
 
-    {program.domains.map((domain) => (
-      <section class="domain" style={`--pig: var(--${domain.pigment})`}>
+    {sections.map((sec) => (
+      <section class="domain" style={`--pig: var(--${sec.pigment}); --pig-wash: var(--${sec.pigment}-wash)`}>
         <div class="domain-head">
-          <h2 class="domain-name">{domain.name}</h2>
-          <p class="domain-q">{domain.question}</p>
+          <h2 class="domain-name">{sec.title}</h2>
+          <p class="domain-q">{sec.sub}</p>
         </div>
-        {domain.description && <p class="domain-desc">{domain.description}</p>}
-        <ol class="focuses">
-          {domain.focuses.map((f) => (
-            <li class="focus">
-              <span class="focus-wk">Week {f.week}</span>
-              <div class="focus-body">
-                <h3 class="focus-name">{f.name}</h3>
-                <p class="focus-wisdom">{f.coach.wisdom}</p>
+
+        {sec.weeks.map((f) => (
+          <article class="week">
+            <h3 class="week-title"><span class="wk">Week {f.week}</span> {f.name}</h3>
+
+            {f.fast && (
+              <div class="fast">
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">F</span> Focus</p>
+                  {f.fast.focus.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">A</span> Approach</p>
+                  {f.fast.approach.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">S</span> Story</p>
+                  {f.fast.story.map((beat) => (
+                    <div class={`beat${beat.draft ? ' is-draft' : ''}`}>
+                      <p class="beat-voice">
+                        {beat.voice}
+                        {beat.draft && <span class="beat-draft-tag">story outline · to be told</span>}
+                      </p>
+                      {beat.text.map((p) => (
+                        <p class="fast-p">{p}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker">
+                    <span class="fast-letter">T</span> Tool{f.fast.tool.name && <span class="tool-name"> · {f.fast.tool.name}</span>}
+                  </p>
+                  {f.fast.tool.practice.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
               </div>
-            </li>
-          ))}
-        </ol>
+            )}
+          </article>
+        ))}
       </section>
     ))}
 
     <footer class="prog-foot">
       <p>
-        The programme is JD's; the wheel is the house engine reading one data
-        file — its first single-ring shape. The words above are working drafts
-        of JD's system, awaiting the authors' polish.
+        The system is JD's; the wheel is the house engine reading one data
+        file — its first single-ring shape. The FAST deep dives above were
+        researched from JD's published work and drafted on the house pattern:
+        working drafts throughout, for JD and Tom to make their own.
       </p>
     </footer>
   </article>
@@ -90,8 +154,9 @@ export const prerender = true;
   }
   .prose strong { color: var(--text-primary); font-weight: 600; }
 
-  .domain { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
-  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  /* domain sections — pigment via the --pig channel */
+  .domain { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
   .domain-name {
     font-family: var(--font-display); font-optical-sizing: auto;
     font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 460; letter-spacing: 0.02em;
@@ -101,29 +166,53 @@ export const prerender = true;
     font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
     letter-spacing: 0.1em; color: var(--text-muted);
   }
-  .domain-desc {
-    font-family: var(--font-body); font-size: 1.05rem; line-height: 1.6;
-    color: var(--text-secondary); max-width: 62ch; margin-bottom: 1.4rem;
+
+  .week { margin-top: 2.6rem; }
+  .week-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 460; color: var(--text-primary);
+    line-height: 1.15; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem;
+  }
+  .week-title .wk {
+    font-family: var(--font-mono); font-size: 0.62em; color: var(--pig); letter-spacing: 0.04em;
   }
 
-  .focuses { list-style: none; display: flex; flex-direction: column; gap: 1.25rem; padding: 0; }
-  .focus { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.5rem 1rem; align-items: start; }
-  @media (max-width: 520px) { .focus { grid-template-columns: 1fr; gap: 0.2rem; } }
-  .focus-wk {
-    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em;
-    padding-top: 0.35rem; white-space: nowrap; color: var(--pig);
+  /* the FAST frame */
+  .fast { max-width: 64ch; margin-top: 1rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .fast-part { border-left: 2px solid var(--pig-wash); padding-left: 1.1rem; }
+  .fast-marker {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--pig); margin-bottom: 0.55rem;
+    display: flex; align-items: center; gap: 0.55rem;
   }
-  .focus-name {
-    font-family: var(--font-display); font-optical-sizing: auto;
-    font-size: 1.3rem; font-weight: 480; color: var(--text-primary); line-height: 1.15;
+  .fast-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    border: 1.25px solid var(--pig); background: var(--bg-elevated);
+    font-size: 0.78rem; font-weight: 600;
   }
-  .focus-wisdom {
-    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6;
-    color: var(--text-secondary); margin-top: 0.3rem;
+  .tool-name { color: var(--text-secondary); text-transform: none; letter-spacing: 0.04em; }
+  .fast-p {
+    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.65;
+    color: var(--text-secondary); margin-top: 0.55rem;
   }
+
+  /* story beats — voices, with draft outlines marked honestly */
+  .beat { margin-top: 0.9rem; }
+  .beat:first-of-type { margin-top: 0.55rem; }
+  .beat-voice {
+    font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-primary);
+    display: flex; align-items: baseline; gap: 0.6rem;
+  }
+  .beat-draft-tag {
+    color: var(--text-muted); border: 1px dashed var(--hairline);
+    border-radius: 999px; padding: 0.05rem 0.55rem; letter-spacing: 0.06em;
+  }
+  .beat.is-draft .fast-p { font-style: italic; color: var(--text-muted); }
 
   .prog-foot {
-    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
+    margin-top: 4.5rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline);
     font-family: var(--font-body); font-style: italic; font-size: 1.02rem;
     line-height: 1.6; color: var(--text-muted); max-width: 62ch;
   }
