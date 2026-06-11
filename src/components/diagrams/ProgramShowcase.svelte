@@ -12,8 +12,10 @@
     programs: Program[];
     /** One accent pigment per programme, same order. */
     accents?: Pigment[];
+    /** Each programme's own page path, same order — routes deep-dive links. */
+    hrefs?: string[];
   }
-  let { programs, accents = ['derived', 'established', 'open', 'contested'] }: Props = $props();
+  let { programs, accents = ['derived', 'established', 'open', 'contested'], hrefs }: Props = $props();
 
   let active = $state(0);
   const accentFor = (i: number) => accents[i % accents.length];
@@ -37,7 +39,7 @@
   </div>
 
   {#key active}
-    <ProgramWheel program={programs[active]} />
+    <ProgramWheel program={programs[active]} deepDiveHref={hrefs?.[active] ?? null} />
   {/key}
 </div>
 

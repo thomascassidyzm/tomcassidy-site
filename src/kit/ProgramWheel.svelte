@@ -23,8 +23,14 @@
     dims?: WheelDims;
     /** ms per step when the rotation is playing. */
     interval?: number;
+    /**
+     * Where the FAST deep dives live, when they exist: '' anchors this page
+     * (#week-N), '/agile-results' routes to that page's anchors (the family
+     * showcase), null/omitted shows no link.
+     */
+    deepDiveHref?: string | null;
   }
-  let { program, dims = DEFAULT_DIMS, interval = 1500 }: Props = $props();
+  let { program, dims = DEFAULT_DIMS, interval = 1500, deepDiveHref = null }: Props = $props();
 
   const layout = $derived(buildWheel(program, dims));
   // Tight square viewBox around the actual content (ring + curved titles +
@@ -154,14 +160,18 @@
           name: selectedSlice.name,
           wisdom: selectedSlice.coach.wisdom,
           pigment: selectedSlice.pigment as string,
-          deepDive: selectedSlice.hasFast ? `#week-${selectedSlice.week}` : null,
+          deepDive:
+            selectedSlice.hasFast && deepDiveHref != null
+              ? `${deepDiveHref}#week-${selectedSlice.week}`
+              : null,
         }
       : {
           kicker: `${isThisWeek ? 'This week · ' : ''}${hubKicker}`,
           name: program.hub.algorithmName,
           wisdom: program.hub.coach.wisdom,
           pigment: (hubPigment ?? '') as string,
-          deepDive: program.hub.fast ? `#week-${hubNumeral}` : null,
+          deepDive:
+            program.hub.fast && deepDiveHref != null ? `${deepDiveHref}#week-${hubNumeral}` : null,
         },
   );
 

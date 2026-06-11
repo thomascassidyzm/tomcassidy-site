@@ -41,7 +41,7 @@ const accents = family.map((f) => f.accent);
     </header>
 
     <!-- One wheel, the whole family: switch the programme, watch the data change. -->
-    <ProgramShowcase programs={programs} accents={accents} client:visible />
+    <ProgramShowcase programs={programs} accents={accents} hrefs={family.map((f) => f.href)} client:visible />
 
     <div class="family-grid">
       {family.map(({ program, href, accent }) => (
