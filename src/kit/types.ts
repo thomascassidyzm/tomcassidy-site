@@ -221,9 +221,15 @@ export interface Domain {
   name: string;
   /** A short human gloss, e.g. "How you eat". */
   question: string;
+  /** A fuller paragraph (e.g. a research dimension's summary), page-rendered. */
+  description?: string;
   /** The ONE place colour-by-meaning is declared for this domain. */
   pigment: Pigment;
-  /** Exactly `cycles` focus points, ordered inner cycle → outer. */
+  /**
+   * The focus points, ordered inner cycle → outer. Exactly `cycles` of them
+   * in a Franklin (interleaved) wheel; a sequential wheel may have UNEVEN
+   * domains — each domain's share of the ring derives from its own count.
+   */
   focuses: FocusPoint[];
 }
 
@@ -273,8 +279,17 @@ export interface Program {
    *  - 'sequential': the numerals run in order (the 9×4's 1..9).
    */
   rotationStyle?: 'interleaved' | 'sequential';
-  /** Two domains (halves), three (thirds) or four (quadrants), clockwise from the top. */
-  domains: [Domain, Domain] | [Domain, Domain, Domain] | [Domain, Domain, Domain, Domain];
+  /**
+   * One to four domains, clockwise from the top. One = a single continuous
+   * ring (Agile Results); two = halves; three = thirds; four = quadrants.
+   * Domains may hold UNEVEN focus counts on a sequential wheel (Great
+   * Teaching: 1/4/1/6) — each takes its share of the ring from its count.
+   */
+  domains:
+    | [Domain]
+    | [Domain, Domain]
+    | [Domain, Domain, Domain]
+    | [Domain, Domain, Domain, Domain];
   /** Optional link to the essay that introduces the programme. */
   essaySlug?: string;
 }

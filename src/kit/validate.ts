@@ -18,8 +18,8 @@ export function validateProgram(program: Program): string[] {
   // Widen the tuple: these checks guard RUNTIME data that may not honour the types.
   const domainCount = (domains as readonly unknown[]).length;
   if (!program.slug) problems.push('program.slug is required');
-  if (domainCount < 2 || domainCount > 4)
-    problems.push(`expected 2, 3 or 4 domains, got ${domainCount}`);
+  if (domainCount < 1 || domainCount > 4)
+    problems.push(`expected 1 to 4 domains, got ${domainCount}`);
 
   // Colour is meaning: a four-domain wheel uses each pigment exactly once;
   // a two-half wheel just needs its halves distinct.
@@ -27,8 +27,12 @@ export function validateProgram(program: Program): string[] {
   if (new Set(pigments).size !== pigments.length)
     problems.push(`domain pigments must be distinct, got [${pigments.join(', ')}]`);
 
+  // A Franklin (interleaved) rotation needs equal domains; a sequential wheel
+  // may run uneven ones (Great Teaching: 1/4/1/6).
+  const sequential = (program.rotationStyle ?? 'interleaved') === 'sequential';
   for (const d of domains) {
-    if (d.focuses.length !== cycles)
+    if (d.focuses.length === 0) problems.push(`domain ${d.name}: needs at least one focus`);
+    if (!sequential && d.focuses.length !== cycles)
       problems.push(`domain ${d.name}: expected ${cycles} focuses (= cycles), got ${d.focuses.length}`);
     for (const f of d.focuses) {
       if (!f.name) problems.push(`domain ${d.name} week ${f.week}: focus needs a name`);

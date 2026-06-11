@@ -72,7 +72,9 @@ export function arc(
 ): string {
   const [x1, y1] = pt(cx, cy, r, a1);
   const [x2, y2] = pt(cx, cy, r, a2);
-  return `M${x1},${y1} A${r},${r} 0 0,${sweep} ${x2},${y2}`;
+  // A span past 180° needs the large-arc flag (a single-domain rim is ~358°).
+  const largeArc = Math.abs(a2 - a1) > 180 ? 1 : 0;
+  return `M${x1},${y1} A${r},${r} 0 ${largeArc},${sweep} ${x2},${y2}`;
 }
 
 export interface WheelSlice {
@@ -125,15 +127,25 @@ export interface WheelLayout {
  */
 export function buildWheel(program: Program, dims: WheelDims = DEFAULT_DIMS): WheelLayout {
   const { cx, cy, ro, ri, rLab, rNum, rArc, numInset } = dims;
-  const domainCount = program.domains.length;
-  const quadSpan = 360 / domainCount;
-  const sliceAngle = quadSpan / program.cycles;
+
+  // Every slice is the same width; each domain takes its share of the ring
+  // from its OWN focus count — so uneven domains (Great Teaching's 1/4/1/6)
+  // and a single continuous ring (one domain) lay out with the same maths,
+  // and even wheels render exactly as before.
+  const totalFocuses = program.domains.reduce((s, d) => s + d.focuses.length, 0);
+  const sliceAngle = 360 / totalFocuses;
+  let cursor = 0;
+  const spans = program.domains.map((domain) => {
+    const span = domain.focuses.length * sliceAngle;
+    const base = cursor;
+    cursor += span;
+    return { domain, base, span };
+  });
 
   const slices: WheelSlice[] = [];
   let order = 0;
 
-  program.domains.forEach((domain, d) => {
-    const base = d * quadSpan;
+  spans.forEach(({ domain, base }) => {
     domain.focuses.forEach((focus, c) => {
       const a1 = base + c * sliceAngle;
       const a2 = a1 + sliceAngle;
@@ -159,24 +171,28 @@ export function buildWheel(program: Program, dims: WheelDims = DEFAULT_DIMS): Wh
     });
   });
 
-  const domainArcs: WheelDomainArc[] = program.domains.map((domain, d) => {
-    const base = d * quadSpan;
-    const mid = base + quadSpan / 2;
+  const domainArcs: WheelDomainArc[] = spans.map(({ domain, base, span }) => {
+    const mid = base + span / 2;
     const [lx, ly] = pt(cx, cy, rArc + 30, mid);
     // Titles ride a textPath just outside the rim. Bottom-half titles get a
     // REVERSED arc (so they read upright); reversed text hangs its ascenders
-    // inward, so the reversed baseline sits a cap-height further out.
+    // inward, so the reversed baseline sits a cap-height further out. The
+    // label path BLEEDS ±12° past the domain (it's invisible) so a title on
+    // a single-slice domain isn't clipped by a too-short path.
     const flip = mid > 90 && mid < 270;
     const rText = flip ? rArc + 26 : rArc + 12;
+    const labelSpan = Math.min(span + 24, 352);
+    const la1 = mid - labelSpan / 2;
+    const la2 = mid + labelSpan / 2;
     const labelPath = flip
-      ? arc(cx, cy, rText, base + quadSpan - 1.2, base + 1.2, 0)
-      : arc(cx, cy, rText, base + 1.2, base + quadSpan - 1.2, 1);
+      ? arc(cx, cy, rText, la2, la1, 0)
+      : arc(cx, cy, rText, la1, la2, 1);
     // inset the arc a touch from the boundaries so the four arcs read as
     // separate signatures, not one continuous ring.
     return {
       name: domain.name,
       pigment: domain.pigment,
-      arc: arc(cx, cy, rArc, base + 1.2, base + quadSpan - 1.2),
+      arc: arc(cx, cy, rArc, base + 1.2, base + span - 1.2),
       labelPath,
       lx,
       ly,
