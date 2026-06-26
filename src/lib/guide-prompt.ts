@@ -13,6 +13,12 @@
 //
 //  Do NOT wire/live-test the guide (it is BILLED) — verify with build/check
 //  only. The endpoint returns 503 when no ANTHROPIC_API_KEY is set.
+//
+//  Tom's COACHING voice + method (the Script & the Sausage Machine) is the
+//  canonical reference at `src/lib/the-script.md` — distilled from the
+//  Reasonable Wealth groups (RW1/RW2) and the Thrive coaching engine. Build
+//  any coaching-mode behaviour FROM that file (import with `?raw`) rather than
+//  re-stating it. It is the single home for that voice.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const GUIDE_PERSONA = 'Alexander';
