@@ -38,6 +38,53 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/* ————————————————————————————————————————————————————————————————————————
+ * Pocket coach — web push.
+ *
+ * The server (Vercel cron) sends a single tone-weighted line for the week's
+ * focus. We show it; tapping opens that week on the wheel (focusing an open tab
+ * if one exists, else opening the PWA). Return, not nag: a fixed `tag` means a
+ * later push REPLACES the earlier one rather than stacking unread reminders.
+ * ———————————————————————————————————————————————————————————————————————— */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'Reasonable Eating';
+  const url = data.url || '/reasonable-eating';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || '',
+      tag: data.tag || 'pocket-coach',
+      renotify: true,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/reasonable-eating';
+  const targetUrl = new URL(target, self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      // Focus an existing programme tab if one is open, navigating it to the week.
+      for (const client of clients) {
+        if (client.url.includes('/reasonable-eating') && 'focus' in client) {
+          client.navigate(targetUrl).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    }),
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;

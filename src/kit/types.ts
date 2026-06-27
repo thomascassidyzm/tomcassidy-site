@@ -14,9 +14,29 @@
 
 export type Pigment = 'derived' | 'established' | 'contested' | 'open';
 
+/**
+ * Tone-tagged message banks for the pocket coach. Each tone holds several
+ * SHORT lines that gently bring the week's ONE focus back to mind — minimum
+ * will, zero pressure, no streaks, return-not-nag. They never ask "did you do
+ * it?"; they just put the focus in front of you again when the day gets loud.
+ * DRAFTS in Tom's voice, for him to edit.
+ */
+export interface CoachBanks {
+  /** Soft, low-key, no demand — a hand on the shoulder. */
+  gentle: string[];
+  /** Warm lift, belief in you — dog-energy glad-to-see-you. */
+  encouraging: string[];
+  /** Straight and caring — the kind truth a good friend tells you. */
+  honestKind: string[];
+  /** Light, grinning, a wink — keeps it from ever feeling like homework. */
+  playful: string[];
+}
+
 export interface Coach {
   /** The word of wisdom for this focus — the line the pocket-coach leads with. */
   wisdom: string;
+  /** Tone-tagged short lines that return the week's focus to mind (drafts). */
+  banks?: CoachBanks;
   /** Optional Socratic opener for live coach mode (Alexander), later. */
   prompt?: string;
   /** Optional keep-on-track quip, in Tom's voice. */

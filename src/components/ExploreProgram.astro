@@ -1,0 +1,373 @@
+---
+import type { Program } from '@/kit/types';
+
+/**
+ * Explore the programme — STUDY mode.
+ *
+ * There is no Reasonable Shape book; this surface IS the book. Where the
+ * Today surface is PRACTICE mode (this week's one focus, brought to mind),
+ * Explore is where the reader spends an hour learning the whole reasoning
+ * behind a programme so they TRUST the choice of focus points before they
+ * commit a year to them.
+ *
+ * Two movements:
+ *  (a) THE FOUNDATION — the philosophy every Reason-Ability programme rests
+ *      on. The same for all of them, so it lives here, in the component:
+ *      Reason-Ability itself, success = reason × reasonable, and the four
+ *      dogmas that justify the 13×4 shape.
+ *  (b) THE DEEP DIVES — per focus point, the full FAST teaching, read STRAIGHT
+ *      from the programme data. Program-agnostic: it flattens whatever domains
+ *      + hub the programme has and renders the FAST block of every focus that
+ *      carries one. A programme (or a single week) with no FAST block simply
+ *      shows its coach wisdom instead — the surface degrades gracefully rather
+ *      than breaking.
+ */
+interface Props {
+  program: Program;
+}
+const { program } = Astro.props;
+
+// Flatten the ring + the hub into uniform sections, exactly as the programme
+// page does — so the FAST markup exists once and reads any programme shape.
+const sections = [
+  ...program.domains.map((d) => ({
+    title: d.name,
+    sub: d.question,
+    pigment: d.pigment as string,
+    weeks: d.focuses,
+  })),
+  {
+    title: Array.isArray(program.hub.label) ? program.hub.label.join(' ') : program.hub.algorithmName,
+    sub: program.hub.kicker ?? 'The hub',
+    pigment: (program.hub.pigment ?? 'established') as string,
+    weeks: [
+      {
+        week: Number(program.hub.numeral ?? '0'),
+        name: program.hub.algorithmName,
+        coach: program.hub.coach,
+        fast: program.hub.fast,
+      },
+    ],
+  },
+];
+
+// Does this programme carry ANY deep-dive content at all? Drives the honest
+// "explorable / not yet written" signposting at the top.
+const fastCount = sections.reduce(
+  (n, sec) => n + sec.weeks.filter((w) => w.fast).length,
+  0,
+);
+const focusCount = sections.reduce((n, sec) => n + sec.weeks.length, 0);
+
+// The four dogmas — Tom's own framing (fourth-dogma-a-reasonable-plan.md),
+// each with the one line that justifies a piece of the 13×4.
+const dogmas = [
+  {
+    n: 'I',
+    name: 'Marginal Gains',
+    claim: 'Break the goal into components and get a little better at each.',
+    body:
+      'Mastery of anything comes from dividing it into parts and improving each by a small margin — the gains are marginal one by one, but they compound. Brailsford’s British Cycling team went from nowhere to total Tour de France dominance on exactly this: a hundred things done 1% better. Get 10% better at thirteen components and you are over three times more effective overall.',
+  },
+  {
+    n: 'II',
+    name: 'One Thing at a Time',
+    claim: 'Focus on one component per week — the 13×4.',
+    body:
+      'The most effective way to improve each component is to work on just one at a time, leaving the others to their natural chance. Benjamin Franklin proved it: thirteen virtues, one a week, four laps a year (13 × 4 = 52). Any goal breaks into thirteen parts the same way. MAINTAIN focus. CHANGE routines.',
+  },
+  {
+    n: 'III',
+    name: 'Discernment',
+    claim: 'Know why you’re doing it — and let the reason survive scrutiny.',
+    body:
+      'There has to be a reason, and the reason has to be reasonable to you, having weighed the evidence honestly. There is no such thing as proof, only evidence: science can only ever say “so far it seems to work like this.” So you adopt a focus after a reasonable amount of thought — not because someone told you it was proven. This whole surface exists to make that discernment possible.',
+  },
+  {
+    n: 'IV',
+    name: 'A Reasonable Plan',
+    claim: 'Make whatever you do reasonable enough to actually stick to.',
+    body:
+      'Most people don’t fail to reach their goals; they fail to stick to the plan they drew up — because the plan was unreasonable. A reasonable plan is easy to start, easy to stick to, forgiving, robust, requires no new skills, and is faintly fun. Apply the brother-in-law test: if you can’t explain what you’re doing and why so that it plainly looks like it’ll work, the plan isn’t reasonable yet.',
+  },
+];
+---
+
+<div class="explore">
+  <!-- ——— (a) THE FOUNDATION — shared across every programme ——— -->
+  <section class="foundation">
+    <p class="eyebrow">The foundation · why this programme is shaped the way it is</p>
+
+    <div class="prose">
+      <p>
+        There is no book to hand you, so this is the book. Before you give a
+        year to thirteen focus points, it’s reasonable to want to know
+        <em>why these thirteen</em>, and why one a week. That’s what this
+        page is for — about an hour’s reading, and then you can trust the
+        choice.
+      </p>
+
+      <p>
+        <strong>Reason-Ability</strong> is a practical philosophy — or better, a
+        philosophy of practice: <em>the ability to create an extraordinary life
+        by combining reasoned thinking and reasonable action.</em> It uses the
+        minimum amount of willpower to achieve the maximum effect — the path of
+        least resistance, doing nothing more than reasonable things, in a
+        reasonable way, that over time produce quite extraordinary results.
+      </p>
+
+      <p>
+        Most people make only two mistakes: they don’t think clearly about
+        what they actually want, and they don’t take action on it. So the
+        whole thing collapses to one formula:
+      </p>
+    </div>
+
+    <p class="formula">success&nbsp;=&nbsp;<span class="f-reason">reason</span>&nbsp;×&nbsp;<span class="f-reasonable">reasonable</span></p>
+
+    <div class="prose">
+      <p>
+        You have to have a <strong>reason</strong> for doing anything, and what
+        you do then has to be <strong>reasonable</strong>. It’s a product,
+        not a sum — a brilliant reason with an unreasonable plan multiplies out
+        to almost nothing, which is exactly why most plans, however
+        well-intentioned, quietly fail. Reason-Ability isn’t a
+        zero-willpower system; it’s a <em>minimum-will</em> system. It
+        won’t run the marathon for you — it gives you a bicycle.
+      </p>
+    </div>
+
+    <div class="dogmas">
+      <p class="dogmas-head">The four dogmas</p>
+      {dogmas.map((d) => (
+        <article class="dogma">
+          <p class="dogma-marker"><span class="dogma-num">{d.n}</span> {d.name}</p>
+          <p class="dogma-claim">{d.claim}</p>
+          <p class="dogma-body">{d.body}</p>
+        </article>
+      ))}
+    </div>
+
+    <div class="prose dogmas-foot">
+      <p>
+        Those four are why a programme looks the way it does: a goal broken into
+        components (I), taken one a week across a 13×4 (II), each one chosen for
+        a reason you’ve actually weighed (III), and asked of you in a way
+        reasonable enough to stick (IV). What follows is that reasoning, focus
+        by focus.
+      </p>
+    </div>
+  </section>
+
+  <!-- ——— (b) THE DEEP DIVES — read straight from the programme data ——— -->
+  <section class="deep-dives">
+    <div class="dd-head">
+      <p class="eyebrow">The deep dives · the full case for each focus</p>
+      {fastCount > 0 ? (
+        <p class="dd-note">
+          Each focus below is a complete teaching in the <strong>FAST</strong>
+          frame — <strong>F</strong>ocus (the itch it scratches),
+          <strong>A</strong>pproach (the thinking behind it),
+          <strong>S</strong>tory (the telling that lands it), and
+          <strong>T</strong>ool (the one practice for the week). Things happen
+          <em>fast</em> and stick <em>fast</em>.
+          {fastCount < focusCount && (
+            <> {fastCount} of {focusCount} focuses are written up so far; the rest show their coach’s note until their deep dive is drafted.</>
+          )}
+        </p>
+      ) : (
+        <p class="dd-note">
+          This programme’s full deep dives aren’t written yet — below is
+          the coach’s note for each focus, the one line it leads with. The
+          FAST teachings will appear here, focus by focus, as they’re
+          drafted.
+        </p>
+      )}
+    </div>
+
+    {sections.map((sec) => (
+      <section class="domain" style={`--pig: var(--${sec.pigment}); --pig-wash: var(--${sec.pigment}-wash)`}>
+        <div class="domain-head">
+          <h2 class="domain-name">{sec.title}</h2>
+          <p class="domain-q">{sec.sub}</p>
+        </div>
+
+        {sec.weeks.map((f) => (
+          <article class="week" id={`week-${f.week}`}>
+            <h3 class="week-title"><span class="wk">Week {f.week}</span> {f.name}</h3>
+
+            {f.fast ? (
+              <div class="fast">
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">F</span> Focus</p>
+                  {f.fast.focus.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">A</span> Approach</p>
+                  {f.fast.approach.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker"><span class="fast-letter">S</span> Story</p>
+                  {f.fast.story.map((beat) => (
+                    <div class={`beat${beat.draft ? ' is-draft' : ''}`}>
+                      {beat.voice && (
+                        <p class="beat-voice">
+                          {beat.voice}
+                          {beat.draft && <span class="beat-draft-tag">story outline · to be told</span>}
+                        </p>
+                      )}
+                      {beat.text.map((p) => (
+                        <p class="fast-p">{p}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <div class="fast-part">
+                  <p class="fast-marker">
+                    <span class="fast-letter">T</span> Tool{f.fast.tool.name && <span class="tool-name"> · {f.fast.tool.name}</span>}
+                  </p>
+                  {f.fast.tool.practice.map((p) => (
+                    <p class="fast-p">{p}</p>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p class="coach-only">{f.coach?.wisdom}</p>
+            )}
+          </article>
+        ))}
+      </section>
+    ))}
+  </section>
+</div>
+
+<style>
+  .explore { max-width: 820px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+  }
+
+  .prose {
+    font-family: var(--font-body); font-size: 1.12rem; line-height: 1.7;
+    color: var(--text-secondary); max-width: 62ch; margin: 1rem auto;
+  }
+  .prose p { margin-top: 0.9rem; }
+  .prose strong { color: var(--text-primary); font-weight: 600; }
+
+  /* the success formula — the spine of the whole philosophy */
+  .formula {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.6rem, 4.5vw, 2.4rem); font-weight: 440;
+    text-align: center; color: var(--text-primary);
+    margin: 1.6rem auto; letter-spacing: -0.01em;
+  }
+  .f-reason { color: var(--derived); }
+  .f-reasonable { color: var(--established); }
+
+  /* the four dogmas */
+  .dogmas { margin: 2.4rem 0 1rem; }
+  .dogmas-head {
+    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 1rem;
+  }
+  .dogma { margin-top: 1.6rem; border-left: 2px solid var(--hairline); padding-left: 1.1rem; }
+  .dogma-marker {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: 1.25rem; font-weight: 460; color: var(--text-primary);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .dogma-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.7rem; height: 1.7rem; padding: 0 0.4rem; border-radius: 50%;
+    border: 1.25px solid var(--text-muted); background: var(--bg-elevated);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+  }
+  .dogma-claim {
+    font-family: var(--font-body); font-style: italic; font-size: 1.08rem;
+    color: var(--text-secondary); margin-top: 0.45rem;
+  }
+  .dogma-body {
+    font-family: var(--font-body); font-size: 1.02rem; line-height: 1.62;
+    color: var(--text-muted); margin-top: 0.5rem; max-width: 62ch;
+  }
+  .dogmas-foot { margin-top: 1.8rem; }
+
+  /* the deep dives */
+  .deep-dives { margin-top: 4rem; }
+  .dd-head { padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+  .dd-note {
+    font-family: var(--font-body); font-size: 1.06rem; line-height: 1.65;
+    color: var(--text-secondary); max-width: 62ch; margin-top: 0.8rem;
+  }
+  .dd-note strong { color: var(--text-primary); font-weight: 600; }
+
+  .domain { margin-top: 3.2rem; }
+  .domain-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .domain-name {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 460; letter-spacing: 0.02em;
+    color: var(--pig);
+  }
+  .domain-q {
+    font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+
+  .week { margin-top: 2.6rem; scroll-margin-top: 1.5rem; }
+  .week-title {
+    font-family: var(--font-display); font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 460; color: var(--text-primary);
+    line-height: 1.15; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem;
+  }
+  .week-title .wk {
+    font-family: var(--font-mono); font-size: 0.62em; color: var(--pig); letter-spacing: 0.04em;
+  }
+
+  .coach-only {
+    font-family: var(--font-body); font-style: italic; font-size: 1.08rem;
+    line-height: 1.6; color: var(--text-muted); margin-top: 0.8rem; max-width: 62ch;
+    border-left: 2px solid var(--pig-wash); padding-left: 1.1rem;
+  }
+
+  /* the FAST frame — matched to the programme page */
+  .fast { max-width: 64ch; margin-top: 1rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .fast-part { border-left: 2px solid var(--pig-wash); padding-left: 1.1rem; }
+  .fast-marker {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--pig); margin-bottom: 0.55rem;
+    display: flex; align-items: center; gap: 0.55rem;
+  }
+  .fast-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    border: 1.25px solid var(--pig); background: var(--bg-elevated);
+    font-size: 0.78rem; font-weight: 600;
+  }
+  .tool-name { color: var(--text-secondary); text-transform: none; letter-spacing: 0.04em; }
+  .fast-p {
+    font-family: var(--font-body); font-size: 1.04rem; line-height: 1.65;
+    color: var(--text-secondary); margin-top: 0.55rem;
+  }
+
+  .beat { margin-top: 0.9rem; }
+  .beat:first-of-type { margin-top: 0.55rem; }
+  .beat-voice {
+    font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-primary);
+    display: flex; align-items: baseline; gap: 0.6rem;
+  }
+  .beat-draft-tag {
+    color: var(--text-muted); border: 1px dashed var(--hairline);
+    border-radius: 999px; padding: 0.05rem 0.55rem; letter-spacing: 0.06em;
+  }
+  .beat.is-draft .fast-p { font-style: italic; color: var(--text-muted); }
+</style>
