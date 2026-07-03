@@ -1,5 +1,13 @@
 # Reasonable Eating — does it merit its own webapp? + the 13-family kit
 
+> **STATUS (2026-07-03): both graduation gates are now essentially met — this memo's
+> framing is historical.** Gate 2 (a second Reasonable-X as data only) passed long ago:
+> six-plus programmes render from pure data through `src/kit/`. Gate 1 (the push loop)
+> is built and merged — `src/lib/coach-engine.ts`, `/api/push/*`, `/api/cron/coach`,
+> the Today surface — pending only on-device verification (VAPID keys in Vercel env,
+> install the PWA on a real iPhone 16.4+, confirm the nudge fires). The live question
+> is no longer "build the engine?" but section 2's graduation decision, which is Tom's.
+
 ## 1) The verdict
 
 **SOON, not now — and the threshold is concrete.** Reasonable Eating does not merit a separate Vercel app today, and the reason is not timidity — it's that splitting it out now would graduate an empty room. Configuration Economics and Distinction Physics earned their own domains because each is a *finished, standalone treatise*; their own-app value is presence and permanence. Reasonable Eating is the opposite shape: a **kit with exactly one instance and zero shipped interactivity**. The ProgramWheel island, the geometry helper, the schema, and the full reasonable-eating coach data all exist in the working tree — uncommitted past `0211c56`, embedded in no live page. You cannot judge whether something merits its own app until it exists as one coherent surface. Right now it doesn't.
