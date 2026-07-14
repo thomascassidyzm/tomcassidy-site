@@ -274,6 +274,28 @@ are no longer just creating change for themselves, they are designing change for
 **One thing at a time (the wheel discipline)**
 "there is only ever one thing to focus on at a time. … 'If you chase two rabbits, you will lose
 them both.'" (the-9x4.md:79). "MAINTAIN focus. CHANGE routines." (reason-ability-an-overview.md:135).
+"The 13/4 rests on four dogmas: Marginal Gains, One Thing At A Time, Discernment, and A Reasonable
+Plan." (`src/content/essays/the-cassidy-method.md:56` — note the third naming variant, "13/4").
+
+**The 70% rule**
+"A good friend of mine, Jim Rai, came up with the concept of 'The 70% rule' which involves aiming
+to spend around 70% of your time on thoughts/feelings/actions that you'd ideally want to do … The
+wise man and the gambler both know that 70% right gets you just about anything you want in life!
+… If 70% of your thoughts were helpful, you'd be not only rare, but unstoppable."
+(reasonable-doubt.md:35–39). With "the daily dance" as its frame: "all of life is a daily dance
+between these two opposing positions, a continuous battle in the fight to discern the difference"
+(reasonable-doubt.md:242). Neither survives into the-script.md.
+
+**The 100 Points** [ASSEMBLER — found only in knock-knock-neo, needs Tom's confirmation as a real move]
+"**The 100 Points:** 'Allocate 100 points across your whole life. No limits.'" and "Forget
+possible. You have 100 points. Design your life."
+(`~/APML/APML-Projects/knock-knock-neo/orchestrator/METHODOLOGY.md:67,141`). The same project
+renders the Sausage Machine in Matrix voice: "The Matrix is a sausage machine, Neo. Beef in, beef
+sausages out. Pork in, pork sausages out. What are you putting in?" (orchestrator/morpheus-training.js).
+
+**The Input Principle (alias)**
+`conquering-life.ts:442` names the week's focus "The Input Principle" — "life is a machine - you
+get out what you put in" — with "sausage machine" only lowercase mid-sentence. Same move, third name.
 
 ---
 
@@ -340,7 +362,25 @@ are both live, plus "the Ultimate 13x4" as a specific wheel. Fine as a family; t
 state the rule ("N×4: N focuses, four laps, sized to the year that contains them" [ASSEMBLER —
 proposed wording, not Tom's]).
 
-**3.10 Gateway Question canonical form.** Free-standing "What WOULD you choose?" vs
+**3.10 The canonical file is wired to nothing.** `guide-prompt.ts:17–21` promises "Build any
+coaching-mode behaviour FROM that file (import with `?raw`)" — but no such import exists anywhere;
+the delegation is aspirational. The estate-scout memo already lists "wire the-script.md into the
+live coach" as the pending move (`~/estate-scout/reasonability.md:44`). Voice-in-a-doc the engine
+doesn't consume is drift waiting to happen — this is the mechanical fix that stops §3 growing.
+
+**3.11 Some named moves may be later crystallisations.** A worker deep-read of thrive's
+`tom-coaching-verbose-backup.js` (1,637 lines of coaching material) found "Become/Do/Give",
+"Helpful > True" as a named phrase, and DING!/Duuuum/energy-vampires all ABSENT — closest is
+"helpful or harmful", and "choose easy" appears once as a raw transcript quote, not a framework.
+[ASSEMBLER] The moves are real (they're in the 2014 transcripts in substance), but several of the
+canonical NAMES appear to have been coined during the Thrive distillation rather than in Tom's own
+mouth. Worth Tom confirming which names he owns.
+
+**3.12 Person drift.** Programme data consistently asks first-person "What would I choose?";
+the-script.md and the essays ask second-person "What WOULD you choose?". Coach-voice vs self-tool —
+probably both intended, but unstated.
+
+**3.13 Gateway Question canonical form.** Free-standing "What WOULD you choose?" vs
 thought-anchored "Would you CHOOSE to think that?". The 2014 anchored form is arguably the more
 coachable move (it always has a referent); the free-standing form is the brand. Probably both, with
 the anchored form as the in-session default — needs his taste call.
@@ -366,6 +406,16 @@ sources — e.g. `guide-prompt.ts` houses Alexander AND points to the-script.md 
 mode ("Build any coaching-mode behaviour FROM that file… It is the single home for that voice"),
 which is the right wiring: same discipline, different corpus, different goal.
 
+**Confirmed negative (worker deep-read of the alexander repo, all 17 branches + history):** none of
+the method's named terms — Script/Sausage Machine, Become/Do/Give, Choose easy, the Gateway
+Question, Helpful > True — appear anywhere in that repo. One false cognate to guard against: the
+old Dom persona (`api/coaching.js`, older branches) says "The Script they're running probably
+sounds like…" and "Let's expose your Script" — a thin borrow of the word for a student's self-talk,
+never the framework. Alexander's own method family is HEXAGON / SAME-DIFFERENT / UFAST / Teachback,
+which was deliberately restructured into the "progressive layers" distinction-network model on
+2025-10-28 (commits 245c50a, faad57a). Separate lineage, separate canon — it belongs to
+`~/alexander/pedagogy-core/`, not to this document.
+
 **Rule of thumb for future files** [ASSEMBLER — proposed]: if the move ends in the learner
 understanding a thing, it's Alexander; if it ends in the person choosing consciously, it's the
 Script method in Tom's voice. Neither should restate the other's content.
@@ -389,6 +439,7 @@ Every file found stating or carrying part of the method. (This repo unless pathe
 - `src/content/essays/architects-of-the-future.md` — helpful-not-true; the universal sausage machine; god-among-gods focus litany.
 - `src/content/essays/reason-ability-an-overview.md` — reason × reasonable; the 13x4 definition; Become/Do/HAVE (contradiction 3.1); two reasons we fail.
 - `src/content/essays/the-9x4.md` — the 9×4; Franklin 13 lineage; one-thing-at-a-time; low floor / high ceiling.
+- `src/content/essays/the-cassidy-method.md` — "The 13/4" telling; names the four dogmas as the cadence's foundation.
 - `src/content/essays/first-dogma-marginal-gains.md`, `second-dogma-one-thing-at-a-time.md`, `third-dogma-discernment.md`, `fourth-dogma-a-reasonable-plan.md` — the Reason-Ability dogmas around the cadence.
 - `src/content/essays/thoughts-on-net-worth.md` — Become/Do/Give language in the wealth frame.
 
@@ -409,11 +460,13 @@ Every file found stating or carrying part of the method. (This repo unless pathe
 
 **Leaks / echoes elsewhere**
 - `~/command-surface/cos-portrait.md` — names the scattered-canon problem this document answers ("De-dupe Tom").
+- `~/command-surface/nodes.js:52` — dispatch-graph node "Script / Sausage Machine", tier canon: "Give it ONE canonical home; let other repos reference instead of re-stating" — the mandate this file answers.
 - `~/estate-scout/reasonability.md` — scout memo confirming the-script.md as canonical; pending move: wire it into the live coach.
 - `~/distinction-physics/docs/immune-responses/axiom-arena-antibody-register.md` — "Helpful >> True" as the arena's guiding philosophy.
 - `~/configuration-economics/src/content/open/NOTES-recursive-fitness-and-bridge-test.md` — the careful epistemic version of Helpful > True.
 - `~/richard-liz-coaching/` — Broadband Consciousness coaching platform (Richard & Liz personas).
-- `~/APML/APML-Projects/knock-knock-neo/` — Matrix-themed guide with a `generate_sausage_machine` tool; Script-adjacent play.
+- `~/APML/APML-Projects/knock-knock-neo/` — the method rebuilt as product code ("Tom's Actual Method" in Matrix mythology): Script↔Matrix mapping, `generate_sausage_machine` MCP tool, "What Would Neo Choose", and the otherwise-unrecorded "100 Points" move (orchestrator/METHODOLOGY.md, morpheus-training.js).
+- `~/alexander/api/coaching.js` (older branches) — false-cognate use of "Script" for student self-talk; not the method.
 - `~/zenjin-2026-v1` — checked; no method content found.
 
 ---
