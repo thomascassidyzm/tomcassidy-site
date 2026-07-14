@@ -66,6 +66,13 @@ The live 2014 voice (Reasonable Wealth WhatsApp, `~/reasonable-wealth-coaching-v
 > "I started creating the future I wanted through deliberate use of the sausage machine."
 > — `~/thrive/thrive-website/coaching-prompts/tom-system-prompt.md:62` (and `src/lib/the-script.md:44`)
 
+The origin-story line in its original habitat, with the provenance Tom gives it himself, RW1
+WhatsApp, 03/03/2014 14:14–14:15 (`~/thrive/thrive-website/tom-source-material/WhatsApp Chat_ RW1.txt:2218–2222`):
+
+> "Or was it that I started creating the future I wanted through deliberate use of the sausage
+> machine? Forever indebted to my personal mentor, the great Richard Wilkins for coming up with
+> that metaphor..."
+
 > "You get out what you put in. What are you putting in?" — tom-system-prompt.md:21 (the model
 > response: brief, then wait)
 
@@ -202,7 +209,11 @@ Crispest: tom-system-prompt.md:21. Variants: "deliberate use of the sausage mach
 story, same file line 62); "like karma, it gives you instant agency, and it appears to be a
 universal principle" (reasonable-leadership.ts:97); the cosmological "universal sausage machine"
 of collective thought (architects-of-the-future.md:74); BC's framing as a "detection system…
-memorable, funny metaphor (slightly rude = more memorable)" (`~/thrive/thrive-website/coaching-prompts/context/bc-methodology.md`).
+memorable, funny metaphor (slightly rude = more memorable)" (`~/thrive/thrive-website/coaching-prompts/context/bc-methodology.md`);
+the group-as-machine variant from the 2014 Architects group — "We are the sausage machine" (Mark
+Berger, 25/03/2014, Architects #1.txt:508), which Tom takes up as "The sausage machine is where the
+magic happens" (28/03/2014, line 4900). Coinage is settled: Richard Wilkins, per Tom's own credit
+(see §1).
 
 **Notice — "Step 1: Notice. Step 2: There is no Step 2."**
 Crispest: RW 2014 lines 281–284. Variants: "Everything starts with noticing" (ultimate-13x4.ts
@@ -316,8 +327,10 @@ of you who want to know more about the script, please check out my personal ment
 Richard Wilkins" (actors-agents-architects.md:87), and the Thrive repo carries a full BC
 methodology file (`context/bc-methodology.md`) whose Script and Sausage Machine definitions are
 near-identical to Tom's, plus a whole Richard & Liz coaching platform (`~/richard-liz-coaching`).
-The canon has to decide how the inheritance is acknowledged: what is BC's, what is Tom's layer on
-top. [ASSEMBLER] Tom's distinctive layer looks like: Helpful>True as the discriminator, the
+And the primary source is unambiguous — Tom, RW1, 03/03/2014: "Forever indebted to my personal
+mentor, the great Richard Wilkins for coming up with that metaphor..." (said of the sausage
+machine, RW1.txt:2222). The canon has to decide how the inheritance is acknowledged: what is BC's,
+what is Tom's layer on top. [ASSEMBLER] Tom's distinctive layer looks like: Helpful>True as the discriminator, the
 Reason-Ability pairing of the two meta-questions, Become/Do/Give, Choose easy, and the 13x4 as the
 implementation engine. The Script/Sausage Machine core is inherited and openly credited elsewhere —
 the-script.md just never says so.
@@ -377,8 +390,18 @@ canonical NAMES appear to have been coined during the Thrive distillation rather
 mouth. Worth Tom confirming which names he owns.
 
 **3.12 Person drift.** Programme data consistently asks first-person "What would I choose?";
-the-script.md and the essays ask second-person "What WOULD you choose?". Coach-voice vs self-tool —
-probably both intended, but unstated.
+the-script.md and the essays ask second-person "What WOULD you choose?". Both are Tom's: RW1
+03/03/2014 has him modelling the self-tool first-person — "What would I choose? What makes me feel
+better now?" (RW1.txt:2211–2212). Coach-voice vs self-tool — probably both intended, but unstated.
+
+**3.14 Noticing > Changing vs "re-programming the script".** Both verbatim Tom, one day apart in
+the Architects group: "It's all about re-programming the script" (28/03/2014 17:55:49) and
+"Noticing > Changing" — agreeing with Stephanie Sales's "Not just noticing, not having to 'kill'
+the script" (29/03/2014 21:37:19–21:38:06, Architects #1.txt). [ASSEMBLER] My read: Noticing >
+Changing is the settled doctrine — it recurs everywhere (There is no Step 2; reasonable-doubt's
+"we don't stop thinking it, we just NOTICE"); the re-programming line reads like meeting Kevin
+Goddard's frame mid-conversation. But it is a genuine surface contradiction in the primary source
+and the canon should state the resolution explicitly.
 
 **3.13 Gateway Question canonical form.** Free-standing "What WOULD you choose?" vs
 thought-anchored "Would you CHOOSE to think that?". The 2014 anchored form is arguably the more
