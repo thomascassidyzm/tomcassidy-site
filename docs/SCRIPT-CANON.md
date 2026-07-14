@@ -119,6 +119,14 @@ And the definition of the gap it opens:
 
 ### Helpful > True
 
+The phrase itself, in Tom's own thumbs, primary source — Architects group, 29/03/2014 22:44:59
+(`~/thrive/thrive-website/tom-source-material/WhatsApp Chat_ Architects #1.txt:7704`):
+
+> "Your script will tell you that you need to examine it. To fix it. To work out where these
+> thoughts originated from. … And that MAY work. It MAY be possible to rewrite your scripts. But
+> what's going to be EASIER for you? To notice it and then move on. Or to try to change it?
+> **Helpful > True**" (lines 7689–7704)
+
 > "I always say to people: Just do what's helpful. I don't care about the truth. … Science isn't
 > about THE TRUTH. Science is about: well, so far THIS seems to work. … Don't listen to anyone.
 > Don't listen to me. Trust your own intuition." — `~/reasonable-wealth-coaching-voice.md` lines 400–412
@@ -295,7 +303,10 @@ wise man and the gambler both know that 70% right gets you just about anything y
 … If 70% of your thoughts were helpful, you'd be not only rare, but unstoppable."
 (reasonable-doubt.md:35–39). With "the daily dance" as its frame: "all of life is a daily dance
 between these two opposing positions, a continuous battle in the fight to discern the difference"
-(reasonable-doubt.md:242). Neither survives into the-script.md.
+(reasonable-doubt.md:242). Neither survives into the-script.md. Cross-confirmed: the 70% rule also
+appears in `tom-coaching-verbose-backup.js` as step 4 of the Script teaching (NOTICE → MAKE IT OK →
+DIFFERENTIATE → 70% RULE), same gambler/wise-man wording — so it is a stable part of the method,
+with the Jim Rai credit only in the essay.
 
 **The 100 Points** [ASSEMBLER — found only in knock-knock-neo, needs Tom's confirmation as a real move]
 "**The 100 Points:** 'Allocate 100 points across your whole life. No limits.'" and "Forget
@@ -307,6 +318,26 @@ sausages out. Pork in, pork sausages out. What are you putting in?" (orchestrato
 **The Input Principle (alias)**
 `conquering-life.ts:442` names the week's focus "The Input Principle" — "life is a machine - you
 get out what you put in" — with "sausage machine" only lowercase mid-sentence. Same move, third name.
+
+**Script is allergic to love (the isolation move)**
+"Underneath every single avenue of attack by the script, it really only tries to do one thing …
+The one thing it tries to do is to isolate us from other humans. Because it knows that getting us
+to be apart from humans is where it can destroy us. On our own is our only real weakness. Together.
+In a loving relationship. In a family. In a great friendship. There is no script. Script is
+allergic to love." — Architects #1.txt:7931–7948 (30/03/2014). [ASSEMBLER] A whole move — the
+script's single underlying strategy, and love as the structural antidote — recorded nowhere outside
+this transcript. Strong candidate for the canonical file.
+
+**The script is perfect too (the appendix riff)**
+"You are perfect even when you are in your script. But you don't need to stay there. Because it
+isn't helpful." (Architects #1.txt:3618–3626, 28/03/2014) — with the surrounding riff: the script
+is part of you, it "got you to today" (kept your ancestors from tigers and cliffs), so it earns
+thanks, not hate — you just "don't need it anymore. Like your appendix." (per the worker's fuller
+extraction of L3618–3662). No-enemy framing; pairs with "there's nothing wrong with you".
+
+**There is no doubt, there is only the script**
+Architects #1.txt:1160 (per worker extraction) — the strongest compression of the doubt teaching
+(cf. RW 2014's "doubt kicked them into touch").
 
 ---
 
@@ -329,8 +360,18 @@ methodology file (`context/bc-methodology.md`) whose Script and Sausage Machine 
 near-identical to Tom's, plus a whole Richard & Liz coaching platform (`~/richard-liz-coaching`).
 And the primary source is unambiguous — Tom, RW1, 03/03/2014: "Forever indebted to my personal
 mentor, the great Richard Wilkins for coming up with that metaphor..." (said of the sausage
-machine, RW1.txt:2222). The canon has to decide how the inheritance is acknowledged: what is BC's,
-what is Tom's layer on top. [ASSEMBLER] Tom's distinctive layer looks like: Helpful>True as the discriminator, the
+machine, RW1.txt:2222). The Thrive Wiz persona file goes further, labelling both frameworks
+Wilkins' own: "THE SCRIPT FRAMEWORK (Your Creation)" and "THE SAUSAGE MACHINE (Your Creation)"
+(`~/thrive/thrive-website/coaching-prompts/wiz-system-prompt.md:85,166`). The canon has to decide
+how the inheritance is acknowledged: what is BC's, what is Tom's layer on top.
+
+Useful boundary markers — vocabulary that is BC/Wilkins-side and never appears in Tom's own
+material: the Script Poem (wiz-system-prompt.md:88–108), "Scriptjacked", "SHIT-FM", "Script Aware",
+"95% of the time, the Script is choosing" (wiz-system-prompt.md:110–125), and "Scriptitis — there's
+only ONE disease" (bc-methodology.md:161). Liz Ivory's ingredient exercise (score an area 1–10,
+list 5 ingredients totalling 100g, "would you choose these?", redesign — liz-system-prompt.md:200–256)
+is her own operationalisation of the shared sausage-machine metaphor, also not Tom's. Anything
+using this vocabulary is quoting the lineage, not Tom. [ASSEMBLER] Tom's distinctive layer looks like: Helpful>True as the discriminator, the
 Reason-Ability pairing of the two meta-questions, Become/Do/Give, Choose easy, and the 13x4 as the
 implementation engine. The Script/Sausage Machine core is inherited and openly credited elsewhere —
 the-script.md just never says so.
@@ -381,13 +422,15 @@ the delegation is aspirational. The estate-scout memo already lists "wire the-sc
 live coach" as the pending move (`~/estate-scout/reasonability.md:44`). Voice-in-a-doc the engine
 doesn't consume is drift waiting to happen — this is the mechanical fix that stops §3 growing.
 
-**3.11 Some named moves may be later crystallisations.** A worker deep-read of thrive's
-`tom-coaching-verbose-backup.js` (1,637 lines of coaching material) found "Become/Do/Give",
-"Helpful > True" as a named phrase, and DING!/Duuuum/energy-vampires all ABSENT — closest is
-"helpful or harmful", and "choose easy" appears once as a raw transcript quote, not a framework.
-[ASSEMBLER] The moves are real (they're in the 2014 transcripts in substance), but several of the
-canonical NAMES appear to have been coined during the Thrive distillation rather than in Tom's own
-mouth. Worth Tom confirming which names he owns.
+**3.11 Which move-names are Tom's — now partly settled by source.** CONFIRMED Tom's own:
+"Helpful > True" (verbatim, his thumbs, Architects 29/03/2014 22:44:59 — exactly that notation) and
+"Choose easy" (flagged in `tom-coaching-verbose-backup.js` as "TOM'S ACTUAL RESPONSES FROM
+TRANSCRIPTS ✓", though it appears once, without a framework around it). STILL UNCONFIRMED in any
+2014 primary source: "Become/Do/Give" as a named triad (absent from RW, Architects, and the
+1,637-line verbose backup — closest 2014 analogue is "not NOT done", which is DO-flavoured only)
+and DING!/Duuuum/energy-vampires as named vocabulary. [ASSEMBLER] Become/Do/Give looks like a
+later-stage formalisation — possibly Tom's own later coinage, possibly the Thrive distillation's.
+Needs his word.
 
 **3.12 Person drift.** Programme data consistently asks first-person "What would I choose?";
 the-script.md and the essays ask second-person "What WOULD you choose?". Both are Tom's: RW1
@@ -397,11 +440,19 @@ better now?" (RW1.txt:2211–2212). Coach-voice vs self-tool — probably both i
 **3.14 Noticing > Changing vs "re-programming the script".** Both verbatim Tom, one day apart in
 the Architects group: "It's all about re-programming the script" (28/03/2014 17:55:49) and
 "Noticing > Changing" — agreeing with Stephanie Sales's "Not just noticing, not having to 'kill'
-the script" (29/03/2014 21:37:19–21:38:06, Architects #1.txt). [ASSEMBLER] My read: Noticing >
-Changing is the settled doctrine — it recurs everywhere (There is no Step 2; reasonable-doubt's
-"we don't stop thinking it, we just NOTICE"); the re-programming line reads like meeting Kevin
-Goddard's frame mid-conversation. But it is a genuine surface contradiction in the primary source
-and the canon should state the resolution explicitly.
+the script" (29/03/2014 21:37:19–21:38:06, Architects #1.txt). RESOLVED BY THE SOURCE ITSELF an
+hour later: "It MAY be possible to rewrite your scripts. But what's going to be EASIER for you? To
+notice it and then move on. Or to try to change it? Helpful > True" (22:43–22:44, lines 7689–7704)
+— Tom explicitly weighs the two and settles on noticing, by applying choose-easy to the method
+itself. The canonical statement should carry that passage; the "re-programming" line of the day
+before was superseded in his own words.
+
+**3.15 The dropped divorce anecdote.** `tom-coaching-verbose-backup.js` carries two versions of the
+sausage-machine pitch: an older one anchored in the divorce story ("I was putting in victim energy
+and getting victim results. When I shifted to putting in self-active energy, everything changed")
+and the current one ("Most people think they have to wait for the new job to feel good…"). The
+personal anecdote was dropped somewhere in the prompt's evolution. Deliberate (privacy/register) or
+lost? His call whether the canon keeps it.
 
 **3.13 Gateway Question canonical form.** Free-standing "What WOULD you choose?" vs
 thought-anchored "Would you CHOOSE to think that?". The 2014 anchored form is arguably the more
@@ -452,7 +503,10 @@ Every file found stating or carrying part of the method. (This repo unless pathe
 **Canonical / near-canonical**
 - `src/lib/the-script.md` — the existing canonical distillation (stance, two frameworks, Become/Do/Give, Choose easy, signature moves, flow, voice samples).
 - `~/thrive/thrive-website/coaching-prompts/tom-system-prompt.md` — fullest operational statement; source the-script.md condensed from.
-- `~/thrive/thrive-website/coaching-prompts/context/bc-methodology.md` — Broadband Consciousness source definitions of Script + Sausage Machine (provenance).
+- `~/thrive/thrive-website/coaching-prompts/context/bc-methodology.md` — Broadband Consciousness source definitions of Script + Sausage Machine (provenance); "Scriptitis" one-disease framing.
+- `~/thrive/thrive-website/coaching-prompts/wiz-system-prompt.md` — Richard Wilkins persona; labels Script + Sausage Machine "Your Creation"; the Script Poem; BC-side vocabulary (Scriptjacked, SHIT-FM, Script Aware).
+- `~/thrive/thrive-website/coaching-prompts/liz-system-prompt.md` — Liz Ivory persona; her ingredient exercise extending the sausage machine.
+- `~/thrive/thrive-website/tom-coaching-verbose-backup.js` — verbose Tom coach prompt; NOTICE→MAKE IT OK→DIFFERENTIATE→70% RULE breakdown; both sausage-machine pitch versions (divorce anecdote vs current).
 - `~/reasonable-wealth-coaching-voice.md` — Tom's raw 2014 RW WhatsApp voice, all messages in order; the primary source.
 - `~/thrive/thrive-website/tom-source-material/` — the raw WhatsApp exports (RW1, RW2, Architects #1).
 
