@@ -21,7 +21,13 @@
 //  re-stating it. It is the single home for that voice.
 // ─────────────────────────────────────────────────────────────────────────
 
+import theScript from './the-script.md?raw';
+
 export const GUIDE_PERSONA = 'Alexander';
+
+// The canonical coaching voice/method, wired in verbatim so the engine and
+// the canonical file cannot drift.
+export const COACHING_SCRIPT = theScript;
 
 export interface GuideContext {
   /** frontmatter slug of the essay the reader is on, if any. */
@@ -105,6 +111,8 @@ export function buildPromptWithContext(
   essayMarkdown: string | null,
 ): string {
   let prompt = BASE_PROMPT;
+
+  prompt += `\n\n---\nCOACHING VOICE & METHOD (Tom's Script & the Sausage Machine — canonical, build from this, do not recite it)\n\n${COACHING_SCRIPT}\n`;
 
   prompt += `\n\n---\nREADER CONTEXT\n`;
   prompt += `Surface: ${context.mode ?? 'unknown'}\n`;
