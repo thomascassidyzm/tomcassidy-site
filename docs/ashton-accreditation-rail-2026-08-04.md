@@ -62,7 +62,7 @@ the counsellor and the ready-made fallback (Micro and/or Macroeconomics).
 **The hard part is the diploma — and one provider sells exactly the right product.** The
 requirement is narrow: accept coursework taught entirely by outside tutors, put a real letter
 grade on it, carry the ACS Grades 9-10 credits across intact, and supply a named counsellor for
-the Common App. Fourteen providers were checked and most fail at least one leg. **Bridgeway
+the Common App. Thirteen providers were checked in the comparison and most fail at least one leg. **Bridgeway
 Academy's "Accreditation-Only" tier at $2,500 a year is the recommendation** — Cognia and WASC
 accredited, built explicitly for families who have already chosen their own curriculum, and
 alone in the field in letting a parent or tutor's grade carry onto an accredited transcript
@@ -74,7 +74,7 @@ the three questions to ask Bridgeway before enrolling, and the four calls to mak
 
 ## 2. Provider comparison
 
-Fourteen providers were researched. Currency as published by each. **"Residency"** means credits
+Thirteen providers, ranked. Currency as published by each. **"Residency"** means credits
 that must be earned with the provider itself in order to receive its diploma — the lower the
 number, the more of ACS's Grades 9-10 work survives and the less has to be repeated. The column
 that decides this whole question is the third one: *who assigns the grade*.
