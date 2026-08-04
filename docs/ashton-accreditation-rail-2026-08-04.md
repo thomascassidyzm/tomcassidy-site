@@ -59,47 +59,41 @@ documented submission route for a candidate who has no host course, and — the 
 Kickstart course**. Plan for the swap; treat a yes as upside. Section 7 carries the question for
 the counsellor and the ready-made fallback (Micro and/or Macroeconomics).
 
-**The hard part is the diploma.** The requirement — a provider that will accept coursework
-taught entirely by outside tutors, put a real letter grade on it, carry the ACS Grades 9-10
-credits across intact, and supply a named counsellor for the Common App — is a narrow ask, and
-most of the field fails at least one leg of it. Of the providers verified so far: Laurel
-Springs has no external-credit mechanism at all; Keystone appears to exclude students located
-in the UK; American School of Correspondence has an excellent residency rule and a very low
-price but no evidence of a counsellor or a Common App School Report; Whitmore will take
-external work but routes it to Pass/Fail unless it runs inside their own graded course shells.
-The two providers built precisely for this shape — NARHS and Clonlara's Off-Campus programme —
-are covered in section 3.
+**The hard part is the diploma — and one provider sells exactly the right product.** The
+requirement is narrow: accept coursework taught entirely by outside tutors, put a real letter
+grade on it, carry the ACS Grades 9-10 credits across intact, and supply a named counsellor for
+the Common App. Fourteen providers were checked and most fail at least one leg. **Bridgeway
+Academy's "Accreditation-Only" tier at $2,500 a year is the recommendation** — Cognia and WASC
+accredited, built explicitly for families who have already chosen their own curriculum, and
+alone in the field in letting a parent or tutor's grade carry onto an accredited transcript
+*with a GPA* rather than dropping it to Pass/Fail. **NARHS at $650 a year is the fallback**, and
+if two questions come back well it may be the better buy outright. Section 4 has the reasoning,
+the three questions to ask Bridgeway before enrolling, and the four calls to make this week.
 
 ---
 
 ## 2. Provider comparison
 
-Currency as published by each provider. "Residency" means credits that must be earned with the
-provider itself in order to receive its diploma — the lower the number, the more of ACS's
-Grades 9-10 work survives and the less has to be repeated.
+Fourteen providers were researched. Currency as published by each. **"Residency"** means credits
+that must be earned with the provider itself in order to receive its diploma — the lower the
+number, the more of ACS's Grades 9-10 work survives and the less has to be repeated. The column
+that decides this whole question is the third one: *who assigns the grade*.
 
-| Provider | Accreditation | Accepts externally-taught work? | ACS Grades 9-10 transfer | Residency | Cost, Grades 11+12 | Named counsellor / Common App School Report | UK / Istanbul workable? | Verdict |
+| Provider | Accreditation | Accepts externally-taught work — and who grades it? | ACS Grades 9-10 transfer | Residency | Cost, per year | Named counsellor / Common App School Report | UK / Istanbul workable? | Verdict |
 |---|---|---|---|---|---|---|---|---|
-| **NARHS** (North Atlantic Regional HS) | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* |
-| **Clonlara** — Off-Campus / Home Based | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* | *see §3* |
-| **American School of Correspondence** | MSA-CESS, reaccredited 2026 — CONFIRMED ([accreditation page](https://www.americanschoolofcorr.com/accreditation/)) | Weak. Privately-tutored work credited only via comprehensive exams, capped at 5 units, $50 each, **available only at enrolment** — no route for ongoing Grade 11/12 tutor-taught work | Transfers rather than being redone | **5 of 20 credits** — the best residency rule found ([high school page](https://www.americanschoolofcorr.com/high-school/)) | **$1,200/year**, ≈ £1,785 for both years | **No evidence found** of a named counsellor, School Report, counsellor letter or school profile — only a Parchment transcript service | No restriction found | Cheap, real accreditation, generous residency — but the counselling hole is wide open and it cannot grade ongoing tutor work |
-| **Whitmore School** | Cognia — CONFIRMED, verified live | Yes, but conditionally: after-the-fact certification routes through the "non-accredited homeschool" pathway → **Pass/Fail only, no GPA**. Letter grades require the work to sit inside Whitmore's own enrolled course shells, teacher-graded | Transfers cleanly, **letter grades and GPA intact** | **4.5 credits** | ≈ $2,100–$3,050/year (published as ~£1,590–£2,275/yr), ≈ £4,230 both years on the recommended tier | UNKNOWN — not on public pages, needs a direct call | Rolling enrolment, $150 deposit, no deadline blocking a Sept 2026 start | **Partial fit.** Resolves to good *if* Whitmore confirms a tutor may deliver content while a Whitmore teacher grades it under their umbrella. That is one phone call. |
-| **Laurel Springs** | Cognia (WASC question unresolved) | **No mechanism at all** — no portfolio review, no credit-by-evaluation, no parent/tutor-designed courses ([admissions process](https://laurelsprings.com/admissions/admissions-process/)). Credit comes only from schools attended, or Baylor/Syracuse dual enrolment | n/a | n/a | **$11,700/yr** standard, **$17,250/yr** Academy → ≈ £17.4k–£25.7k both years ([tuition](https://laurelsprings.com/admissions/laurel-springs-tuition/)) | Best in class — in-house NACAC counsellors who write LORs, published school profile | Yes | **Rejected.** You would be buying the lessons you explicitly do not want. |
-| **Keystone School** | Cognia + MSA-CESS | Not assessed | Not assessed | Not assessed | ≈ £2,700–£4,200 both years | Not assessed | **Probably not.** Keystone publishes a list of 76 countries it cannot accept enrolments from and **the United Kingdom is named on it** ([enrollment page](https://www.keystoneschoolonline.com/enrollment)). Turkey is not. Phrased by physical location, not citizenship. Corroborating: they also state US Treasury rules prevent refunds to non-US addresses | **Likely disqualified by geography.** Worth one email to confirm; plan without it. |
-| **Oak Meadow** | *see §8.2 — never researched* | | | | | | | |
-| **West River Academy** | *see §8.2 — never researched* | | | | | | | |
-| **Bridgeway Academy** | *see §8.2 — never researched* | | | | | | | |
-| **Seton Home Study School** | *see §8.2 — never researched* | | | | | | | |
-| **The American Academy** | *see §8.2 — never researched* | | | | | | | |
-| **Wilostar3D** | *see §8.2 — never researched* | | | | | | | |
-| **Excel High School** | *see §8.2 — never researched* | | | | | | | |
-| **Penn Foster** | *see §8.2 — never researched* | | | | | | | |
-
----
-
-## 3. NARHS and Clonlara — the two built for this shape
-
-*Awaiting the research commissioned 4 August 2026. See section 7.*
+| **Bridgeway Academy** | **Cognia + WASC** — both regional-equivalent. CONFIRMED on [their accreditations page](https://homeschoolacademy.com/accreditations/); not independently cross-checked in Cognia's directory | **Yes — and this is the standout.** A distinct **"Accreditation-Only" tier**: *"If you've already chosen a curriculum and have your homeschooling plan, we can help you with accreditation… submitting your chosen curriculum for a full transcript and portfolio review"* ([page](https://homeschoolacademy.com/homeschool-programs/homeschool-academy-accreditation/)). On grading: *"you retain the freedom to handle grading for parent-led coursework"* — so a tutor's grade carries through onto an accredited transcript **with GPA, not pass/fail** | Accepts transfer credit from previous schools. **Whether original letter grades survive intact is UNKNOWN** | **UNKNOWN** — not stated. Plausibly minimal for the accreditation-only tier, but not confirmed | **$2,500** accreditation-only, including portfolio review, NCAA documentation, official transcripts and "limited academic consultant services". Full-service Academy Select is $8,500 | Academy Select provides a dedicated Academic Advisor. **Whether the accreditation-only tier includes a Common App School Report is UNKNOWN** | No restriction found | **Primary recommendation — see §4.** The only provider whose published product *is* the thing being asked for |
+| **NARHS** (North Atlantic Regional HS) | **MSA-CESS** — regional tier — as a "Learning Services Provider", plus Maine DOE recognition as a private school authorised to issue a diploma. CONFIRMED on [About](https://narhs.com/about/) and [NARHS and the Law](https://narhs.com/narhs-and-the-law/); MSA-CESS's own directory is JS-driven and could not be searched | **Yes, by design.** *"Parents decide and direct the content of each course"* — video, Zoom, textbook or tutor-led all accepted ([FAQs](https://narhs.com/faqs/)). **The parent grades**, using answer keys, custom tests or a rubric; NARHS validates the credit onto an accredited transcript rather than assessing the work itself. **Whether the transcript carries a letter grade and GPA or pass/fail is UNKNOWN** — the Handbook PDF exceeded the fetch limit | **Free.** *"If the work was done in a public or private school… all we need is an official transcript"*, no transfer fee for accredited-school credit ([Tuition and Fees](https://narhs.com/tuition-and-fees/)). Whether grades survive intact is UNKNOWN | **17.5 credits** total for the diploma. A "at least one NARHS-reviewed course" minimum is **PROXY** — search snippet only | **$650**, covering up to 8 credits. À la carte: 1 credit $150, 2 $250, 3 $350. Official transcript $10 | **Not evidenced.** A "NARHS Profile" document is referenced in the Handbook contents, and the FAQ mentions working with counsellors and admissions officers — but no page confirms a named counsellor files a Common App School Report or Counselor Recommendation | None. *"No Maine residency… no on-site attendance"*, students in "multiple foreign countries". No UK-specific statement, so the UK point is PROXY | **Fallback recommendation — see §4.** Structurally perfect and remarkably cheap; the college-facing layer is unproven |
+| **Clonlara School** — Off-Campus / Home Based | **MSA-CESS**, plus Accreditation International and NCPSA; reaccredited through **July 2031** ([announcement](https://clonlara.org/2026/06/28/clonlara-school-earns-reaccreditation-through-2031/)). **Material gap: whether the Off-Campus Programme specifically sits inside the MSA-CESS scope, or only the Campus Programme, is UNKNOWN** | Yes — family-led delivery, with a **Credit Request Form per completed course** reviewed by a Clonlara advisor before credit is issued ([Off-Campus Program](https://clonlara.org/our-programs/off-campus-program/)). **Letter grade versus pass/fail is UNKNOWN** despite checking the FAQ, the programme page and a third-party review | Accepts credits from other accredited schools ([Enrollment](https://clonlara.org/enrollment/)). Grade preservation UNKNOWN | **22 credits** total — and note the extras: a 16-book reading list, **180 hours of volunteer service**, a portfolio, an exit exam, a Capstone Project and a senior survey. A **5.5-credit** minimum earned directly from Clonlara is PROXY | **$1,820** for Grades 9-12 (search-indexed). A direct fetch of the same page returned $1,960/$1,750, which appears to be the in-person Campus rate bleeding in — **the discrepancy is unresolved**. Registration $210 first student. Individual half-credit online courses $395, +$50 for AP or world languages | Not established | No restriction found | **Third.** Genuinely built for external delivery, but the volunteer hours, reading list, exit exam and Capstone are real programme work stacked on top of "just certify it" |
+| **American School of Correspondence** | MSA-CESS, reaccredited 2026 — CONFIRMED ([page](https://www.americanschoolofcorr.com/accreditation/)) | **Weak.** Privately-tutored work credited only via comprehensive exams, capped at 5 units, $50 each, **available only at enrolment** — no route for ongoing Grade 11/12 tutor-taught work | Transfers rather than being redone | **5 of 20 credits** — the most generous residency rule found ([page](https://www.americanschoolofcorr.com/high-school/)) | **$1,200** | **No evidence found** of a named counsellor, School Report, counsellor letter or school profile — only a Parchment transcript service | No restriction found | Cheap and properly accredited, but it cannot grade ongoing tutor work, which is the whole requirement |
+| **Whitmore School** | Cognia — CONFIRMED | Yes, conditionally: after-the-fact certification routes through the "non-accredited homeschool" pathway → **Pass/Fail only, no GPA**. Letter grades require the work to sit inside Whitmore's own course shells, teacher-graded | Transfers cleanly, **letter grades and GPA intact** | **4.5 credits** | ≈ $2,100–$3,050 | UNKNOWN — needs a direct call | Rolling enrolment, $150 deposit | **Live alternative.** Resolves to good *if* Whitmore confirms a tutor may deliver content inside a Whitmore-graded shell. One phone call settles it |
+| **Seton Home Study School** | MSA-CESS — CONFIRMED ([page](https://www.setonhome.org/academics/accreditation/)) | **Partially, and not really.** *"Certain assignments must be sent to Seton to be graded in order to earn credit"*; a parent-submitted grade is averaged in at only **25%** of the quarter grade ([page](https://www.setonhome.org/high-school/information/)). Seton does the substantive assessment. Letter grades and GPA | Accepted, evaluated course-by-course; *"not all credits may apply"*. GPA preservation UNKNOWN | **25% of required credits** — 5.5 for the Academic diploma, 6.5 for Advanced — **and the student must be fully enrolled for the whole of Grade 12** | ≈ $1,380 at per-course rates ($230/credit, $125/half). $30 new-family fee; **$250/yr international shipping** | Yes — a Guidance department handling Common App, class rank and college planning. **But the named-counsellor evidence found belongs to "Seton School Manassas", a different institution** — must be verified against the home-study school | None — serves ~50 countries | **Two blockers.** A **mandatory full theology credit every year** ("we require all students who are enrolled full-time to enrol in a full credit of theology"), and Seton grades the work rather than certifying a tutor's |
+| **Oak Meadow** | **NEASC** — regional tier, and NCAA-approved. Consistent across its own pages; NEASC's directory is JS-driven and could not be cross-checked, so PROXY | **No.** Courses are taught and graded by Oak Meadow teachers, and its own curriculum studied independently **explicitly does not count for graduation credit** ([graduation requirements](https://www.oakmeadow.com/admission/graduation-requirements/)). The nearest thing is the **Advanced Study Project** — 0.5-1 credit, local mentor plus an Oak Meadow faculty advisor as instructor of record, at full course tuition. Life Experience Credit is capped at 1 elective credit/year | Accepts accredited transfer credit; grade preservation UNKNOWN | **22 credits** total; a senior transferring in must earn **3 credits** with Oak Meadow **and be full-time both semesters of Grade 12** | **$10,000–$14,500** — per-course full-year rates run $2,439–$2,909 and a full load is 4-5 courses | **Strong** — free college counselling including a comprehensive counsellor letter, and an official "Oak Meadow Profile" school profile. Whether the Common App School Report itself is filed is UNKNOWN | No restriction; 40+ countries | **Weak fit.** Same shape as Laurel Springs — a teaching school — at teaching-school prices, plus the heaviest residency lock-in in the table |
+| **Laurel Springs** | Cognia (WASC question unresolved) | **No mechanism at all** — no portfolio review, no credit-by-evaluation, no parent or tutor-designed courses ([admissions process](https://laurelsprings.com/admissions/admissions-process/)). Credit comes only from schools attended, or Baylor/Syracuse dual enrolment | n/a | n/a | **$11,700** standard, **$17,250** Academy ([tuition](https://laurelsprings.com/admissions/laurel-springs-tuition/)) | Best in class — in-house NACAC counsellors who write LORs, published school profile | Yes | **Rejected.** You would be buying the lessons you explicitly do not want |
+| **The American Academy** | Northwest Accreditation Commission, a division of Cognia — **PROXY only**; the site rate-limited every direct fetch | **UNKNOWN, and it is the central question.** The one page that loaded speaks only to evaluating *incoming* transcripts, not to crediting new externally-taught work | Transcript evaluation offered; detail UNKNOWN | UNKNOWN | $1,099 diploma programme (list possibly $1,299); per-course $238 per half-credit | Uses Parchment for transcript delivery. No evidence of a named counsellor or published school profile | **Contradictory and unresolved.** One source states plainly it *"currently does not accept international students"*; another lists it among schools for international students. **Potential dealbreaker** | **Cannot be recommended.** Two unresolved questions, either of which could be fatal. One phone call (+1 888 364 6940) settles both |
+| **Keystone School** | Cognia + MSA-CESS | Not assessed | Not assessed | Not assessed | ≈ £1,350–£2,100 | Not assessed | **Probably not.** Keystone publishes a list of 76 countries it cannot accept enrolments from and **the United Kingdom is named on it** ([enrolment page](https://www.keystoneschoolonline.com/enrollment)). Turkey is not. Phrased by physical location, not citizenship. Corroborating: US Treasury rules prevent refunds to non-US addresses | **Likely disqualified by geography.** Worth one email; plan without it |
+| **West River Academy** | **NALSAS** — the National Association for the Legal Support of Alternative Schools. This is a legal-compliance verifier that explicitly *"does not have curriculum requirements for member schools"* ([nalsas.org](https://www.nalsas.org/)), **not** a recognised academic accreditor. West River's own page concedes its accreditation *"may not be universally recognised"* | Umbrella model — families submit a year-end summary and a transcript is issued from it | n/a | None | **$450**, plus a one-off $125 onboarding fee | None found | No restriction — "any country in the world" | **Reject.** The accreditation does not do the job being asked of it, and the school says as much itself |
+| **WiloStar3D** | **NPSAG** (National Private Schools Accreditation Group), plus Florida DoE recognition of the *school* — a much weaker thing than accreditation of the *programme*. NPSAG is not Cognia, MSA-CESS, WASC, NEASC or DEAC, and no CHEA or US DoE recognition of it could be found | Its core model *is* parent-directed, which is the right shape | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | No restriction found | **Reject on accreditation.** To be fair to it: no positive evidence was found that NPSAG is illegitimate, only an absence from every recognised list. That absence is enough |
+| **Penn Foster** | DEAC — **national, not regional**. The distinction matters for US university admissions | Not established | Not established | Not established | Not established | Not established | Not established | **Not assessed.** pennfoster.edu returned 403 to every fetch attempt, so nothing here is first-party. The accreditation tier alone puts it behind the field |
 
 ---
 
@@ -185,11 +179,84 @@ rather than in the summer of 2027 — an unobtainable Grades 9-10 transcript wou
 option in this document, including the free one.
 
 ---
-
 ## 4. Recommendation
 
-*Held until section 3 lands. It would be dishonest to name a primary provider while the two
-candidates most likely to be the answer are unresearched.*
+### Primary: Bridgeway Academy, "Accreditation-Only" tier — $2,500 a year
+
+**It is the only provider in the field whose published product is the thing being asked for.**
+Every other candidate has to be bent into shape: Whitmore needs external work moved inside its own
+course shells to avoid Pass/Fail, Seton wants to grade the work itself and requires a theology
+credit, Oak Meadow and Laurel Springs are teaching schools, American School of Correspondence
+cannot credit ongoing tutor work at all. Bridgeway sells the shape directly — *"if you've already
+chosen a curriculum and have your homeschooling plan, we can help you with accreditation"*, via
+portfolio and transcript review.
+
+It wins on all three legs rather than trading them off:
+
+- **Better.** Cognia *and* WASC — regional-equivalent accreditation, the tier US universities look
+  for, which on the University of California evidence in §3A is what keeps Ashton in the standard
+  admissions lane rather than the "admission by exception" one. And critically, the grades survive:
+  *"you retain the freedom to handle grading for parent-led coursework"*, carried onto an accredited
+  transcript with a GPA. Every other provider that accepts external work either grades it itself or
+  drops it to Pass/Fail.
+- **Simpler.** One product, bought as a product. No negotiating a bespoke arrangement, no
+  restructuring the tutoring around a school's course shells, no theology credit, no 180 volunteer
+  hours, no exit exam.
+- **Cheaper in total.** $2,500 a year against Oak Meadow's $10,000-$14,500 and Laurel Springs'
+  $11,700-$17,250 — and cheaper in the cost that actually hurts, which is the family's time. The
+  ongoing admin is a portfolio submission, not a parallel school timetable.
+
+**Three questions must be answered before enrolling, all in one phone call.** These are genuine
+unknowns, not formalities:
+
+1. **What is the residency requirement on the accreditation-only tier?** Not stated anywhere. If it
+   turns out Bridgeway requires a substantial number of its own taught credits, the whole case
+   collapses and NARHS becomes primary.
+2. **Do the ACS Grades 9-10 letter grades and GPA transfer intact**, or are the courses re-recorded?
+3. **Does the accreditation-only tier include a Common App School Report, a counsellor
+   recommendation and a school profile** — or is that only in the $8,500 Academy Select tier? The
+   dedicated Academic Advisor is documented for Academy Select, not for accreditation-only.
+
+If question 3 comes back "Academy Select only", that is not necessarily fatal: §3A establishes that
+a parent can legitimately file the School Report and Counselor Recommendation themselves on the
+Common App, and the accredited transcript — the part a parent genuinely cannot self-issue — still
+comes from Bridgeway. But it should be a known trade, not a surprise in December 2027.
+
+### Fallback: NARHS — $650 a year
+
+**If Bridgeway's residency answer disappoints, NARHS is the fallback, and it is a strong one.**
+MSA-CESS regional-tier accreditation plus Maine DoE recognition; explicitly built around
+parent-directed and tutor-led coursework; free transfer of the ACS credits on receipt of an official
+transcript; 17.5 credits for the diploma; rolling enrolment; no geography bar; and $650 a year,
+which is a quarter of Bridgeway and a twentieth of Oak Meadow.
+
+It is the fallback rather than the primary for two reasons, both honest rather than decisive:
+
+- **The college-facing layer is unproven.** No page confirms that a named human at NARHS completes a
+  Common App School Report or writes a counsellor recommendation. A "NARHS Profile" document is
+  referenced in the Handbook's contents, so something exists — but the 77-page Handbook PDF exceeded
+  the fetch limit and could not be read. This is unverified, not disproven.
+- **Whether the transcript shows letter grades and a GPA, or pass/fail, could not be established.**
+  For a student aiming at competitive US admission that is not a detail.
+
+Both are answerable by one email to NARHS admissions. If both come back well, NARHS is arguably the
+better buy outright — it is a quarter of the price for the same job.
+
+### What to do this week
+
+Two phone calls and two emails, in this order:
+
+1. **Bridgeway** — the three questions above.
+2. **NARHS admissions** — letter grades or pass/fail, and what the college-facing service actually is.
+3. **ACS** — will they release an official Grades 9-10 transcript, at what cost, with what notice?
+   Everything in this document, including the free option, depends on that transcript existing
+   (§3A).
+4. **The ACS counsellor** — the AP Business with Personal Finance question in §7, with an October
+   decision point.
+
+**Explicitly not recommended:** West River Academy and WiloStar3D, both on accreditation that will
+not do the job. **Not assessable:** The American Academy, until it confirms whether it accepts
+international students at all — one call to +1 888 364 6940.
 
 ---
 
@@ -478,14 +545,11 @@ mislaid. What follows distinguishes *researched and unresolved* from *never rese
 
 ### 8.1 Researched, genuinely unresolved
 
-- **AP exam fees, at either centre.** Prometric states fees are set by individual centres; the
-  London and Istanbul figures could not be read off a live page. Both Prometric exam pages 403
-  a direct fetch. The international surcharge is also unconfirmed.
-- **AP registration windows at the Prometric centres**, as distinct from College Board's own
-  ordering deadlines. Prometric recommends registering by the November before the testing year;
-  the actual open and close dates are unconfirmed.
-- **Whether a candidate may split exams between London and Istanbul in one May.** Materially
-  important given Ashton's two bases. Not answered by any source found.
+- **2026-27 AP fees and registration windows.** None of Prometric UK, Prometric Turkey or Hisar
+  had published them as of 4 August 2026 — verified against the Wayback Machine, so this is the
+  pages genuinely not having rolled over rather than a caching artefact. Last cycle's figures are
+  used throughout as planning numbers and are labelled PROXY. Hisar publishes no fee at all
+  publicly; its pricing sits behind an application portal that could not be reached.
 - **Whether AP Business with Personal Finance will be carried at any international Prometric
   centre in May 2027.** Researched hard and genuinely not knowable from public sources today.
   College Board's exam overview, adopt page and Career Kickstart programme page are all silent
@@ -509,20 +573,45 @@ mislaid. What follows distinguishes *researched and unresolved* from *never rese
 - **Laurel Springs: Cognia versus WASC accreditation**, and whether college counselling is
   bundled or an upsell. Moot, since Laurel Springs is rejected on other grounds.
 
-### 8.2 Commissioned and never returned — the load-bearing holes
+### 8.2 Provider-specific unknowns that change the answer
 
-Six replacement workers were dispatched on 4 August 2026 to fill these. The AP Business
-launch-year question has since come back and is folded into §7. **Anything still listed below
-was not recovered.**
+Six replacement workers were dispatched on 4 August 2026 and all six returned. These are what
+they could not close — listed in order of how much each would move the decision.
 
-- **NARHS** — MSA-CESS accredited, portfolio and credit-justification model, "your diploma, your
-  way". On its face the closest thing in the field to a pure credential rail. Never researched.
-- **Clonlara School, Off-Campus / Home Based programme** — the other classic
-  portfolio-evaluation route. Never researched.
-- **Oak Meadow, West River Academy, Bridgeway Academy, Excel High School.** Never returned.
-- **Seton Home Study School, The American Academy, Wilostar3D, Penn Foster**, and the
-  university-run tier (BYU Independent Study, University of Nebraska High School, Texas Tech
-  K-12, Indiana). Never returned.
+- **Bridgeway's residency requirement on the accreditation-only tier.** Not stated anywhere. If it
+  turns out to be substantial, the primary recommendation collapses and NARHS takes its place.
+  This is the single highest-value phone call in the document.
+- **Whether Bridgeway's accreditation-only tier includes a Common App School Report, counsellor
+  recommendation and school profile**, or whether those sit only in the $8,500 Academy Select tier.
+- **Whether NARHS transcripts carry letter grades and a GPA, or pass/fail**, for parent-graded
+  courses. Not stated on any reachable page; the 77-page Handbook PDF exceeded the fetch limit.
+- **Whether a named person at NARHS files a Common App School Report or writes a counsellor
+  recommendation.** A "NARHS Profile" document is referenced in the Handbook contents, so something
+  exists — but the service was never evidenced. Unverified, not disproven.
+- **Whether Clonlara's MSA-CESS accreditation covers the Off-Campus Programme** or only the Campus
+  Programme. Material: it determines whether an Off-Campus diploma carries the same weight.
+- **Clonlara's actual Off-Campus price.** Two fetches of the same page returned $1,820 and
+  $1,960/$1,750; the latter appears to be the in-person Campus rate bleeding into the summary. The
+  discrepancy is recorded rather than resolved, and no single figure is asserted.
+- **Whether The American Academy accepts international students at all.** Sources directly
+  contradict one another and its site rate-limited every attempt to check. A potential dealbreaker
+  and a one-call question.
+- **Whether ACS's Grades 9-10 letter grades and GPA survive transfer intact** at Bridgeway, NARHS,
+  Clonlara or Seton. None of the four states it. Only Whitmore confirms grades and GPA transfer
+  cleanly.
+- **Whether Seton's documented counsellor and Common App service belongs to Seton Home Study School
+  or to Seton School Manassas**, a different institution. The evidence found was for the latter.
+- **Penn Foster** — pennfoster.edu returned 403 to every attempt, so nothing about it here is
+  first-party. Its DEAC accreditation is national rather than regional, which puts it behind the
+  field regardless.
+- **Independent accreditor-directory verification for every provider.** MSA-CESS's, NEASC's and
+  Cognia's directories are all JavaScript-driven search tools that returned no fetchable content.
+  So every accreditation claim above rests on the provider's own page plus corroborating
+  statements, not on a lookup in the accreditor's database. This applies to Bridgeway, NARHS,
+  Clonlara, Oak Meadow and Seton alike, and is the one caveat that runs across the entire table.
+- **Never researched at all:** the university-run tier (BYU Independent Study, University of
+  Nebraska High School, Texas Tech K-12, Indiana), and Excel High School. Excel's site blocked
+  direct fetches and the worker prioritised the other three in its batch.
 - **Common App's own primary documentation.** Its help centre would not load, so §3A's account of
   the School Report / School Profile / Counselor Recommendation mechanics rests on HSLDA and
   practitioner guides agreeing with each other. Confident, but PROXY.
@@ -545,9 +634,11 @@ in the restart. Their content has not been reconstructed from memory or inferred
 subject matter is covered above, it is because a different, surviving worker covered the same
 ground and is cited.
 
-One structural failure is worth recording so it is not repeated: a majority of the dispatched
-workers delegated their brief onward instead of executing it, producing chains of coordinators
-and almost no research. The replacement workers were explicitly forbidden from delegating.
+One structural failure is worth recording so it is not repeated: a majority of the originally
+dispatched workers delegated their brief onward instead of executing it, producing chains of
+coordinators and almost no research. The six replacement workers were explicitly forbidden from
+delegating, and all six returned substantive sourced findings. That is the difference between
+this document and a blank page.
 
 ---
 
