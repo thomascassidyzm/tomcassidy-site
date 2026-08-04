@@ -604,3 +604,66 @@ Four things, each answerable in a sentence.
    be Hexagon-shaped, that is a conversation with Dom before it is a line of code. Nothing was
    written to that repo and nothing assumes it.
 
+
+---
+
+## 9. Hexagon and Zenjin
+
+### 9.1 Hexagon — read-only, and it changes the picture more than expected
+
+**No writes were made to `/home/tomcassidy/hexagon`. `git status` was clean before and after.**
+
+Read purely as a structural template, Hexagon turns out to hold the one thing neither theracowch nor
+tomcassidy-site has: **a working scheduled job that composes and delivers a report to a human by
+email.** `vercel.json` declares two crons —
+
+```
+{ "path": "/api/weekly-digest",       "schedule": "0 17 * * 5" }   // Fridays 17:00
+{ "path": "/api/reengagement-email",  "schedule": "0 10 * * *" }   // daily 10:00
+```
+
+— backed by `api/weekly-digest.js` (195 lines), `api/reengagement-email.js` (117), and
+`api/progress-report.js` (234), all delivering through **Resend** (`RESEND_API_KEY`). That is
+§3.7's missing parent-report job and §3.2's initiative loop, already built, already scheduled,
+already delivering to an inbox.
+
+**And it confirms the estate-wide pattern rather than breaking it.** I grepped all three of those
+jobs for `anthropic|claude|model:` and got **zero hits**. Hexagon's digests are template-composed
+from database rows, exactly as tomcassidy-site's coach lines and theracowch's `NUDGES` array are
+hard-coded text. So across three independent repos, five scheduled jobs, and two delivery channels:
+**every scheduled thing in Tom's estate is template-driven, and not one has a model in the loop.**
+That is the single most consistent finding in this scout, and it is precisely the gap between a
+reminder system and a mentor.
+
+Stack is Vue + Supabase + Stripe + Resend on Vercel — same family as the rest of the estate, so
+nothing here argues for new infrastructure.
+
+**The most valuable transferable structure** is the delivery layer: Resend + a cron + a report
+composer is exactly what step 8 of the first slice needs, and Hexagon has already made every
+mistake in building it once.
+
+**PARTNERSHIP QUESTION FOR TOM AND DOM.** Hexagon is co-owned. If its academic spine or its digest
+machinery is the right foundation for pocket-Tom, that is a conversation to have with Dom before it
+is a line of code. **Nothing in the recommended architecture assumes Hexagon.** The first slice can
+be built end to end without it — Resend is a fifteen-minute integration from scratch. I am flagging
+it because the honest finding is that Hexagon solved the reporting problem first, not because the
+build needs it.
+
+### 9.2 Zenjin — a later-phase asset, and I'd not spend the year's budget on it
+
+Small share of the scout, per the brief. `main` at `e6c4c41` (2026-07-17) — no movement in seven
+weeks, consistent with Tom's own "not developed completely yet."
+
+What's there: a Svelte monorepo, ~251 TypeScript/Svelte files, with a real `packages/engine`
+carrying graph logic (`src/graph/factorout.ts` with tests). **No Claude or Anthropic usage anywhere
+in the repo** — it is a client-side progression engine, not an AI product. Content is thin: a
+`docs/zucs/` class-factorisation JSON, not a curriculum.
+
+**Position: later-phase asset, and the reason is shape, not maturity.** Zenjin's ambition —
+"counting to university engineering" — is a *many-year mastery ladder*. The boy's problem is the
+opposite: **one specific year, two AP exams, a fixed May deadline.** Even a finished Zenjin would
+be the wrong instrument for a twelve-month sprint, and an unfinished one would consume the year's
+build budget. Alexander's generated-curriculum path (§3.4) fits the deadline; Zenjin fits the decade.
+
+Revisit it when the product has a second student and a longer horizon.
+
