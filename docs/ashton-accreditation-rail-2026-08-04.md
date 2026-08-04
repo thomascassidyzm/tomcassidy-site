@@ -19,7 +19,7 @@ published; sterling figures are indicative only.
 
 **The AP problem is smaller than expected. The diploma problem is bigger.**
 
-Three things are now settled.
+Five things are now settled.
 
 **AP exams do not depend on which diploma provider you choose.** Prometric runs authorised AP
 test centres in both of Ashton's cities — Escalla, 55 Broadway, London SW1H 0BD, and via ABC
@@ -32,10 +32,23 @@ Separately, Hisar School in Istanbul publishes a dedicated page for non-Hisar st
 AP exams there as exam-only candidates. So "does this provider run AP exams" is close to a
 non-question, which removes a whole column from the provider decision.
 
+**And he can split the two cities in the same May.** Prometric's own page confirms a student may
+register for different exams at more than one centre, on one College Board account — he simply
+cannot sit the *same* exam twice. So nobody has to guess in October which country he will be in
+next May. That was the constraint everyone feared, and it is not real.
+
 **What does bite is the AP calendar, and it bites in about ten weeks.** For May 2027 exams the
 preferred order deadline is 2 October 2026 and the final deadline 13 November 2026, with a $40
 per-exam late fee after that. That is independent of the provider decision and should be
-started in parallel, not after it.
+started in parallel, not after it. Budget **$235-$320 per exam** paid to Prometric — not the
+$129 figure on College Board's fee schedule, which applies to school coordinators and not to an
+individual candidate.
+
+**The free option is more viable than expected, and its cost is specific.** A parent-issued
+transcript clears the basic admissibility gate at named US universities. What an accredited
+provider buys is not admission but the *standard* admissions lane rather than the University of
+California's named "admission by exception" pathway, plus credibility with scholarship
+committees. Section 3A sets that out with the sources.
 
 **One of the two Grade 11 APs in the ACS plan probably will not happen, and the fallback should
 be chosen deliberately in October rather than discovered in March.** AP Business with Personal
@@ -458,7 +471,8 @@ business-inclined student.
 ## 8. Gaps — what is not known, and why
 
 **This section is the honest part, and it is longer than it should be.** This research ran as a
-fan-out of about forty parallel workers on 4 August 2026. A server restart killed the
+fan-out of about forty parallel workers on 4 August 2026, with a further six dispatched to
+recover the wreckage. A server restart killed the
 coordinating chain and most of the workers before they reported. Their findings are gone, not
 mislaid. What follows distinguishes *researched and unresolved* from *never researched*.
 
@@ -509,11 +523,18 @@ was not recovered.**
 - **Seton Home Study School, The American Academy, Wilostar3D, Penn Foster**, and the
   university-run tier (BYU Independent Study, University of Nebraska High School, Texas Tech
   K-12, Indiana). Never returned.
-- **The parent-issued transcript route** and its real risks — the cheapest option on the table,
-  and the one that needs the most honest appraisal. Never researched.
-- **ACS's own transcript-release policy for leaving students** — fee, notice period, whether it
-  sends directly to universities. Never researched. If it is not on the ACS site, it is a direct
-  question for the dad to ask ACS, and it should be asked early.
+- **Common App's own primary documentation.** Its help centre would not load, so §3A's account of
+  the School Report / School Profile / Counselor Recommendation mechanics rests on HSLDA and
+  practitioner guides agreeing with each other. Confident, but PROXY.
+- **UK university acceptance of a US homeschool transcript.** No named UK admissions office was
+  found addressing it. A direct email to each target university is the only way to close this.
+- **How US universities treat the specific mixed record** — accredited ACS Grades 9-10 followed by
+  two parent-issued years. Reasoned inference from adjacent confirmed policy; no direct statement
+  found.
+- **ACS's transcript-release policy for leaving students** — fee, notice period, whether it sends
+  directly to universities. **Not published anywhere on the ACS site**, which was checked. This is
+  a direct question for the dad to put to ACS, and it should be asked early: an unobtainable
+  Grades 9-10 transcript would undermine every option here, including the free one.
 
 ### 8.3 A note on the research itself
 
