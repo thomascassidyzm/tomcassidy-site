@@ -221,3 +221,386 @@ classification) turns out to be high-volume and low-intelligence. Explicitly out
 
 *(Sections 3–8 follow: the exists-versus-missing map, the donor recommendation, the first slice,
 the taste-safe defaults, the explicit gaps, and what needs Tom.)*
+
+---
+
+## 3. Exists-versus-missing map for the mentor layer
+
+Legend: **PORT** = code exists, move it. **WIRE** = pieces exist in different places, join them.
+**BUILD** = genuinely new.
+
+### 3.1 Persistent per-student memory — PARTIALLY EXISTS, in the wrong two halves
+
+Tom's frame: not a chat transcript, a model of who this boy is and what he is becoming. In the
+estate that splits cleanly into an *academic* half and a *becoming* half, and they live in
+different repos with different storage models.
+
+**The academic half exists and is better than expected.** Alexander has a real durable learner
+model, not just conversation rows:
+
+- `student_spec_competence` (`supabase/migrations/20260411_spec_mapping.sql`) — one row per
+  student per specification point, with `level` in `strong|partial|weak|not_demonstrated`,
+  `evidence_count`, `last_assessed_at`, and the `conversation_ids` that produced the evidence.
+  Written by `api/post-conversation.js:226–254` (read-then-update-or-insert).
+- `review_items` (`supabase/migrations/20260413_review_items.sql`) — generated questions with
+  **SM-2 spaced repetition fields including `next_review_at`**. Written at
+  `api/post-conversation.js:281`.
+- `conversations` carries extracted `insights` and a `breakthrough_detected` flag
+  (`api/post-conversation.js:313`), and there is a `breakthroughs` table in the base schema.
+
+So Alexander already answers "what does he know, how well, on what evidence, and when should he
+see it again." That is a genuine learner model and it is a **PORT**, not a build.
+
+**The becoming half exists only in theracowch, and it is client-side.** `api/compress-profile.js`
+runs Haiku over recent conversation and returns a compressed profile — patterns, active themes,
+insights, strengths, `respondsTo`, last session (`api/chat.js:396–439`). Conceptually this is
+exactly right: it is a rolling model of a person, not a transcript, and it compresses rather than
+accumulates.
+
+But **the compressed profile is never stored server-side.** `compress-profile.js` takes a prompt in
+the request body and returns a string; the caller — the phone — owns it. Its own header comment
+says it updates "the local therapy profile", and `chat.js` receives `profile` from the request
+body. **Consequence: a scheduled job cannot read who the user is.** This is the single structural
+reason the estate has no mentor. Initiative and memory cannot meet, because the memory is on the
+phone and the initiative is on a server.
+
+**Missing (BUILD, small):** one server-side `student` row holding the becoming-model — who he is,
+what he's committed to, what he keeps drifting on, what lands with him — written by the nightly
+digest and readable by both the chat turn and the cron. Everything else is a port.
+
+### 3.2 Initiative and scheduled check-ins — EXISTS TWICE, MODEL-DRIVEN IN NEITHER
+
+This is the finding I did not expect. Initiative plumbing exists in **two** repos, both working,
+and it is the **better-developed of the two capabilities** — but neither has a model in the loop
+and neither reads a student model.
+
+**`tomcassidy-site` — the 13x4-aware one.** `vercel.json` declares three real crons at jittered
+times (`47 7`, `13 12`, `9 18`). `src/pages/api/cron/coach.ts` (70 lines) authenticates the Vercel
+`CRON_SECRET`, reads a stored subscription and program start date, computes the current week, draws
+a tone-weighted line, and sends one web push tagged `pocket-coach` so a second push replaces rather
+than stacks. `src/lib/coach-engine.ts` (119 lines) holds the week arithmetic, deliberately shared
+with `ProgramWheel.svelte` so the push and the wheel can never disagree about which week it is.
+Tone weights are gentle 4, encouraging 3, honest-kind 2, playful 2 — "return, not nag", stated in
+the code comments as design intent.
+
+Its limit is stated honestly in its own source: `src/lib/push-store.ts` says **"SOLO DOGFOOD — one
+user, no accounts"** and stores exactly one subscription and one start date.
+
+**`theracowch` — the multi-user one, and it is more mature.** `vercel.json` runs `*/15 * * * *`
+against `api/push/send.js` (161 lines), which does per-user **timezone-aware slot matching** with an
+8-minute tolerance window, honours per-user morning/evening preferences and on/off toggles, and
+dedupes by day-key. Subscriptions live in KV/Upstash (`api/push/subscribe.js`), so it is genuinely
+multi-user. `public/sw.js` has real `push` and `notificationclick` handlers.
+
+**What's missing in both is the same thing, and it's the whole game:** the message text is drawn
+from a hard-coded array (`NUDGES` in `api/push/send.js:29–40`; the coach banks in the program
+files). **No Claude call is made on any scheduled path anywhere in the estate.** A canned line
+picked by a weighted random is a reminder, not a mentor.
+
+**Alexander has no scheduling at all** — `vercel.json` has no `crons` key, and grep for
+cron/setInterval/webpush finds only subscription-billing and consultation-booking code. But it has
+the *trigger data*: `review_items.next_review_at` already knows when this boy is due. **The estate
+has a due-date column and no job that reads it.**
+
+**Missing (WIRE, plus one small BUILD):** point the existing cron at a Claude call that reads the
+student model and composes the nudge, instead of at a `NUDGES` array. The pipe, the auth, the
+timezone logic, the service worker, the dedupe, the "replace don't stack" tag — all exist.
+
+### 3.3 The weekly 13x4 cadence as a running rhythm — HALF EXISTS
+
+`src/lib/programs/` holds 2,809 lines across nine programmes, including `ultimate-13x4.ts` (165
+lines). `coach-engine.ts` turns one stored start date into "which week are you on" via
+`rotationOrder` + `currentWeekNumber`, and `ProgramWheel.svelte` renders it. So the **rhythm exists
+as live, running arithmetic** — not as a document. That is more than the brief assumed.
+
+What's missing is that the cadence is **read-only against the person**. It knows which week it is;
+it does not know what he put in, whether he did the thing, or what he chose. There is no
+commitment, no slot state, no "what are you putting in?" captured anywhere.
+
+**Missing (BUILD):** the four slots per week as *state* — what he committed to, what he did, what
+he's dodging. That is the substrate the mentor actually coaches against.
+
+**A naming discrepancy to flag, not resolve:** the essay is `the-9x4.md` and the component is
+`NineByFour.astro`, while the programme file is `ultimate-13x4.ts` and Tom's live vocabulary is
+13x4. Both live in the repo simultaneously. This is Tom's term to settle — I have used 13x4
+throughout because that is what he said.
+
+### 3.4 Academic depth layer for AP from scratch — EXISTS, and the AP answer is better than feared
+
+**Alexander's curriculum is generated, not curated.** `api/curriculum-topics.js` checks the DB for
+cached topics for a `subject`/`level`/`exam_board` triple, and **if absent, generates them with
+Claude and saves them** — "Student is never blocked." That single design choice is what makes AP
+tractable: Alexander is not limited to the subjects someone has hand-authored.
+
+Two real constraints, both concrete:
+
+1. **The level enum has no AP.** `LEVEL_LABELS` covers `gcse | alevel | university | exploring`.
+   Adding `ap` is a small change, but it is a change.
+2. **The spec-point tree is UK-board-shaped** — `exam_spec_points` is keyed on
+   `(board, qualification, subject, spec_point_id)` with `is_paper2_only` and `is_practical` flags.
+   College Board AP has units and learning objectives, not boards and papers. The table will hold
+   AP with `board='College Board'`, but the semantics are a slight lie and the flags don't apply.
+
+Subjects actually referenced in code are `mathematics`, `physics`, `chemistry` — which is exactly
+where two AP spines would sit most naturally (AP Calculus + AP Physics, or AP Chemistry). If
+Alexander's existing coverage is to inform the choice, **that is the pair I would pick.**
+
+`api/post-conversation.js` is the piece that makes it a depth layer rather than a chatbot: after a
+conversation it maps what happened onto spec points, updates competence, and generates review items.
+Summoning Alexander as a callable depth layer means calling `alexander-coaching` (or `alexander`)
+for the teaching turn and `post-conversation` for the extraction — both are already HTTP endpoints
+with their own auth, so **the API boundary is clean enough to call from another app.**
+
+Two notes for whoever builds: every Alexander endpoint reads `process.env.CLAUDE_API_KEY` (12
+occurrences), not `ANTHROPIC_API_KEY` as the rest of the estate does; and its pinned models are
+`claude-sonnet-4-6`, `claude-sonnet-4-5-20250929`, `claude-opus-4-6`, `claude-opus-4-5-20251101`,
+`claude-haiku-4-5-20251001` — **nothing on the 5 family.** Neither blocks anything; both are worth
+knowing before the first invoice.
+
+### 3.5 The conversational surface — EXISTS (see §4)
+
+### 3.6 Voice, in and out — DOES NOT EXIST anywhere in scope
+
+Grep for `elevenlabs|deepgram|whisper|SpeechRecognition` across all five repos returns **one hit,
+and it is a false positive** (`chat-script.js:3386`, the word "whisper" in a sing-along prompt).
+There is no TTS, no STT, no audio pipeline, and no cloned-voice asset in any repo in scope.
+
+The estate does have ElevenLabs experience — but it is in **SSi**, which is Aran's project, and
+`ELEVENLABS_API_KEY` sits in SSi's own secrets vault. **That key must not be borrowed for this
+product.** Pocket-Tom needs its own ElevenLabs account and its own cloned-voice model of Tom's
+voice, which does not exist yet.
+
+**Missing: everything. BUILD, and deliberately out of the first slice** (§7).
+
+### 3.7 Parent-visible progress reporting — BARELY EXISTS, and the one hit is misleading
+
+Alexander has a `parents` table — **but it is a CRM table, not a reporting surface.** Its columns
+are `lead_id`, `occupation`, `household_income`, `previous_tutoring`, `referral_source`: this is
+lead scoring for sales, not a parent's view of their child. Anyone reading the table name and
+assuming a parent surface exists would be wrong. There is also a `communication_log` table.
+
+`api/generate-report.js` is the real asset and it is genuinely useful: "Alexander Proof of Work
+Report Generator", producing print-ready HTML. But it is **stateless** — it takes an `analysis`
+object in the POST body and returns HTML. It fetches nothing, schedules nothing, and sends nothing.
+
+**Missing (WIRE + small BUILD):** the weekly job that assembles the analysis from competence rows
+and digests, calls the existing renderer, and emails it. Given the buyer is the dad paying £500+ a
+month, this is not optional and it is cheap — one Sonnet call a week (§2.4).
+
+### 3.8 The weekly human cheerleader's brief — DOES NOT EXIST
+
+Nothing in the estate produces a briefing for a third party. What the system owes that person,
+concretely: **what he actually did this week, what he said he'd do and didn't, one thing to be
+genuinely delighted about, one thing to poke at, and the exact words he used** — so the call opens
+with recognition rather than interrogation. Same input as the parent report, different output and
+different register: the parent report is evidence, the cheerleader brief is ammunition. One extra
+Sonnet call a week, £0.20/month. **BUILD, but trivially.**
+
+### 3.9 The escalation path to Tom — DOES NOT EXIST
+
+No repo has any concept of escalating to a human. The nearest thing is Alexander's
+`breakthrough_detected` flag — a signal that gets written and never routed.
+
+Given the ZERO-LIVE-TOM-TIME spec, this needs to be a narrow, high-bar channel: not "Tom reviews
+weekly", but "these three specific conditions reach Tom, everything else never does." Tom authors
+the conditions once; the digest evaluates them nightly and does nothing 99% of the time.
+**BUILD, small.** The delivery pipe already exists — it is the same web push.
+
+### 3.10 Summary table
+
+| Capability | State | Where | Port / Wire / Build |
+|---|---|---|---|
+| Academic learner model | **Exists** | `alexander` competence + review_items + SM-2 | PORT |
+| Becoming-model (who he is) | Exists, client-side only | `theracowch/api/compress-profile.js` | BUILD (server-side store) |
+| Initiative pipe | **Exists ×2** | `theracowch` (mature) + `tomcassidy-site` (13x4-aware) | PORT |
+| Model-driven nudge content | **Missing** | canned arrays in both | WIRE |
+| 13x4 week arithmetic | **Exists** | `coach-engine.ts` + `ProgramWheel.svelte` | PORT |
+| 13x4 slot state / commitments | Missing | — | BUILD |
+| AP academic depth | Exists, generated | `curriculum-topics.js` + `post-conversation.js` | PORT + small BUILD (AP level) |
+| Phone surface | **Exists** | `theracowch` PWA | PORT |
+| The Script as standing prompt | **Exists** | `src/lib/the-script.md` | PORT |
+| Voice in / out | Missing entirely | — | BUILD (deferred) |
+| Parent report renderer | Exists, stateless | `alexander/api/generate-report.js` | WIRE |
+| Parent report job | Missing | — | BUILD (small) |
+| Cheerleader brief | Missing | — | BUILD (trivial) |
+| Escalation to Tom | Missing | — | BUILD (small) |
+
+---
+
+## 4. Recommended donor codebase for the phone surface
+
+### The recommendation
+
+**Fork `theracowch`'s chat surface. Graft `tomcassidy-site`'s cron and coach-engine onto it. Call
+Alexander over HTTP. Do not fork Alexander's front end, and do not start fresh.**
+
+Stated as one narrative rather than a survey:
+
+**Better.** The mentor's defining capability is INITIATIVE, and initiative on a phone means web
+push, which means a service worker. **Theracowch is the only candidate that has one.**
+`public/sw.js` (188 lines) has working `push` and `notificationclick` handlers; `api/push/` has
+subscribe, unsubscribe, keys and a send path with per-user timezone slot matching. Alexander has a
+`manifest.json` and **no service worker at all** — so as a donor it cannot do the one thing the
+product is for, and adding push to it is not a port, it's the build. Theracowch is also already
+running the right chat economics (§2.1): two-block cached system prompt, compressed profile, three-
+message window. That is not a coincidence — it is the shape a mentor needs, and it is already
+debugged in production.
+
+**Simpler.** Theracowch's surface is 4,072 lines of vanilla JS plus a 188-line service worker — no
+framework, no build step for the chat, one file to read. Alexander's front end is 17,468 lines of
+Vue with a **4,228-line single chat component**, entangled with Stripe checkout, credit tiers,
+subscription management, OTP auth and an admin console. Porting that means carrying a payments
+system into an N=1 product with one user who isn't paying through the app.
+
+**Cheaper, total cost.** The maintenance question decides it. Alexander is Tom's live tutoring
+product with real users and a payments path; forking its front end forks that liability and creates
+a second thing to keep in sync. Theracowch's chat surface is comparatively self-contained — the
+baggage is *content*, not *architecture* (therapy prose in the system prompt, the Mandy persona,
+cow branding, and ~10 marketing HTML pages under `public/`), and content is deleted, not untangled.
+The plumbing underneath — chat endpoint, cache split, profile compression, push, SW, KV — is
+domain-neutral. And critically: leaving Alexander **behind an HTTP boundary** means it keeps
+shipping as its own product while pocket-Tom calls it. One codebase, not two forks.
+
+**What I'd strip for parts from the ones I didn't pick:**
+
+- From **`tomcassidy-site`**: `src/lib/coach-engine.ts` (the week arithmetic, near-verbatim),
+  `src/pages/api/cron/coach.ts` (the cron shape and `CRON_SECRET` handling), and **the Script**
+  (`src/lib/the-script.md`) as the standing prompt. Its `push-store.ts` I would *not* take —
+  theracowch's KV store is strictly better (multi-user, preference-aware).
+- From **Alexander**: nothing ported. Two endpoints called over HTTP — the coaching turn and
+  `post-conversation` — plus `generate-report.js` as the parent-report renderer. Its competence and
+  review-item schema is the reference design for the academic half of the student model.
+- From **theracowch**: strip the Mandy persona, the therapy/crisis-safeguarding prose (a homeschool
+  mentor needs its own, different safeguarding), the cow branding, the marketing HTML, IMAGINE
+  framework content, and the `[[MOOD: x]]` hidden-tag mechanism — though that last one is a *good
+  idea worth reimplementing* as a drift signal rather than a mood signal.
+
+**Why not fresh.** A fresh build would have to write, from nothing: a service worker with push, a
+VAPID key path, subscribe/unsubscribe, a KV-backed subscription store, timezone slot matching, a
+cached two-block prompt assembly, profile compression, and an offline fallback. That is the bulk of
+theracowch's chat plumbing and it is all already debugged against a real phone. Fresh is only
+cheaper if the existing thing is wrong, and it isn't — it's just wearing the wrong clothes.
+
+**Honest caveat.** The result is genuinely a *new repo assembled from two donors*, not a clean
+single fork, because the surface donor and the initiative-cadence donor are different repos. I'd
+name it as such rather than pretend it's a tidy port.
+
+**Hosting and stack:** Vercel + Upstash/KV + Supabase — every donor already uses exactly this, no
+new infrastructure, no Better×Simpler×Cheaper narrative needed because nothing changes.
+
+---
+
+## 5. Proposed first slice
+
+**What it is:** a phone web app the boy installs, that talks to him in Tom's voice, knows what week
+of the 13x4 he's on, remembers who he is across weeks, starts the conversation three times a day
+without being asked, and can go deep on two AP subjects by calling Alexander. His dad gets an email
+every Sunday.
+
+**Repo:** new — `tom-in-your-pocket`, seeded from `theracowch`'s chat surface. Not a branch on
+theracowch (that's Tom's live wellbeing product), not on tomcassidy-site (Astro content site, wrong
+shape), and nothing in `hexagon` (co-owned, read-only).
+**Branch:** `main` from the seed commit, feature branches per step below.
+**Built by:** workers on the estate, not Tom.
+
+### The order, and why it's this order
+
+| # | Step | Size | Why here |
+|---|---|---|---|
+| 1 | Seed the repo: fork theracowch chat surface, strip Mandy/therapy/cow/marketing, keep chat.js + push/ + sw.js + KV. | ~1 day | Everything else needs a surface to land on. Deletion, not writing. |
+| 2 | **Move the profile server-side.** One `student` row in Supabase; `chat.js` reads it instead of taking it from the request body. | ~1 day | **The keystone.** Nothing that follows works while memory lives on the phone. |
+| 3 | Swap the system prompt for the Script. `the-script.md` verbatim as the cached block, mentor framing + escalation rules appended. Two-block cache preserved. | ~half day | Makes it Tom rather than generic. Cheapest step with the biggest felt change. |
+| 4 | Port `coach-engine.ts`; add 13x4 slot state (committed / did / dodged) to the student row. | ~1 day | Gives the mentor something to coach *against*. |
+| 5 | **Model-driven nudges.** Point theracowch's `*/15` cron at a Sonnet call that reads the student row and the current week and writes the push text, instead of the `NUDGES` array. | ~1 day | This is the moment it stops being a reminder app and becomes a mentor. |
+| 6 | Nightly digest: one Sonnet call rolls the day's turns into the student row; evaluates Tom's escalation conditions. | ~1 day | Makes memory *compound* rather than accumulate. |
+| 7 | Alexander as depth: call `alexander-coaching` + `post-conversation` over HTTP for the two AP subjects; add `ap` to `LEVEL_LABELS`. | ~2 days | Last, because the mentor is the differentiator and the tutor is the commodity. |
+| 8 | Sunday jobs: parent email via Alexander's `generate-report.js`; cheerleader brief to whoever runs the weekly call. | ~1 day | The buyer must see it working; the human needs ammunition. |
+
+**Roughly 8–9 working days of worker time.** Steps 1–5 alone (~4.5 days) are already a usable
+product: a mentor in Tom's voice that remembers him and starts conversations. If the year is
+tight, **ship after step 5 and put it in front of the boy** — steps 6–8 improve it, they don't
+gate it.
+
+### What it deliberately does NOT do yet
+
+- **No voice, in or out.** Text-first (§7). Cloned voice is a later delight, not a first slice.
+- **No multi-tenancy.** One student row, one dad, one cheerleader. No org model, no roles, no
+  billing in the app. Tom invoices the dad directly.
+- **No auth system.** The simplest thing for N=1 — a single-device install with a shared secret, or
+  Alexander's existing OTP/email pattern if a login screen is genuinely wanted.
+- **No more than two AP subject spines.** Two, plus the mentor.
+- **No Hexagon.** Read for structure only (§8).
+- **No Zenjin.** Later-phase asset.
+- **No local model.** §2.8.
+- **No product identity or branding.** "Tom in your pocket" is a working title, and the persona
+  framing is Tom's call, not a worker's.
+
+---
+
+## 6. Taste-safe defaults applied — overturn any of these with one sentence
+
+1. **Text-first.** Occasional spoken nudges in Tom's cloned voice modelled as an add-on line item
+   (§2.6) and deferred out of the first slice. Tom said most of it is text.
+2. **Two AP subject spines maximum**, plus the mentor. On Alexander's existing coverage
+   (`mathematics`, `physics`, `chemistry`) I'd propose **AP Calculus + AP Physics** — but which
+   subjects the boy is actually sitting is a fact I don't have (§7).
+3. **Cost modelled at Sonnet 5's post-September $3/$15**, not the $2/$10 intro rate, because the
+   boy's year runs past 31 August 2026.
+4. **Opus 5 escalation set at 5% of turns.** A guess, and the single most sensitive cost input —
+   at 15% the bill roughly doubles (still trivial).
+5. **1-hour cache TTL, not 5-minute.** Turns cluster into ~4 windows/day; a 5-minute TTL would miss
+   most of them.
+6. **Doctrine corpus stays out of the standing prompt.** ~68k tokens of essays and canon shape the
+   Script once at authoring time; they are not re-read every turn.
+7. **Vercel + Supabase + Upstash KV**, because every donor already uses exactly that.
+8. **Simplest N=1 identity** — single-device install or Alexander's existing OTP pattern. No auth
+   system designed.
+9. **"Tom in your pocket" as working title only.** Persona framing and product identity flagged as
+   Tom's call, not invented.
+10. **Cheerleader brief and parent report share one input, differ in register** — parent gets
+    evidence, cheerleader gets ammunition.
+
+---
+
+## 7. Explicit gaps — things I could not verify, stated rather than papered over
+
+1. **Nothing was run live.** No dev servers, no database queries, no API calls. Every claim about
+   the data model comes from reading migrations and the code that writes to them, not from
+   inspecting rows. **I do not know how much real data is in any of these tables.**
+2. **Which AP subjects the boy is taking is unknown.** The two-spine recommendation is derived from
+   Alexander's existing coverage, not from the actual case. This is a one-sentence answer from the
+   dad that changes step 7 of the first slice.
+3. **Tom's cloned voice does not exist as an asset** anywhere in scope, and the estate's ElevenLabs
+   experience sits in **SSi, which is Aran's project**. I priced ElevenLabs list rates; I could not
+   verify what tier the estate is on, and **SSi's key must not be borrowed for this product.**
+4. **Deployment state unverified.** I did not check whether the tomcassidy-site crons are actually
+   firing in production, whether theracowch's `*/15` cron requires a Vercel Pro tier (its own code
+   comment says Hobby needs a different interval), or whether either has a live subscription stored.
+5. **Alexander's live subject/topic counts are unknown** — the curriculum is DB-cached and
+   generated, so counts are a runtime fact, not a repo fact.
+6. **Token estimates use 4 chars/token.** Claude 4.7-and-later models use a newer tokenizer that
+   produces ~30% more tokens for the same text. Sonnet 5 is in that family, so **the cost model's
+   input token counts may be understated by up to ~30%** — which moves the typical month from £7.10
+   to about £9. Worth one `count_tokens` call against the real assembled prompt before anyone
+   quotes a number externally.
+7. **Hexagon and Zenjin were delegated** to a read-only worker and are covered in §8 at whatever
+   depth that scout reached; I did not read them myself.
+
+---
+
+## 8. Needs Tom
+
+Four things, each answerable in a sentence.
+
+1. **The Script as standing prompt — is `src/lib/the-script.md` the version pocket-Tom speaks
+   from?** It exists, it is canonical, and it is 5,875 chars. `docs/SCRIPT-CANON.md` explicitly
+   describes itself as an audit "built for Tom to redline, not to be believed." Someone has to say
+   which one the product uses. Everything else in the build is downstream of this answer.
+2. **The escalation rules.** What are the three conditions that reach Tom? This is the whole of his
+   ongoing time commitment and only he can write it.
+3. **9x4 or 13x4?** Both are live in the repo simultaneously — `the-9x4.md` and `NineByFour.astro`
+   against `ultimate-13x4.ts`. I've used 13x4 throughout because that's his current word.
+4. **Hexagon is a PARTNERSHIP QUESTION, not an architectural one.** If the academic spine ought to
+   be Hexagon-shaped, that is a conversation with Dom before it is a line of code. Nothing was
+   written to that repo and nothing assumes it.
+
