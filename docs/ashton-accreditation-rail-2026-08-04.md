@@ -10,7 +10,7 @@ published; sterling figures are indicative only.
 > **How to read this document.** Every factual claim is either **CONFIRMED** — a page was
 > fetched and the wording is quoted or linked — or **PROXY** — a prior-year figure, a
 > third-party source, or an inference, labelled as such. Where the answer is not known, it
-> says so. Nothing is estimated to fill a hole. Sections 6 and 7 list what is missing and
+> says so. Nothing is estimated to fill a hole. Section 8 lists what is missing and
 > why, honestly, including research that was commissioned and never came back.
 
 ---
@@ -73,14 +73,14 @@ Grades 9-10 work survives and the less has to be repeated.
 | **Whitmore School** | Cognia — CONFIRMED, verified live | Yes, but conditionally: after-the-fact certification routes through the "non-accredited homeschool" pathway → **Pass/Fail only, no GPA**. Letter grades require the work to sit inside Whitmore's own enrolled course shells, teacher-graded | Transfers cleanly, **letter grades and GPA intact** | **4.5 credits** | ≈ $2,100–$3,050/year (published as ~£1,590–£2,275/yr), ≈ £4,230 both years on the recommended tier | UNKNOWN — not on public pages, needs a direct call | Rolling enrolment, $150 deposit, no deadline blocking a Sept 2026 start | **Partial fit.** Resolves to good *if* Whitmore confirms a tutor may deliver content while a Whitmore teacher grades it under their umbrella. That is one phone call. |
 | **Laurel Springs** | Cognia (WASC question unresolved) | **No mechanism at all** — no portfolio review, no credit-by-evaluation, no parent/tutor-designed courses ([admissions process](https://laurelsprings.com/admissions/admissions-process/)). Credit comes only from schools attended, or Baylor/Syracuse dual enrolment | n/a | n/a | **$11,700/yr** standard, **$17,250/yr** Academy → ≈ £17.4k–£25.7k both years ([tuition](https://laurelsprings.com/admissions/laurel-springs-tuition/)) | Best in class — in-house NACAC counsellors who write LORs, published school profile | Yes | **Rejected.** You would be buying the lessons you explicitly do not want. |
 | **Keystone School** | Cognia + MSA-CESS | Not assessed | Not assessed | Not assessed | ≈ £2,700–£4,200 both years | Not assessed | **Probably not.** Keystone publishes a list of 76 countries it cannot accept enrolments from and **the United Kingdom is named on it** ([enrollment page](https://www.keystoneschoolonline.com/enrollment)). Turkey is not. Phrased by physical location, not citizenship. Corroborating: they also state US Treasury rules prevent refunds to non-US addresses | **Likely disqualified by geography.** Worth one email to confirm; plan without it. |
-| **Oak Meadow** | *see §7 — not returned* | | | | | | | |
-| **West River Academy** | *see §7 — not returned* | | | | | | | |
-| **Bridgeway Academy** | *see §7 — not returned* | | | | | | | |
-| **Seton Home Study School** | *see §7 — not returned* | | | | | | | |
-| **The American Academy** | *see §7 — not returned* | | | | | | | |
-| **Wilostar3D** | *see §7 — not returned* | | | | | | | |
-| **Excel High School** | *see §7 — not returned* | | | | | | | |
-| **Penn Foster** | *see §7 — not returned* | | | | | | | |
+| **Oak Meadow** | *see §8.2 — never researched* | | | | | | | |
+| **West River Academy** | *see §8.2 — never researched* | | | | | | | |
+| **Bridgeway Academy** | *see §8.2 — never researched* | | | | | | | |
+| **Seton Home Study School** | *see §8.2 — never researched* | | | | | | | |
+| **The American Academy** | *see §8.2 — never researched* | | | | | | | |
+| **Wilostar3D** | *see §8.2 — never researched* | | | | | | | |
+| **Excel High School** | *see §8.2 — never researched* | | | | | | | |
+| **Penn Foster** | *see §8.2 — never researched* | | | | | | | |
 
 ---
 
