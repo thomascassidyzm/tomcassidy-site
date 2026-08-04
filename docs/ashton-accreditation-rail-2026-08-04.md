@@ -90,6 +90,89 @@ Grades 9-10 work survives and the less has to be repeated.
 
 ---
 
+## 3A. The no-provider route — issue the transcript yourself
+
+Worth taking seriously, because it is free, and because the research says it works better than
+most people assume. The honest summary: **the parent route clears the basic admissibility gate at
+named US universities; what an accredited provider buys is not admission, it is which lane you
+are admitted through, and credibility at the margins.**
+
+**It is genuinely accepted, and this comes from admissions offices, not advice blogs.** The
+University of Miami states that where state law does not require a homeschooled student to obtain
+a secondary-school completion credential, *"you may submit a transcript signed by your primary
+instructor"*
+([Miami homeschool transcript requirements](https://admissions.miami.edu/undergraduate/application-process/admission-requirements/homeschool-transcript-requirements/),
+CONFIRMED). Arizona State and NC State are reported to do the same — **PROXY**, from search
+summaries rather than fetched pages.
+
+**But the University of California draws the line that matters, in its own words.** Where a
+curriculum is accredited by one of the seven formerly-regional accreditors and comes with an
+official transcript and diploma, the applicant follows standard admission requirements. Where it
+is **not** accredited and there is no official transcript, the applicant *"may still qualify
+through 'admission by exception'"*
+([UC home-schooled students](https://admission.universityofcalifornia.edu/admission-requirements/first-year-requirements/home-schooled-students.html),
+CONFIRMED). That is a named, non-default pathway. Not a closed door — a different door, with a
+smaller quota behind it. This is the single most concrete piece of evidence in the whole document
+for what accreditation actually buys.
+
+**On the Common App, a parent can wear all three hats.** The applicant selects "Homeschooled" as
+their school, then invites a **Counselor** into the system; for a homeschool that is the parent,
+and the Counselor account is where the **School Report**, the **School Profile** and the
+**Counselor Recommendation** are filed, along with the transcript. Nothing in the platform
+requires a third party. **PROXY throughout** — Common App's own help centre would not load
+(`appsupport.commonapp.org` threw a client-side error, `commonapp.org/first-year-applicants`
+404'd), so this rests on HSLDA and practitioner guides agreeing closely with one another. The
+caveat is qualitative rather than mechanical: admissions committees read a parent-written
+counsellor letter as inherently less independent than a third party's.
+
+**Living in the UK and Turkey helps rather than hurts here.** US state homeschool law is
+jurisdiction over a state's own residents; a family based in Woking and Istanbul sits outside all
+of it, so no state affidavit is required (**PROXY** — specific and checkable, but not found on a
+.gov source). And by Miami's own logic, with no applicable state law there is no credential
+trigger, so the instructor-signed transcript stands on its own. The flip side: there is also no
+state registration to point at as third-party corroboration.
+
+**The mixed record — accredited ACS Grades 9-10, then two parent-issued years — looks fine, but
+this is inference.** No university statement addressing that exact pattern was found. Both UC's
+and Miami's frameworks are phrased per-course and per-curriculum-source rather than as a single
+verdict on a whole transcript, and Common App's design assumes multi-school records. Starting
+home education partway through high school is described everywhere as common. Reasoned inference
+from confirmed adjacent policy, not a confirmation.
+
+**So what does a provider actually buy?** Honestly, and specifically:
+
+1. **The standard admissions lane instead of the exception lane** at UC, and plausibly elsewhere
+   the same logic applies undocumented.
+2. **Third-party verification for merit and scholarship committees** — reported as the place the
+   gap bites hardest, more than plain admission.
+3. **Administrative convenience** — a school of record issuing a transcript in the format
+   institutions are used to processing, and filing the School Report so the parent is not wearing
+   three hats.
+4. **What it does not buy: basic admissibility.** Both fetched admissions pages treat the
+   parent-issued route as a normal working pathway, not a workaround.
+
+**UK universities: unresolved.** No named UK admissions office was found addressing US homeschool
+transcripts specifically. Christ's College, Cambridge welcomes home-educated applicants but its
+page is written entirely around A-levels, UCAS references and science practicals, and it tells
+anyone outside that framework to email admissions@christs.cam.ac.uk directly
+([page](https://www.christs.cam.ac.uk/how-apply-1/home-educated), CONFIRMED). The general picture
+— UCAS as an international applicant, SAT and AP scores standing in for A-levels, judged
+case-by-case — is **PROXY**. If UK universities are genuinely in scope for Ashton, that is a
+direct email to each target, and Christ's own page says so.
+
+### The ACS transcript question — ask early
+
+**ACS publishes no policy on transcripts for leaving students.** Its site and the ACS Cobham
+University and College Counselling page were both fetched; the only relevant line covers
+coordinating references and transcripts for currently-enrolled students applying to university,
+not for a student departing after Grade 10. So: **whether ACS will release an official transcript
+to a new school or direct to universities, whether there is a fee, and whether there is a notice
+period, are all unknown and are a direct question for the dad to put to ACS.** Worth asking now
+rather than in the summer of 2027 — an unobtainable Grades 9-10 transcript would undermine every
+option in this document, including the free one.
+
+---
+
 ## 4. Recommendation
 
 *Held until section 3 lands. It would be dishonest to name a primary provider while the two
@@ -116,9 +199,23 @@ Ashton's bases are covered, which is a considerable piece of luck.
   an hour from Woking.
 - **Turkey:** ABC Horizon, Fatih, Istanbul — info@abchorizon.com, +90 531 858 2499
   ([ABC Horizon](https://abchorizon.com/advanced-placement-exams-in-turkey/)).
+- **Registration goes directly to Prometric**, not through a school — *"Register and pay
+  Prometric directly to save a seat"* (CONFIRMED, both College Board registration flyers). The
+  underlying account is still Ashton's own College Board **My AP** account and AP ID, so all
+  scores consolidate under one candidate record.
 - **ID:** an original, valid, non-expired **passport** is required at authorised centres in both
-  countries. Worth saying out loud, because a passport expiring in spring 2027 would quietly
-  destroy the exam sitting.
+  countries, and the name on it must match the College Board account **exactly**. Photocopies are
+  not accepted; no valid ID means no admission to the test room. The Turkey page does offer an
+  alternative government-issued photo ID, but scopes it to Turkish citizens and residents, so a
+  British/US candidate should plan on the passport at both centres. Worth saying out loud, because
+  a passport expiring in spring 2027 would quietly destroy the exam sitting.
+
+**He can split London and Istanbul in the same May — CONFIRMED, and it materially de-risks the
+whole dual-base plan.** The Prometric UK page states a student may register for different AP
+exams at more than one school or test centre, provided the **same College Board account, AP ID,
+legal name and email** are used throughout so the scores report together. The one hard rule: he
+cannot sit *the same* exam at two different centres. So he does not have to guess in October
+which country he will be in next May — he can place each exam where it suits.
 
 **Route B — Hisar School, Istanbul.** The clearest school-based hit in the whole sweep. Hisar's
 own site states: *"Our school is an AP exam center and our students have the opportunity to take
@@ -135,11 +232,15 @@ account as an **EXAM ONLY** candidate. 22 AP subjects offered. Contact: **ap@his
 (5 business days stated reply time), +90 212 364 00 00, Göktürk Merkez Mah., İstanbul Cad. No:3,
 Eyüpsultan, İstanbul 34077.
 
-*PROXY — 2025-26 cycle dates, not yet confirmed for 2026-27:* registration opened 13 October
-2025 and closed 3 November 2025, with a late window to 16 February 2026; exams 4-15 May 2026;
-50% refund if cancelled between 4 November 2025 and 17 February 2026, nothing after 18 February
-2026. Hisar's own page notes its internal deadlines can differ from College Board's published
-dates. **These must be re-checked for the 2026-27 cycle before anyone relies on them.**
+*PROXY — the page still shows the 2025-26 cycle as of 4 August 2026, so these are last year's
+figures:* registration opened 13 October 2025 and closed 3 November 2025, with a late window to
+16 February 2026; exams 4-15 May 2026; 50% refund if cancelled between 4 November 2025 and 17
+February 2026, nothing after 18 February 2026. **Hisar publishes no fee at all** on the public
+page — pricing sits behind an application portal at `ap.hisarschool.k12.tr`, which could not be
+fetched. And Hisar's own page carries an explicit warning worth heeding: its announced deadlines
+**may differ from the deadlines on the College Board website**, so its window will not
+necessarily track Prometric's or College Board's. Ask ap@hisarschool.k12.tr directly once the
+2026-27 cycle is published.
 
 **Route C — a host school seats him.** College Board's rule is that parents and students cannot
 order AP exams directly; a school's AP coordinator must create an "exam only" section and issue
@@ -149,7 +250,49 @@ outside students"
 This is the discretionary route. It matters mainly because 12 March 2027 is the point at which a
 coordinator can have the late-order fee waived for exactly this category of student.
 
-### 5.2 Istanbul schools that teach or host AP — what was checked
+### 5.2 What it costs — and the number not to use
+
+**Nothing for the 2026-27 cycle has been published yet by any of the three venues.** Prometric
+UK, Prometric Turkey and Hisar all still display 2025-26 content as of 4 August 2026 — this was
+checked against the Wayback Machine to rule out a caching artefact, and the pages simply have not
+rolled forward. So the figures below are **PROXY**: last cycle's actual prices, offered as the
+planning number. **Re-check in September or October 2026**, which is when these pages historically
+roll over.
+
+| | Period 1 regular | Period 1 late testing | Period 2 regular | Period 2 late testing |
+|---|---|---|---|---|
+| **UK — Escalla, London** | $239 | $279 | $279 | $319 |
+| **Turkey — ABC Horizon, Istanbul** | $235 | $275 | $275 | $315 |
+
+*PROXY, 2025-26 cycle, from the Prometric [UK](https://www.prometric.com/exams/cbapuk/) and
+[Turkey](https://www.prometric.com/exams/cbaptr/) pages. Both 403 a direct fetch; content was
+read via a text-extraction proxy and cross-checked against the Wayback Machine.*
+
+These are **all-in prices paid to Prometric** — College Board base fee, international handling
+and centre administration together — not an add-on to something else.
+
+**The number not to use: $129.** College Board's own 2026-27 fee schedule lists $99 per exam for
+US, Canadian and DoDEA schools and **$129 per exam "outside the U.S."**
+([2026-27 exam fees](https://apcentral.collegeboard.org/exam-administration-ordering-scores/ordering-fees/exam-fees),
+CONFIRMED as a 2026-27 page). That is the fee an AP *coordinator at an enrolling school* pays
+through the standard school channel. It is **not** what an individual Prometric candidate pays,
+and Ashton has no enrolling school. Budget on roughly **$235-$320 per exam**, not $129. Getting
+this wrong would understate a four-exam year by around $500.
+
+**Refund terms differ between the two centres, and it is not a small difference.** CONFIRMED at
+both:
+
+- **UK, Escalla:** cancel up to the Period 2 close and the refund is a **flat $80 per exam**,
+  regardless of what was paid.
+- **Turkey, ABC Horizon:** cancel up to the same date and the refund is **what was paid minus a
+  flat 10%** — proportionally far better.
+- Neither centre permits **rescheduling**. The only options are cancel-for-partial-refund or
+  forfeit. No refund at all for a no-show, missing ID, or force majeure.
+
+Practical consequence: where there is a real chance an exam gets dropped, book it in Istanbul
+rather than London.
+
+### 5.3 Istanbul schools that teach or host AP — what was checked
 
 | School | Teaches AP? | External / exam-only candidates? | Contact |
 |---|---|---|---|
@@ -184,9 +327,12 @@ figure or an inference. Do not act on a PROXY date without re-checking it.
 | **~mid Oct 2026** | Hisar School external-candidate AP registration expected to open | **PROXY** — 2025-26 cycle opened 13 Oct 2025 | [Hisar non-student page](https://eng.hisarschool.k12.tr/ap-exam-hisar-ogrencisi-olmayanlar/) |
 | **~early Nov 2026** | Hisar external-candidate registration expected to close | **PROXY** — 2025-26 closed 3 Nov 2025 | as above |
 | **13 Nov 2026, 23:59 ET** | AP **final** exam ordering deadline. A **$40 per exam** late fee applies after this | CONFIRMED | [AP timeline](https://apcentral.collegeboard.org/about-ap/school-year-timeline); late-fee category confirmed at [students from other schools](https://apcentral.collegeboard.org/exam-administration-ordering-scores/ordering-fees/ordering-exam-materials/special-ordering-circumstances/students-other-study) |
-| **~Nov 2026** | Prometric recommends advance registration by the November before the testing year | **PROXY** — stated as a recommendation, not a hard date; exact window unconfirmed | Prometric UK/Turkey pages (403 to direct fetch — see gaps) |
+| **~27 Sep 2026** | Prometric Period 1 registration expected to open, both centres — the cheaper window | **PROXY** — 2025-26 cycle opened ~27 Sep 2025; 2026-27 not yet published | Prometric [UK](https://www.prometric.com/exams/cbapuk/) / [Turkey](https://www.prometric.com/exams/cbaptr/) |
+| **~7 Nov 2026, 11:30 GMT** | Prometric Period 1 registration expected to close | **PROXY** — 2025-26 closed 7 Nov 2025, 11:30 GMT | as above |
+| **~22 Nov 2026** | Prometric Period 2 registration expected to open — higher price, last chance | **PROXY** | as above |
+| **~6 Mar 2027, 11:30 GMT** | Prometric Period 2 registration expected to close; join codes expire. **Also the cancellation cut-off at both centres** | **PROXY** — 2025-26 closed 6 Mar 2026, 11:30 GMT | as above |
 | **~mid Feb 2027** | Hisar late-registration window closes; refund entitlement ends | **PROXY** — 2025-26: late window to 16 Feb, 50% refund to 17 Feb, none after 18 Feb | [Hisar non-student page](https://eng.hisarschool.k12.tr/ap-exam-hisar-ogrencisi-olmayanlar/) |
-| **12 Mar 2027** | The point at which an AP coordinator can have the **late-order fee waived** for homeschooled / outside students specifically | CONFIRMED | [students from other schools](https://apcentral.collegeboard.org/exam-administration-ordering-scores/ordering-fees/ordering-exam-materials/special-ordering-circumstances/students-other-study) |
+| **12 Mar 2027** | **End of the AP late-ordering window.** After this, no further ordering. *Contested:* two sources describe this as also the point at which a coordinator can have the late-order fee waived for homeschooled / outside students; a third worker re-checked the timeline page and could not find that waiver language. Treat the deadline as CONFIRMED and the waiver as **PROXY** | Deadline CONFIRMED; waiver PROXY | [AP timeline](https://apcentral.collegeboard.org/about-ap/school-year-timeline); [students from other schools](https://apcentral.collegeboard.org/exam-administration-ordering-scores/ordering-fees/ordering-exam-materials/special-ordering-circumstances/students-other-study) |
 | **3-7 May 2027** | AP exams, week 1 | CONFIRMED | [AP timeline](https://apcentral.collegeboard.org/about-ap/school-year-timeline) |
 | **10-14 May 2027** | AP exams, week 2 | CONFIRMED | as above |
 | **17-21 May 2027** | AP late testing window | CONFIRMED | as above |
@@ -195,9 +341,10 @@ figure or an inference. Do not act on a PROXY date without re-checking it.
 | **Rolling** | Whitmore School enrolment — $150 deposit, no deadline blocking a September 2026 start | CONFIRMED | Whitmore enrolment pages |
 | **Before spring 2027** | **Passport validity check.** An original, valid, non-expired passport is required for entry at authorised AP centres in both the UK and Turkey | CONFIRMED requirement; the date is a family action, not a published deadline | [UK](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-the-uk.pdf) / [Turkey](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-turkey.pdf) PDFs |
 
-**Deliberately absent:** AP exam fees. Prometric states fees are set by individual centres, and
-neither the London nor the Istanbul centre's 2026-27 fee could be read off a live page. No
-figure is stated here rather than a plausible one. This is chased in section 7.
+**A standing instruction that goes with this calendar:** none of the three venues — Prometric UK,
+Prometric Turkey, Hisar — had published 2026-27 dates or fees as of 4 August 2026. Every entry
+above marked PROXY is last cycle's actual figure, used as a planning number. **Put a re-check in
+the diary for late September 2026**, which is when these pages historically roll over.
 
 ---
 
