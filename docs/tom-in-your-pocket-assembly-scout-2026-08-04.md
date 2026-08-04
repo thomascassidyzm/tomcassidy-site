@@ -829,3 +829,104 @@ analytics only.
 
 None of these is pocket-Tom's problem. All three are Dom's repo, two touch billing or outbound mail,
 and I did not scope fixes.
+
+---
+
+## 11. Hexagon, read properly — and why it settles the academic-spine question
+
+The final scout went deep on Hexagon. **No writes; nothing created, modified, committed or branched;
+no builds, no queries, no paid calls.** Two contested claims were re-verified against source before
+inclusion.
+
+### 11.1 The content is enormous, and it is deep in exactly the wrong place
+
+Hexagon's curriculum is **static TypeScript compiled into the client bundle** — not a database,
+not generated. 192,469 lines across seven directories in `src/data/`:
+
+| Asset | Count |
+|---|---|
+| Specification files → modules → topics | 18 → 154 → **760** |
+| Past papers / paper questions / mark-scheme fields | 506 / **6,014** / 20,931 |
+| Bank exam questions | 496 across 13 banks (13 of 30 registered board slugs have none) |
+| Prerequisite entries / diagnostic questions | 677 / **1,973** |
+| Worked examples / annotated steps | ~693 / 1,585 |
+| KS2/KS3 units / sections | 317 / 1,353 |
+
+For scale: **Hexagon has roughly thirty times Alexander's hand-authored question content** (496 + 6,014
+against 210). That is a serious asset and I under-described it in §9.
+
+**And it settles the spine question in the opposite direction to what the size suggests.** All of it
+is UK maths — Edexcel/AQA/OCR, IAL and GCSE, modules named `P1`/`S2`/`M1`, KS2/KS3 units. The boy is
+sitting **College Board AP in twelve months**. Hexagon's depth is in the wrong syllabus, the wrong
+awarding body and the wrong country, and none of it is portable by configuration — it is 192k lines
+of hand-authored board-specific TypeScript.
+
+**Contrast that with Alexander, which has almost no content and the right mechanism**: a generated
+curriculum with no CHECK constraint on `subject`/`level`/`exam_board` (§10.2). For a one-year AP
+sprint, **the generator beats the library.** That is the whole argument, and it means the §4/§5
+recommendation stands unchanged: Alexander over HTTP as the depth layer, Hexagon as a partnership
+conversation and a structural reference, not as the spine.
+
+### 11.2 What Hexagon does have that is worth copying
+
+**The one closed loop in the entire estate.** `hexagon.user_topic_mastery` (`009_topic_mastery.sql:4`)
+— `mastery_level 0-5`, `ease_factor`, `interval_days`, `next_review_due`, `streak`, unique on
+`(user_id, spec_id, topic_id)`, with SM-2 authoritative in the SQL RPC `hexagon.update_topic_mastery`
+and `spacedRepetition.ts` an explicitly-labelled client mirror. It is wired **both ways**: written
+from the chat and retrieval-practice components, read by `CoachPage`, `ParentDashboard`,
+`CancelSave` and `weekly-digest.js`.
+
+**Attempt → mastery → SM-2 interval → due-review surface → outbound email is a complete circuit, and
+it is the only one in the estate.** That circuit — not the content — is the transferable design.
+
+### 11.3 A live data bug in Dom's product — the most valuable single thing this scout found
+
+**`spec_id` is written and read with different values, and it is part of the uniqueness key.**
+
+- Write: `const specId = examContext.value?.board ?? 'edexcel-int'` — the bare board slug
+  (`SimpleChatV2.vue:758`).
+- Read: a suffixed key — `` `${selectedBoard.value}-gcse` ``, `-ks2`, `-ks3`, `-fm`
+  (`CoachPage.vue:743-752`).
+
+**Consequence: every GCSE, KS2, KS3 and Further Maths student's mastery silently reads back empty.**
+A-level is unaffected, because those slugs take no suffix. Nothing errors; the data is being written
+correctly and simply never found again.
+
+This is Dom's to fix and I have not touched it, but it is worth telling him today — it is silent,
+it affects the majority of his cohort, and it will keep quietly discarding evidence for as long as
+it runs.
+
+### 11.4 Three more things that are dead, and one that may not be running
+
+- **The prerequisite DAG is dead as a graph.** 677 entries with `prerequisiteTopicIds`, and **no code
+  anywhere walks transitive prerequisites** — the only reader displays one entry's diagnostics.
+  Edges are unvalidated strings. This is the most under-used asset in the repo.
+- **`breakthrough_achieved` is never set.** The logger doesn't pass `conceptual_breakthrough`, so the
+  trigger at `005_conversation_logging_system.sql:231` never fires and **every breakthrough counter
+  reads zero.** (Alexander has the same shape of problem from the other end — it sets the flag and
+  never routes it.)
+- **`student_paper_progress` has full RLS and zero application references** — built as a proper
+  table, then implemented in localStorage instead. Same pattern as theracowch and Alexander: the
+  durable store gets designed, the shipping code goes to the device.
+- **Five mutually incompatible schema lineages**, with two migrations colliding on number `007`.
+
+**And the estate-wide pattern extends to the crons themselves.** Neither `CRON_SECRET` nor
+`WEBHOOK_RETRY_SECRET` appears in Hexagon's `.env.example`, and its cron auth **fails closed**
+(`reengagement-email.js:16-19`). Combined with tomcassidy-site's cron proven inert in production
+(§3.2), the honest position is: **the estate has four scheduled jobs across two repos and I cannot
+confirm that any of them has ever successfully fired.** That is not a claim they haven't — it is a
+claim nobody has checked, and it is checkable in about ten minutes in the Vercel dashboard.
+
+**Doc-vs-code, one more time:** `HEXAGON-MATHS-SPECIFICATION.apml` (34KB, root) is referenced by
+**zero** source files, and `src/apml/` (2,310 lines of parser and reverse-compiler) appears in live
+code only as a comment. The APML pipeline the root markdown describes is **not wired in**;
+`src/data/*.ts` is the real model.
+
+### 11.5 What this changes in the recommendation
+
+**Nothing structural.** The donor call (§4), the first slice (§5) and the cost model (§2) are
+unchanged. What changes is confidence: three independent repos have now been read to the bottom and
+all three show the identical shape — **a durable learner model that something writes, an initiative
+loop that something schedules, and no model in between.** Pocket-Tom's first slice is the first
+thing in the estate that would close that circuit.
+
