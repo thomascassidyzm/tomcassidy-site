@@ -10,8 +10,11 @@ won and the disagreement is recorded as a finding.
 
 ## 0. The headline
 
-**The mentor layer does not exist anywhere in the estate. Every one of its three defining
-capabilities is missing, and two of the three are missing in a way that a port cannot fix.**
+**The mentor layer does not exist anywhere in the estate — but it is closer than "build a mentor"
+suggests. Of its three defining capabilities, one (initiative) exists as working plumbing in two
+separate repos, one (the 13x4 rhythm) exists as live arithmetic, and one (a durable server-side
+model of the student) does not exist at all. Not one scheduled job in the estate has a model in the
+loop.**
 
 What exists is better than that sounds, because what's missing is small:
 
@@ -69,7 +72,7 @@ item is a third-party cost. ElevenLabs list pricing, fetched 2026-08-04 from
 `elevenlabs.io/pricing/api`: **Scribe v2 STT $0.22/hour** of audio, **Flash/Turbo TTS $0.05 per
 1,000 characters**, **Multilingual v2/v3 TTS $0.10 per 1,000 characters**, on tiers from $6/month
 (Starter) to $99/month (Pro, 440k Flash chars included). I could not verify what rate Tom's estate
-is actually on — see §6.
+is actually on — see §7.
 
 ---
 
@@ -583,8 +586,9 @@ gate it.
    input token counts may be understated by up to ~30%** — which moves the typical month from £7.10
    to about £9. Worth one `count_tokens` call against the real assembled prompt before anyone
    quotes a number externally.
-7. **Hexagon and Zenjin were delegated** to a read-only worker and are covered in §8 at whatever
-   depth that scout reached; I did not read them myself.
+7. **Hexagon and Zenjin were read shallowly** (§9) — enough to establish stack, scheduled jobs,
+   delivery layer and shape, not enough to judge their data models in detail. Hexagon was read
+   strictly read-only; `git status` was clean before and after.
 
 ---
 
