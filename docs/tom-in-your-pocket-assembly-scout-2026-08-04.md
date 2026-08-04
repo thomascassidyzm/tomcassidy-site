@@ -18,9 +18,12 @@ loop.**
 
 What exists is better than that sounds, because what's missing is small:
 
-- **Initiative exists as working plumbing** — `tomcassidy-site` has a live Vercel cron firing three
-  times a day into web push, with a real jitter pattern and a real "return, not nag" design. It has
-  never had a model in the loop, and it has no student to know about.
+- **Initiative exists as working plumbing, in two repos** — `theracowch` runs a `*/15` cron with
+  per-user timezone slot matching, dedupe and dead-subscription pruning; `tomcassidy-site` has three
+  jittered daily crons and a "return, not nag" design. Neither has ever had a model in the loop.
+  **And tomcassidy-site's is inert in production** — a live unauthenticated probe of
+  `/api/cron/coach` returns `503 {"error":"VAPID keys not configured"}`, which proves both that the
+  VAPID keys are unset *and* that `CRON_SECRET` is unset. It is three env vars from firing.
 - **Chat plumbing exists and is already cost-tuned** — `theracowch` runs a two-block cached system
   prompt, a compressed rolling profile, and a 3-message context window. That is exactly the shape a
   mentor needs, and it is already debugged.
@@ -277,11 +280,19 @@ This is the finding I did not expect. Initiative plumbing exists in **two** repo
 and it is the **better-developed of the two capabilities** — but neither has a model in the loop
 and neither reads a student model.
 
-**`tomcassidy-site` — the 13x4-aware one.** `vercel.json` declares three real crons at jittered
-times (`47 7`, `13 12`, `9 18`). `src/pages/api/cron/coach.ts` (70 lines) authenticates the Vercel
-`CRON_SECRET`, reads a stored subscription and program start date, computes the current week, draws
-a tone-weighted line, and sends one web push tagged `pocket-coach` so a second push replaces rather
-than stacks. `src/lib/coach-engine.ts` (119 lines) holds the week arithmetic, deliberately shared
+**`tomcassidy-site` — the week-arithmetic one, and it is currently dead.** `vercel.json` declares
+three real crons at jittered times (`47 7`, `13 12`, `9 18`). `src/pages/api/cron/coach.ts` (70
+lines) *optionally* authenticates `CRON_SECRET`, reads a stored subscription and program start date,
+computes the current week, draws a tone-weighted line, and sends one web push tagged `pocket-coach`
+so a second push replaces rather than stacks.
+
+**Three corrections from the deep read, all of which matter.** (i) It is **inert in production**: a
+live probe returns `503 VAPID keys not configured`, having already passed the secret gate — so
+neither the VAPID pair nor `CRON_SECRET` is set, and the route is currently open to anyone.
+(ii) `const PROGRAM = reasonableEating` is **hardcoded** (`coach.ts:13`) — **the cron never touches
+13x4 at all**, and `ORIGIN_PATH` deep-links to `/reasonable-eating`. (iii) It writes **no state at
+all** — no last-sent record, no dedupe, no reaping of dead 404/410 subscriptions despite the
+comment saying otherwise. Theracowch's loop does all three things properly. `src/lib/coach-engine.ts` (119 lines) holds the week arithmetic, deliberately shared
 with `ProgramWheel.svelte` so the push and the wheel can never disagree about which week it is.
 Tone weights are gentle 4, encouraging 3, honest-kind 2, playful 2 — "return, not nag", stated in
 the code comments as design intent.
@@ -631,7 +642,23 @@ email.** `vercel.json` declares two crons —
 §3.7's missing parent-report job and §3.2's initiative loop, already built, already scheduled,
 already delivering to an inbox.
 
-**And it confirms the estate-wide pattern rather than breaking it.** I grepped all three of those
+**But the parent surface is thinner than the marketing.** There is **no parent role and no parent
+email field** — `AccountSettings.vue:24-25` hardcodes `role: 'parent'` as mock data, `/parent`
+redirects to `/progress`, and both the Friday digest (`api/weekly-digest.js:108`) and the on-demand
+report mail **the student's own auth address**. `PricingPage.vue:59` promises reports "sent directly
+to parents", which only works if the account was registered with the parent's address. So Hexagon
+has solved *scheduled email delivery*, not *parent identity*. Correcting my own earlier framing:
+it is the delivery rail that transfers, not a parent surface.
+
+Hexagon also has a real durable learner model — `hexagon.user_topic_mastery`
+(`supabase/migrations/009_topic_mastery.sql`) with SM-2 in `src/services/spacedRepetition.ts`,
+written from the chat and retrieval-practice components and read by `CoachPage`, `ParentDashboard`
+and `weekly-digest.js`. **And its coach never reads it.** `api/coaching.js` fetches nothing before
+building a prompt — no history, no mastery, no prior attempts; context is the client's last 10–16
+messages. So Hexagon is the third instance of the same estate-wide shape: memory and initiative both
+exist, and they are wired to each other through *email templates* rather than through the model.
+
+**It confirms the estate-wide pattern rather than breaking it.** I grepped all three of those
 jobs for `anthropic|claude|model:` and got **zero hits**. Hexagon's digests are template-composed
 from database rows, exactly as tomcassidy-site's coach lines and theracowch's `NUDGES` array are
 hard-coded text. So across three independent repos, five scheduled jobs, and two delivery channels:
@@ -671,3 +698,134 @@ build budget. Alexander's generated-curriculum path (§3.4) fits the deadline; Z
 
 Revisit it when the product has a second student and a longer horizon.
 
+
+---
+
+## 10. Corrections and additions from the deep reads
+
+Six parallel read-only scouts went into the repos after the first pass above. Where they corrected
+me, the correction is recorded here rather than quietly patched, because a scout that hides its own
+errors is worth less than one that doesn't.
+
+### 10.1 Corrections to my own claims
+
+**(a) The cached base is 16.5k tokens, and the code comment is wrong by 2.7×, not 2.5×.** Measured
+precisely: `prompt-base.js` 23,162 chars + three inline chunks (26,920 + 10,182 + 779) =
+**61,043 chars ≈ 16.5k tokens ±1k**. Not verified against `count_tokens` — that is a paid call and
+the scout was read-only.
+
+**(b) A cost trap I under-weighted: theracowch's cache is 5-minute, not 1-hour.** `cache_control:
+{type:'ephemeral'}` with no `ttl` defaults to 5 minutes. Break-even is 2 messages inside 5 minutes.
+For a live back-and-forth that is a ~10× win from turn 2 — but **for a student who opens the app
+once and sends one message, every message is a cache write, and the split makes it ~25% *more*
+expensive than not caching at all.** My model already assumed a 1-hour TTL, so the arithmetic in §2
+stands; but this is now a **specific, named fix in the fork**, not a preference: set `ttl: "1h"`, or
+drop `cache_control` entirely if the real cadence turns out to be genuinely single-shot.
+
+**(c) Alexander's device-side learner model is dead code, and the sync drops the live half.**
+`updateProfileFromConversation()` (`learningStore.ts:329`) — which would populate `masteredConcepts`,
+`currentlyLearning`, `struggles` — **has no callers anywhere in `src/`**. What *is* populated is
+`communicationStyle` and `thinkingGaps`. And `compressProfile()` (`cloudSync.ts:152`) **drops exactly
+those two fields** before syncing. Net: the only populated fields are the only unsynced fields, and
+what lands in Supabase `learning_profiles` is an empty shell plus counters.
+
+**This does not change §3.1's conclusion — it sharpens it.** `student_spec_competence` and
+`review_items`, written server-side by `post-conversation.js`, are still real and still accumulating.
+That remains the one genuine durable learner model in the estate. But `review_items` has exactly one
+reader — `api/admin-user-detail.js:59-67`, an admin dashboard — so nothing reads it **back into a
+coaching conversation**, and `student_paper_progress` is fully dead. **The competence store is
+write-only from the student's point of view.**
+
+**(d) Hexagon has no parent surface** (corrected inline in §9.1) and its coach reads none of its own
+learner model.
+
+**(e) I understated Zenjin.** It is not scaffolding: `packages/engine` is 104 graph source files,
+109 test files, **803 `it()` blocks / 12,253 test lines**, and `apps/web` is a deployable SvelteKit 5
+player with a complete loop — pack picker, countdown, MC at rungs 1–5, keypad at 6–7, red-shake with
+canonical reveal and forced re-drill, localStorage resume. **~325–330 playable atoms across 92
+packs.** My verdict is unchanged but the reasoning gets sharper (§10.3).
+
+### 10.2 Additions that change the build
+
+**The 13x4 programme has no coach banks.** `grep -c 'banks:'` is **zero** for every programme file
+except `reasonable-eating.ts`, which has 13. So `ultimate-13x4.ts` carries one `coach.wisdom` line
+per focus and nothing else, and there is no push CTA, no service-worker registration and no manifest
+identity for 13x4 anywhere. **The 13x4 cadence content for coaching does not exist yet.** In the
+first slice this is a feature, not a blocker — pocket-Tom composes its nudges with a model reading
+the Script, so it needs no banks. It does mean there is nothing to port as *content*.
+
+**A latent week-arithmetic bug.** `src/lib/today.ts:57` computes `totalWeeks = program.cycles *
+program.domains.length`. For Reasonable Eating (3 domains × 4) that gives 12 and is correct. For
+`ultimate13x4` (4 cycles × 3 domains) it also gives 12 — **but the programme has 13 weeks**, so week
+13 would be unreachable and every week after the first lap mis-indexed. Latent only: `today.ts` is
+never called with 13x4. `coach-engine.ts` computes the order correctly. **Port `coach-engine.ts`,
+not `today.ts`.**
+
+**Theracowch is even cleaner as a donor than §4 argued.** Its `CLAUDE.md` names Clerk, Supabase and
+Stripe; the code has **none of them**. `package.json` has exactly two runtime dependencies —
+`@upstash/redis` and `web-push` — and greps for clerk/supabase/stripe across `public api lib` return
+nothing. No auth, no database, no payments, no migrations. That is a *stronger* donor argument than
+I made: there is no billing or auth liability to strip, only content.
+
+**Two security notes for whoever forks it.** The origin allowlist in `api/chat.js:19` **passes when
+there is no `Origin` header at all**, so a plain `curl` reaches a billed key. And
+`api/push/send.js:86` only enforces `CRON_SECRET` **if the env var is set**. Both are one-line fixes
+and both should be made on day one of the fork, not later.
+
+**AP is easier than §3.4 concluded.** `curriculum_topics` has free-text `subject`/`level`/
+`exam_board` with **no CHECK constraint**, and migration `007_curriculum_topics.sql:15-16` explicitly
+anticipates non-board use. `parse-paper.js` and `admin-upload-paper.js` interpolate whatever strings
+they are given. **Pointing the ingestion pipeline at College Board / AP requires no schema change and
+no code change — only rows.** The `LEVEL_LABELS` addition remains a nicety for prompt wording, not a
+gate.
+
+**One live hazard to guard if the checkpoint feature is carried over:** with no matching question
+bank, `bankKey()` returns `''`, `getQuestionsForTopic` returns `[]`, and `startCheckpoint()`
+(`learningCheckpointService.ts:64-90`) proceeds with **zero questions and no guard**. Any AP subject
+hits this immediately. Alexander's hand-authored content is 210 questions across 12 banks, all
+UK-board; topic maps cover 7 of the 12.
+
+**Alexander's repo carries two unrelated products.** Product A is Alexander (live). Product B is a
+"Hexagon" CRM/marketplace — `api/leads.ts`, `dashboard.ts`, `consultations.ts` against a `hexagon.*`
+Postgres schema, **no table of which is queried by any live code path**. There are also three
+competing generations of the credits system, of which only `20260415_credits_system.sql` is
+canonical, and `create-credit-checkout.ts` reads columns that don't exist in it. **This is the
+strongest argument yet for the mentor app standing alone rather than sitting on Alexander's Supabase
+estate** — which is what §4 recommends and what the Alexander scout independently concluded.
+
+### 10.3 Zenjin, re-stated with the better reasoning
+
+The blocker is not content volume, it is **the answer layer**. The ladder terminates in a numeric
+keypad and the MC rungs are 2-option (a 50% guess floor). **Calculus answers are expressions, not
+integers**, so extending Zenjin to AP is engine work plus a new input modality, not atom authoring.
+Content reach stops at FOIL and factoring out an HCF — nothing for quadratics, functions, exp/log,
+trig, limits, derivatives or integrals. And nothing in the repo *teaches*: there is no worked
+solution beyond a one-line canonical reveal.
+
+**But there is a role for it from day one that I missed:** the **automaticity floor underneath** the
+AP year — arithmetic, fractions, decimals, percent, ratio, index laws, expansion. That is precisely
+the layer that sinks AP Calculus students, and it is built and tested today. Still out of the first
+slice; worth a look the moment the boy's algebra fluency turns out to be the actual bottleneck.
+
+Two honest gaps from that scout: there is no `vercel.json` and no deployment URL in the repo, so
+**nobody has confirmed Zenjin is live anywhere**; and `node_modules` was absent, so no tests were
+run — the green claim rests on CI, not an executed run.
+
+### 10.4 Three things in Hexagon that are Tom-and-Dom's to call
+
+Found while reading; **nothing was touched, and `git status` was clean throughout.**
+
+1. **`.github/workflows/auto-merge-claude.yml` auto-merges any `claude/**` push straight to `main`
+   with `contents: write`.** On a co-owned repo that is worth knowing about.
+2. **`/api/coaching` has no rate limit and no credit gate.** `RATE_LIMITING.md` claims 10/hr; the
+   file imports no middleware. The only credit-deduction code (`deepDomIntegration.ts`) is imported
+   by nothing. So the most expensive endpoint is the only unmetered one, and CORS admits
+   origin-less server-to-server calls. An open cost tap.
+3. **`api/progress-report.js` emails a full progress report to any address supplied in an
+   unauthenticated POST body**, CORS `*`, no ownership check.
+
+Also: `api/admin-data.js:126,214` pins `claude-sonnet-4-20250514`, retired seven weeks ago. Admin
+analytics only.
+
+None of these is pocket-Tom's problem. All three are Dom's repo, two touch billing or outbound mail,
+and I did not scope fixes.
