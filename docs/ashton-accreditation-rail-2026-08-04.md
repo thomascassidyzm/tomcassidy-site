@@ -37,12 +37,14 @@ preferred order deadline is 2 October 2026 and the final deadline 13 November 20
 per-exam late fee after that. That is independent of the provider decision and should be
 started in parallel, not after it.
 
-**One of the two Grade 11 APs in the ACS plan is a launch-year course and is the single
-weakest link.** AP Business with Personal Finance is real and the ACS course name maps to it
-exactly, but it debuts in 2026-27, its exam carries an exam-day validation question about the
-student's own Business Canvas Project, and there is no published statement that external or
-exam-only candidates can take it in year one. This is section 5, and it is the question to put
-to the ACS counsellor this week.
+**One of the two Grade 11 APs in the ACS plan probably will not happen, and the fallback should
+be chosen deliberately in October rather than discovered in March.** AP Business with Personal
+Finance is real and the ACS course name maps to it exactly, but it debuts in 2026-27, its exam
+carries an exam-day validation question about the student's own Business Canvas Project with no
+documented submission route for a candidate who has no host course, and — the decisive point —
+**it does not appear on the London Prometric centre's subject list, nor does any other AP Career
+Kickstart course**. Plan for the swap; treat a yes as upside. Section 7 carries the question for
+the counsellor and the ready-made fallback (Micro and/or Macroeconomics).
 
 **The hard part is the diploma.** The requirement — a provider that will accept coursework
 taught entirely by outside tutors, put a real letter grade on it, carry the ACS Grades 9-10
@@ -188,7 +190,8 @@ figure or an inference. Do not act on a PROXY date without re-checking it.
 | **3-7 May 2027** | AP exams, week 1 | CONFIRMED | [AP timeline](https://apcentral.collegeboard.org/about-ap/school-year-timeline) |
 | **10-14 May 2027** | AP exams, week 2 | CONFIRMED | as above |
 | **17-21 May 2027** | AP late testing window | CONFIRMED | as above |
-| **May 2027** | AP Business with Personal Finance — first ever administration, fully digital in Bluebook | CONFIRMED that this is the plan | [AP Central course page](https://apcentral.collegeboard.org/courses/ap-business-personal-finance) |
+| **May 2027** | AP Business with Personal Finance — first ever administration, fully digital in Bluebook. **Not on the London Prometric subject list; assume unavailable there** | CONFIRMED that this is the plan; the London unavailability is PROXY from the 2026 flyer | [course page](https://apcentral.collegeboard.org/courses/ap-business-personal-finance); [UK flyer](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-the-uk.pdf) |
+| **~Oct 2026** | **Decision point:** if nobody has confirmed external access to AP Business with Personal Finance by now, swap in Micro/Macroeconomics for Grade 11 | Family action, set to sit before the 13 Nov ordering deadline | §7 |
 | **Rolling** | Whitmore School enrolment — $150 deposit, no deadline blocking a September 2026 start | CONFIRMED | Whitmore enrolment pages |
 | **Before spring 2027** | **Passport validity check.** An original, valid, non-expired passport is required for entry at authorised AP centres in both the UK and Turkey | CONFIRMED requirement; the date is a family action, not a published deadline | [UK](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-the-uk.pdf) / [Turkey](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-turkey.pdf) PDFs |
 
@@ -208,7 +211,8 @@ launches in the **2026-27 school year**, with a fully digital Bluebook exam plan
 2027** ([AP Central](https://apcentral.collegeboard.org/courses/ap-business-personal-finance),
 [AP Students](https://apstudents.collegeboard.org/courses/ap-career-kickstart)).
 
-So the exam exists. Two things make it the weakest link in the Grade 11 year.
+So the exam exists. Three things make it the weakest link in the Grade 11 year, and the third
+is close to decisive.
 
 **1. The coursework is welded to the exam.** One of the free-response questions is an exam-day
 validation question about the student's own **Business Canvas Project**
@@ -224,14 +228,47 @@ process, no deadline and no eligibility detail — only an interest form
 For an external candidate who needs someone else to order the exam, a brand-new course is the
 hardest case, not the easiest. AP Homeschoolers, which runs online AP courses for home-educated
 students, lists the course but records the exam date as **"TBD"**
-([aphomeschoolers.com](https://www.aphomeschoolers.com/course/apbusiness/)) — itself a signal
-that the homeschool route for this specific exam is not yet settled.
+([aphomeschoolers.com](https://www.aphomeschoolers.com/course/apbusiness/), fetched 4 August
+2026 — still "TBD", nothing has firmed up) — itself a signal that the homeschool route for this
+specific exam is not yet settled.
+
+**3. The London centre does not currently offer it, or any Career Kickstart course.** This is
+the finding that changes the recommendation. College Board's own UK registration flyer for the
+May 2026 cycle lists the 25 AP subjects available at Prometric UK — Art & Design, Biology, both
+Calculus courses, Chemistry, Comparative Government, both Computer Science courses, Drawing,
+both English courses, Environmental Science, European History, Human Geography, Macroeconomics,
+Microeconomics, Music Theory, Precalculus, Physics 1 and 2, both Physics C courses, Psychology,
+Statistics, World History Modern
+([flyer](https://apcentral.collegeboard.org/media/pdf/register-for-ap-exams-in-the-uk.pdf)).
+**AP Business with Personal Finance is not on that list, and neither is any other AP Career
+Kickstart course.**
+
+That is a **PROXY** for May 2027, not a confirmation — the 2027 flyer does not exist yet, and a
+course cannot appear on a 2026 list for an exam that first runs in 2027. But it is the strongest
+evidence available, and the direction of travel points the wrong way: adding a brand-new,
+project-dependent course to an international walk-in centre in its very first year would be
+unusual. **Plan on the assumption that London will not carry it, and treat a yes as the upside
+case.**
+
+### What is *not* a problem, so nobody wastes worry on it
+
+**AP Course Audit authorisation is not a gate on Ashton sitting exams.** Course Audit is a
+labelling mechanism: it governs whether an *entity* may call its course "AP" and appear on the
+AP Course Ledger. It does not govern whether an individual may sit an exam. College Board's own
+homeschool guidance is that students can self-study for most AP exams and a formal AP course is
+recommended but not required
+([homeschool providers guidance](https://apcentral.collegeboard.org/courses/ap-course-audit/explore-by-role/homeschool-providers-ap-courses)
+— PROXY, surfaced via search rather than fully fetched). So an unaffiliated tutor can teach
+Ashton the material perfectly legitimately; the course simply cannot be labelled "AP" on a
+transcript unless the diploma provider itself holds the authorisation. The real gates are
+finding a willing host school or centre, and the project question above.
 
 ### The question for the dad and the ACS counsellor, this week
 
 > **Can Ashton sit AP Business with Personal Finance in May 2027 as an external candidate — and
-> will the London or Istanbul centre carry it in its first year? If nobody can say yes by around
-> October 2026, which established AP goes into Grade 11 in its place?**
+> will the London or Istanbul centre carry it in its first year, given it is on neither's current
+> subject list? If nobody can say yes by around October 2026, which established AP goes into
+> Grade 11 in its place?**
 
 Three properties make that the right question. It is answerable by the people who have the
 answer — the ACS counsellor has a College Board relationship a parent does not. It is time-boxed:
@@ -239,6 +276,35 @@ the AP final ordering deadline is 13 November 2026, so an October decision point
 And the fallback is cheap if taken early and expensive if discovered in March — swapping an
 established, widely-offered AP into Grade 11 is a routine change in October and a scramble in
 spring.
+
+**Who to ring.** Not the general student line. The open questions are coordinator-side logistics
+— international carriage, and exam-only-section mechanics — so the number more likely to reach
+someone who knows is **AP Services for Educators: +1 212-713-8000, or (866) 630-9305 toll-free
+in the US/Canada**
+([administering exams internationally](https://apcentral.collegeboard.org/exam-administration-ordering-scores/administering-exams/administer-exam-internationally)
+— CONFIRMED). The AP Services for Students line is given elsewhere as 888-225-5427 and
++1 212-632-1780, Monday to Friday 08:00-20:00 ET — **PROXY**, surfaced via search and not
+readable on College Board's live contact page, so verify before dialling. There is also a
+[web contact form](https://collegeboard.tfaforms.net/193). Honestly, the fastest real-world
+answer is probably a phone call to the AP coordinator at any UK international school, asking
+what *they* have been told about Career Kickstart carriage for May 2027.
+
+### The fallback, ready to go
+
+If the answer is no, these are the sane Grade 11 swaps. All three are **confirmed on the
+Prometric UK 2026 subject list**, so they can definitely be sat in London, and all suit a
+business-inclined student.
+
+1. **AP Microeconomics and/or AP Macroeconomics** — the closest substitute by subject matter.
+   Short syllabi, heavily worn self-study paths, no prerequisite chain, and either can be taken
+   alone. This is the recommended swap.
+2. **AP Statistics** — genuinely useful for a business or economics Common App narrative,
+   multiple-choice and free-response only, no project or portfolio component to arrange.
+3. **AP Computer Science Principles** — only if Ashton has a tech or product angle. Note it
+   carries its own "Create" performance task due end of April, submitted through AP's digital
+   portfolio system. That is a real, documented, already-working external-candidate route —
+   which is precisely what AP Business with Personal Finance lacks — but it is still an extra
+   moving part, so it ranks third.
 
 ---
 
@@ -259,6 +325,18 @@ mislaid. What follows distinguishes *researched and unresolved* from *never rese
   the actual open and close dates are unconfirmed.
 - **Whether a candidate may split exams between London and Istanbul in one May.** Materially
   important given Ashton's two bases. Not answered by any source found.
+- **Whether AP Business with Personal Finance will be carried at any international Prometric
+  centre in May 2027.** Researched hard and genuinely not knowable from public sources today.
+  College Board's exam overview, adopt page and Career Kickstart programme page are all silent
+  on external eligibility, international availability, and Prometric. The 2026 London subject
+  list excludes it and every Career Kickstart course, which is the best available signal but is
+  a proxy, not an answer. Needs the phone call in §7.
+- **Whether any submission route exists for the Business Canvas Project** for a candidate with
+  no host cohort. No artefact upload, portfolio submission, or accommodation parallel to AP
+  Seminar/Research's performance tasks is documented anywhere. The validation question is
+  answered live in Bluebook about a project the candidate is *presumed* to have done — but
+  nothing states how, or whether, that project is verified for a self-studying candidate. This
+  is the deepest unknown in the whole document.
 - **External-candidate AP policy at Robert College, TED İstanbul, IICS, UAA and MEF Okulları.**
   Consistently absent from all five schools' own websites — a real gap in the public record, not
   a research shortfall. Only Hisar publishes a policy.
@@ -272,8 +350,9 @@ mislaid. What follows distinguishes *researched and unresolved* from *never rese
 
 ### 8.2 Commissioned and never returned — the load-bearing holes
 
-Six replacement workers were dispatched on 4 August 2026 to fill these. **Anything still marked
-below at the time you read this was not recovered.**
+Six replacement workers were dispatched on 4 August 2026 to fill these. The AP Business
+launch-year question has since come back and is folded into §7. **Anything still listed below
+was not recovered.**
 
 - **NARHS** — MSA-CESS accredited, portfolio and credit-justification model, "your diploma, your
   way". On its face the closest thing in the field to a pure credential rail. Never researched.
