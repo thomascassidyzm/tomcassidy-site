@@ -9,6 +9,11 @@
 > single canonical home" for the coaching voice (commit 82e1dcc). This document does not compete
 > with it — it audits it against the whole estate, records where the other tellings agree, differ,
 > or carry moves the canonical file dropped, and indexes every file where the method lives.
+>
+> Relationship to `docs/REASON-ABILITY-CANON.md` (2026-08-04): that document covers the whole
+> Reason-Ability system — the four dogmas, the minimum-will week, the no-civil-war doctrine,
+> future-anticipation, the name — built on Tom's spoken talk-through. This document covers the
+> Script and the Sausage Machine engine, which is the inside of each of that system's weeks.
 
 ---
 
