@@ -12,31 +12,119 @@ interface ChatMessage {
   content: string;
 }
 
-type ModelTier = 'haiku' | 'sonnet' | 'opus';
+// Model is fixed server-side — callers can no longer choose (and bill) a
+// pricier tier. Pin the model ID to match the sibling sites' convention;
+// update when newer snapshots ship.
+const MODEL = 'claude-haiku-4-5-20251001';
 
-// Default tier is haiku (cheapest). Pin model IDs to match the sibling sites'
-// convention; update when newer snapshots ship.
-const MODEL_BY_TIER: Record<ModelTier, string> = {
-  haiku: 'claude-haiku-4-5-20251001',
-  sonnet: 'claude-sonnet-4-6',
-  opus: 'claude-opus-4-7',
-};
+const MAX_MESSAGE_CHARS = 4000;
+const MAX_HISTORY_TURNS = 20;
+const MAX_BODY_BYTES = 50_000;
 
 interface GuideRequest {
   message: string;
   history?: ChatMessage[];
   context?: GuideContext;
-  tier?: ModelTier;
+}
+
+// Fixed window rate limiter, per client IP. Module-level Map — fine for a
+// single-instance SSR route; pruned on every request so it can't grow
+// unbounded.
+const RATE_LIMIT_MAX = 15;
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const requestLog = new Map<string, number[]>();
+
+function isRateLimited(ip: string): { limited: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+  for (const [key, timestamps] of requestLog) {
+    const kept = timestamps.filter((t) => t > windowStart);
+    if (kept.length === 0) requestLog.delete(key);
+    else requestLog.set(key, kept);
+  }
+
+  const timestamps = requestLog.get(ip) ?? [];
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    const retryAfterSeconds = Math.ceil((timestamps[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { limited: true, retryAfterSeconds: Math.max(retryAfterSeconds, 1) };
+  }
+
+  timestamps.push(now);
+  requestLog.set(ip, timestamps);
+  return { limited: false, retryAfterSeconds: 0 };
+}
+
+function getClientIp(request: Request): string {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) return forwardedFor.split(',')[0].trim();
+  return 'unknown';
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body: GuideRequest = await request.json();
-    const { message, history = [], context = {}, tier } = body;
+    // Same-origin check: the site's own chat widget always sends Origin
+    // matching the Host it's calling. Cross-origin callers (curl, other
+    // sites) are rejected; requests with no Origin header (same-tab
+    // navigations, some native fetch contexts) are allowed through rather
+    // than risk breaking the widget.
+    const origin = request.headers.get('origin');
+    if (origin) {
+      const host = request.headers.get('host');
+      let originHost: string | null = null;
+      try {
+        originHost = new URL(origin).host;
+      } catch {
+        originHost = null;
+      }
+      if (!originHost || originHost !== host) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    const clientIp = getClientIp(request);
+    const { limited, retryAfterSeconds } = isRateLimited(clientIp);
+    if (limited) {
+      return new Response(JSON.stringify({ error: 'Too many requests' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSeconds),
+        },
+      });
+    }
+
+    const rawBody = await request.text();
+    if (rawBody.length > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body: GuideRequest = JSON.parse(rawBody);
+    const { message, history = [], context = {} } = body;
 
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (message.length > MAX_MESSAGE_CHARS) {
+      return new Response(JSON.stringify({ error: 'Message too long' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!Array.isArray(history) || history.length > MAX_HISTORY_TURNS) {
+      return new Response(JSON.stringify({ error: 'History too long' }), {
+        status: 413,
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -50,9 +138,6 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    const selectedTier: ModelTier = tier && tier in MODEL_BY_TIER ? tier : 'haiku';
-    const selectedModel = MODEL_BY_TIER[selectedTier];
 
     // Resolve the live essay text from the content collection. On non-essay
     // surfaces, fall back to a catalogue overview of all essays.
@@ -75,7 +160,7 @@ export const POST: APIRoute = async ({ request }) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: selectedModel,
+        model: MODEL,
         max_tokens: 2048,
         system: systemPrompt,
         messages,
@@ -104,7 +189,6 @@ export const POST: APIRoute = async ({ request }) => {
         // Raw version (LaTeX intact) — the client stores this in history so
         // subsequent turns send real LaTeX, not placeholder tokens.
         rawMessage: assistantMessage,
-        tier: selectedTier,
         context,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
