@@ -12,14 +12,14 @@ interface ChatMessage {
   content: string;
 }
 
-// Model is fixed server-side — callers can no longer choose (and bill) a
-// pricier tier. Pin the model ID to match the sibling sites' convention;
-// update when newer snapshots ship.
+// Model selection is SERVER-SIDE ONLY. The caller never picks a model and
+// never picks a tier: this constant is the complete set of models this
+// endpoint can ever reach. There is no code path from any request body to any
+// other model, and Opus is not reachable at all. A request that names a model
+// or a tier is rejected outright (400) rather than silently downgraded, so the
+// refusal is visible to whoever sent it.
 const MODEL = 'claude-haiku-4-5-20251001';
-
-const MAX_MESSAGE_CHARS = 4000;
-const MAX_HISTORY_TURNS = 20;
-const MAX_BODY_BYTES = 50_000;
+const MAX_TOKENS = 2048;
 
 interface GuideRequest {
   message: string;
@@ -27,29 +27,37 @@ interface GuideRequest {
   context?: GuideContext;
 }
 
-// Fixed window rate limiter, per client IP. Module-level Map — fine for a
-// single-instance SSR route; pruned on every request so it can't grow
-// unbounded.
-const RATE_LIMIT_MAX = 15;
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_HISTORY_TURNS = 20;
+const MAX_BODY_BYTES = 50_000;
+
+// Sliding-window rate limit, keyed on client IP. Module-level Map is fine for
+// a single serverless instance; entries are pruned on every request so it
+// can't grow unbounded.
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 15;
 const requestLog = new Map<string, number[]>();
 
 function isRateLimited(ip: string): { limited: boolean; retryAfterSeconds: number } {
   const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const cutoff = now - RATE_LIMIT_WINDOW_MS;
 
   for (const [key, timestamps] of requestLog) {
-    const kept = timestamps.filter((t) => t > windowStart);
-    if (kept.length === 0) requestLog.delete(key);
-    else requestLog.set(key, kept);
+    const fresh = timestamps.filter((t) => t > cutoff);
+    if (fresh.length === 0) {
+      requestLog.delete(key);
+    } else {
+      requestLog.set(key, fresh);
+    }
   }
 
   const timestamps = requestLog.get(ip) ?? [];
-  if (timestamps.length >= RATE_LIMIT_MAX) {
+  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    // Retry-After counts from the OLDEST request still in the window — that is
+    // when a slot actually frees up, not a flat full window.
     const retryAfterSeconds = Math.ceil((timestamps[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
     return { limited: true, retryAfterSeconds: Math.max(retryAfterSeconds, 1) };
   }
-
   timestamps.push(now);
   requestLog.set(ip, timestamps);
   return { limited: false, retryAfterSeconds: 0 };
@@ -57,32 +65,39 @@ function isRateLimited(ip: string): { limited: boolean; retryAfterSeconds: numbe
 
 function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) return forwardedFor.split(',')[0].trim();
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
   return 'unknown';
+}
+
+// Same-origin check: reject cross-site callers while keeping the deployed
+// site's own guide panel working. Origin is derived from the request's own URL
+// rather than a hardcoded list, so it holds on every preview deployment too.
+function isSameOrigin(request: Request): boolean {
+  const originHeader = request.headers.get('origin');
+  // Same-origin fetches from a browser normally carry Origin. Missing Origin
+  // (e.g. curl, server-to-server) is not a browser cross-site request, so it
+  // is not what this check is meant to block; let it through to the other
+  // defenses (rate limit, size cap).
+  if (!originHeader) return true;
+
+  try {
+    const origin = new URL(originHeader);
+    const requestUrl = new URL(request.url);
+    return origin.host === requestUrl.host;
+  } catch {
+    return false;
+  }
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Same-origin check: the site's own chat widget always sends Origin
-    // matching the Host it's calling. Cross-origin callers (curl, other
-    // sites) are rejected; requests with no Origin header (same-tab
-    // navigations, some native fetch contexts) are allowed through rather
-    // than risk breaking the widget.
-    const origin = request.headers.get('origin');
-    if (origin) {
-      const host = request.headers.get('host');
-      let originHost: string | null = null;
-      try {
-        originHost = new URL(origin).host;
-      } catch {
-        originHost = null;
-      }
-      if (!originHost || originHost !== host) {
-        return new Response(JSON.stringify({ error: 'Forbidden' }), {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
+    if (!isSameOrigin(request)) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const clientIp = getClientIp(request);
@@ -99,7 +114,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const rawBody = await request.text();
     if (rawBody.length > MAX_BODY_BYTES) {
-      return new Response(JSON.stringify({ error: 'Request too large' }), {
+      return new Response(JSON.stringify({ error: 'Request body too large' }), {
         status: 413,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -108,6 +123,16 @@ export const POST: APIRoute = async ({ request }) => {
     const body: GuideRequest = JSON.parse(rawBody);
     const { message, history = [], context = {} } = body;
 
+    // A caller naming a model or a tier is refused, not quietly ignored. There
+    // is no request shape that selects a model; this exists so the refusal is
+    // legible rather than looking like the request worked as asked.
+    if (body !== null && typeof body === 'object' && ('model' in body || 'tier' in body)) {
+      return new Response(
+        JSON.stringify({ error: 'Model selection is not caller-controlled' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
         status: 400,
@@ -115,16 +140,27 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    if (message.length > MAX_MESSAGE_CHARS) {
+    if (typeof message !== 'string' || message.length > MAX_MESSAGE_LENGTH) {
       return new Response(JSON.stringify({ error: 'Message too long' }), {
-        status: 413,
+        status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
     if (!Array.isArray(history) || history.length > MAX_HISTORY_TURNS) {
       return new Response(JSON.stringify({ error: 'History too long' }), {
-        status: 413,
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (
+      history.some(
+        (msg) => typeof msg?.content !== 'string' || msg.content.length > MAX_MESSAGE_LENGTH,
+      )
+    ) {
+      return new Response(JSON.stringify({ error: 'History entry too long' }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -161,7 +197,7 @@ export const POST: APIRoute = async ({ request }) => {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2048,
+        max_tokens: MAX_TOKENS,
         system: systemPrompt,
         messages,
       }),
@@ -177,8 +213,12 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const data = await response.json();
-    const assistantMessage =
-      data.content?.[0]?.text || 'I was unable to generate a response.';
+    // Take the first TEXT block rather than content[0]: a thinking-capable
+    // model can put a thinking block first.
+    const textBlock = Array.isArray(data.content)
+      ? data.content.find((block: { type?: string }) => block?.type === 'text')
+      : undefined;
+    const assistantMessage = textBlock?.text || 'I was unable to generate a response.';
     const { text: messageWithTokens, math: mathBlocks } = extractAndRenderMath(assistantMessage);
 
     return new Response(
