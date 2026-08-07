@@ -38,7 +38,7 @@ const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 15;
 const requestLog = new Map<string, number[]>();
 
-function isRateLimited(ip: string): boolean {
+function isRateLimited(ip: string): { limited: boolean; retryAfterSeconds: number } {
   const now = Date.now();
   const cutoff = now - RATE_LIMIT_WINDOW_MS;
 
@@ -53,11 +53,14 @@ function isRateLimited(ip: string): boolean {
 
   const timestamps = requestLog.get(ip) ?? [];
   if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
-    return true;
+    // Retry-After counts from the OLDEST request still in the window — that is
+    // when a slot actually frees up, not a flat full window.
+    const retryAfterSeconds = Math.ceil((timestamps[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { limited: true, retryAfterSeconds: Math.max(retryAfterSeconds, 1) };
   }
   timestamps.push(now);
   requestLog.set(ip, timestamps);
-  return false;
+  return { limited: false, retryAfterSeconds: 0 };
 }
 
 function getClientIp(request: Request): string {
@@ -98,12 +101,13 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const clientIp = getClientIp(request);
-    if (isRateLimited(clientIp)) {
+    const { limited, retryAfterSeconds } = isRateLimited(clientIp);
+    if (limited) {
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
         headers: {
           'Content-Type': 'application/json',
-          'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)),
+          'Retry-After': String(retryAfterSeconds),
         },
       });
     }
