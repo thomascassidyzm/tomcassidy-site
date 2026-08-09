@@ -1,6 +1,7 @@
 ---
 import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
 import { todaysFocus } from '@/lib/today';
+import { currentGoal } from '@/lib/push-store';
 
 // The everyday PRACTICE screen — and the page a push notification opens.
 // It shows ONE thing: this week's focus. Computed fresh on each request so it
@@ -8,6 +9,10 @@ import { todaysFocus } from '@/lib/today';
 export const prerender = false;
 
 const { week, totalWeeks, focus, domain } = todaysFocus(program);
+
+// This week's one thing, in your own words — rendered server-side so the page a
+// push opens already knows where you are in the loop. Null means "not set yet".
+const goal = await currentGoal();
 ---
 
 <!doctype html>
@@ -29,7 +34,130 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
       <p class="week">Week {week} of {totalWeeks}{domain ? ` · ${domain}` : ''}</p>
       <h1 class="focus">{focus.name}</h1>
       <p class="line">{focus.coach.wisdom}</p>
+
+      <!--
+        One thing, one week, your words. Three states, and the middle one is the
+        point: we show back exactly what we heard, and nothing is ever pushed
+        until you've confirmed it's actually what you said.
+      -->
+      <section
+        class="goal"
+        id="goal"
+        data-state={goal ? (goal.blessed ? 'blessed' : 'unblessed') : 'empty'}
+      >
+        <form class="goal-set" id="goal-set" hidden={!!goal}>
+          <label class="goal-label" for="goal-text">Your one thing this week</label>
+          <textarea
+            id="goal-text"
+            name="text"
+            rows="2"
+            maxlength="280"
+            placeholder="Say it the way you'd say it."
+            enterkeyhint="done"></textarea>
+          <button type="submit" class="goal-btn">Set it</button>
+        </form>
+
+        <div class="goal-confirm" id="goal-confirm" hidden={!goal || goal.blessed}>
+          <p class="goal-label">Is this exactly what you said?</p>
+          <blockquote class="goal-text" id="goal-echo">{goal?.text}</blockquote>
+          <div class="goal-row">
+            <button type="button" class="goal-btn" id="goal-bless">Yes, that's it</button>
+            <button type="button" class="goal-link" id="goal-redo">No — say it again</button>
+          </div>
+        </div>
+
+        <div class="goal-done" id="goal-done" hidden={!goal?.blessed}>
+          <p class="goal-label">Your one thing this week</p>
+          <blockquote class="goal-text" id="goal-blessed">{goal?.text}</blockquote>
+          <button type="button" class="goal-link" id="goal-change">Change it</button>
+        </div>
+
+        <p class="goal-status" id="goal-status" hidden></p>
+      </section>
     </main>
+
+    <script>
+      // The blessed-confirmation loop. `set` stores the text unblessed; `bless`
+      // confirms the server's copy without re-sending any text, so what you
+      // confirmed and what gets pushed cannot drift apart.
+      (function () {
+        const root = document.getElementById('goal');
+        const setForm = document.getElementById('goal-set') as HTMLFormElement | null;
+        const confirmBox = document.getElementById('goal-confirm');
+        const doneBox = document.getElementById('goal-done');
+        const field = document.getElementById('goal-text') as HTMLTextAreaElement | null;
+        const echo = document.getElementById('goal-echo');
+        const blessedOut = document.getElementById('goal-blessed');
+        const status = document.getElementById('goal-status');
+        if (!root || !setForm || !confirmBox || !doneBox || !field) return;
+
+        function say(msg: string) {
+          if (!status) return;
+          status.textContent = msg;
+          status.hidden = !msg;
+        }
+
+        function show(state: 'empty' | 'unblessed' | 'blessed') {
+          root!.dataset.state = state;
+          setForm!.hidden = state !== 'empty';
+          confirmBox!.hidden = state !== 'unblessed';
+          doneBox!.hidden = state !== 'blessed';
+        }
+
+        async function post(payload: Record<string, unknown>) {
+          const res = await fetch('/api/push/goal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const out = await res.json();
+          if (!res.ok) throw new Error(out.error || 'That didn’t save.');
+          // No KV configured means nothing was written at runtime — say so
+          // rather than letting it look saved.
+          if (out.persisted === 'manual') {
+            say('Saved for now, but there’s no store configured — it won’t survive.');
+          } else {
+            say('');
+          }
+          return out;
+        }
+
+        setForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const text = field.value.trim();
+          if (!text) return;
+          try {
+            const out = await post({ action: 'set', text });
+            if (echo) echo.textContent = out.goal.text;
+            show('unblessed');
+          } catch (err) {
+            say((err as Error).message);
+          }
+        });
+
+        document.getElementById('goal-bless')?.addEventListener('click', async () => {
+          try {
+            const out = await post({ action: 'bless' });
+            if (blessedOut) blessedOut.textContent = out.goal.text;
+            show('blessed');
+          } catch (err) {
+            say((err as Error).message);
+          }
+        });
+
+        document.getElementById('goal-redo')?.addEventListener('click', () => {
+          field.value = echo?.textContent ?? '';
+          show('empty');
+          field.focus();
+        });
+
+        document.getElementById('goal-change')?.addEventListener('click', () => {
+          field.value = blessedOut?.textContent ?? '';
+          show('empty');
+          field.focus();
+        });
+      })();
+    </script>
 
     <style>
       :root {
@@ -75,6 +203,87 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
         font-size: clamp(1.15rem, 4.5vw, 1.4rem);
         line-height: 1.5;
         color: #d8d2c4;
+      }
+
+      .goal {
+        border-top: 1px solid #302c24;
+        padding-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .goal-label {
+        margin: 0 0 0.6rem;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #a39b86;
+      }
+      .goal-set {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .goal textarea {
+        width: 100%;
+        box-sizing: border-box;
+        background: #1e1b15;
+        color: #f3efe6;
+        border: 1px solid #3a352b;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        font: inherit;
+        font-size: 1.05rem;
+        line-height: 1.4;
+        resize: vertical;
+      }
+      .goal textarea:focus {
+        outline: none;
+        border-color: #6f6552;
+      }
+      .goal-text {
+        margin: 0 0 0.9rem;
+        padding-left: 0.9rem;
+        border-left: 2px solid #6f6552;
+        font-size: clamp(1.1rem, 4.2vw, 1.3rem);
+        line-height: 1.45;
+        color: #f3efe6;
+      }
+      .goal-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .goal-btn {
+        margin-top: 0.75rem;
+        background: #f3efe6;
+        color: #16140f;
+        border: 0;
+        border-radius: 999px;
+        padding: 0.6rem 1.3rem;
+        font: inherit;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+      .goal-row .goal-btn {
+        margin-top: 0;
+      }
+      .goal-link {
+        background: none;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        font-size: 0.9rem;
+        color: #a39b86;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .goal-status {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #c9a86a;
       }
     </style>
   </body>

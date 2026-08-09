@@ -28,6 +28,19 @@ export function rotationOrder(program: Program): number[] {
   return nums;
 }
 
+/**
+ * The ABSOLUTE ordinal of the week since the program started (0-based).
+ *
+ * `currentWeekNumber` answers "which focus is live", and it laps every rotation
+ * — week 3 comes round again. That makes it useless as a key for "which week is
+ * this goal for". This is the unambiguous one, and it comes off the same
+ * arithmetic so the two can never drift apart.
+ */
+export function weekIndex(startMs: number, nowMs: number): number {
+  const days = Math.floor((nowMs - startMs) / DAY_MS);
+  return Math.floor(Math.max(0, days) / 7);
+}
+
 /** Which week number the program is on, given the start date and "now". */
 export function currentWeekNumber(program: Program, startMs: number, nowMs: number): number {
   const order = rotationOrder(program);
@@ -116,4 +129,51 @@ export function pickCoachLine(
     }
   }
   return { week, name, tone: 'gentle', text: coach.wisdom };
+}
+
+/**
+ * The one thing you said you'd do this week, in your own words.
+ *
+ * Two states, and the difference matters: `blessed: false` is what we heard,
+ * `blessed: true` is what you confirmed we heard correctly. Only blessed text is
+ * ever pushed — a dictation slip repeated back at you breaks the whole spell.
+ */
+export interface WeeklyGoal {
+  /** Verbatim. Never rewritten, tidied, capitalised or wrapped in encouragement. */
+  text: string;
+  /** True only once the user has confirmed the text back. */
+  blessed: boolean;
+  /** The absolute week ordinal this goal was set for — see `weekIndex`. */
+  weekIndex: number;
+  /** When it was set, epoch ms. */
+  setAtMs: number;
+}
+
+export interface CoachPayload extends CoachLine {
+  /** Where the text came from: the user's own blessed goal, or an authored bank. */
+  source: 'goal' | 'bank';
+}
+
+/**
+ * What to actually push: your own blessed goal for THIS week if there is one,
+ * otherwise the authored bank line, exactly as before. A goal that is unblessed,
+ * empty, or left over from a previous week is not a goal for these purposes.
+ */
+export function selectPayload(
+  program: Program,
+  startMs: number,
+  nowMs: number,
+  goal: WeeklyGoal | null,
+  rng: Rng = Math.random,
+): CoachPayload {
+  const line = pickCoachLine(program, startMs, nowMs, rng);
+  if (
+    goal &&
+    goal.blessed &&
+    goal.text.trim() !== '' &&
+    goal.weekIndex === weekIndex(startMs, nowMs)
+  ) {
+    return { ...line, text: goal.text, source: 'goal' };
+  }
+  return { ...line, source: 'bank' };
 }

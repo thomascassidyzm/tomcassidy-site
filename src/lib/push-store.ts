@@ -11,6 +11,8 @@
  *
  * No SDK: KV's REST API speaks over plain fetch, so there's no extra dependency.
  */
+import { weekIndex, type WeeklyGoal } from '@/lib/coach-engine';
+import { PROGRAM_START } from '@/lib/today';
 
 export interface StoredPush {
   /** The PushSubscription JSON the browser produced. */
@@ -28,6 +30,7 @@ export interface PushSubscriptionJSON {
 
 const KEY_SUB = 'pocketcoach:subscription';
 const KEY_START = 'pocketcoach:startMs';
+const KEY_GOAL = 'pocketcoach:goal';
 
 function kvConfig() {
   const url = import.meta.env.KV_REST_API_URL;
@@ -83,6 +86,43 @@ export async function getStored(): Promise<StoredPush> {
 export async function saveSubscription(sub: PushSubscriptionJSON, startMs: number): Promise<void> {
   await kvSet(KEY_SUB, JSON.stringify(sub));
   await kvSet(KEY_START, String(startMs));
+}
+
+/**
+ * The weekly goal, same two backends as everything else here. With KV it round-
+ * trips at runtime; without it we can only READ what's in `WEEKLY_GOAL`, and the
+ * goal endpoint degrades the way subscribe does — it hands back the exact value
+ * to paste rather than pretending to have saved it.
+ */
+export async function getGoal(): Promise<WeeklyGoal | null> {
+  const raw = canPersist() ? await kvGet(KEY_GOAL) : import.meta.env.WEEKLY_GOAL;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as WeeklyGoal;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveGoal(goal: WeeklyGoal): Promise<void> {
+  await kvSet(KEY_GOAL, JSON.stringify(goal));
+}
+
+/**
+ * Which week we're on, from the stored start date — the SAME number the cron
+ * uses, so capture and delivery can never disagree about which week a goal is
+ * for. Before a subscription exists there's no stored start, so fall back to the
+ * program's own start constant rather than refusing to capture anything.
+ */
+export async function currentWeekIndex(nowMs: number = Date.now()): Promise<number> {
+  const { startMs } = await getStored();
+  return weekIndex(startMs ?? PROGRAM_START.getTime(), nowMs);
+}
+
+/** This week's goal, or null — a goal left over from a previous week is not one. */
+export async function currentGoal(nowMs: number = Date.now()): Promise<WeeklyGoal | null> {
+  const [goal, wi] = await Promise.all([getGoal(), currentWeekIndex(nowMs)]);
+  return goal && goal.weekIndex === wi ? goal : null;
 }
 
 function toMs(v: string): number {

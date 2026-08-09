@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 import webpush from 'web-push';
 import { reasonableEating } from '@/lib/programs/reasonable-eating';
-import { pickCoachLine } from '@/lib/coach-engine';
-import { getStored } from '@/lib/push-store';
+import { selectPayload } from '@/lib/coach-engine';
+import { getGoal, getStored } from '@/lib/push-store';
 
 // The delivery loop. Vercel cron hits this 2–3×/day at jittered times (see
 // vercel.json). It computes the program's CURRENT week from the stored start
@@ -36,7 +36,9 @@ export const GET: APIRoute = async ({ request }) => {
   if (!subscription) return json({ skipped: 'no subscription stored' }, 200);
   if (!startMs) return json({ skipped: 'no start date stored' }, 200);
 
-  const line = pickCoachLine(PROGRAM, startMs, Date.now());
+  // Your own blessed words for this week if you set them; the authored banks if
+  // you didn't. The interrupt only works if it's actually you.
+  const line = selectPayload(PROGRAM, startMs, Date.now(), await getGoal());
   webpush.setVapidDetails(subject, pub, priv);
 
   const payload = JSON.stringify({
@@ -48,11 +50,12 @@ export const GET: APIRoute = async ({ request }) => {
     url: `${ORIGIN_PATH}#week-${line.week}`,
     week: line.week,
     tone: line.tone,
+    source: line.source,
   });
 
   try {
     await webpush.sendNotification(subscription as webpush.PushSubscription, payload);
-    return json({ sent: true, week: line.week, tone: line.tone }, 200);
+    return json({ sent: true, week: line.week, tone: line.tone, source: line.source }, 200);
   } catch (e: unknown) {
     const err = e as { statusCode?: number; body?: string };
     // 404/410 = the subscription is dead (app uninstalled / expired). Report it
