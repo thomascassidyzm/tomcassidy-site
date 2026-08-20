@@ -182,9 +182,71 @@ they measure. Quoting either as "the" dose-response is where popular advice goes
 
 ## Part 3 — Tom's own movement principles
 
-*Filled in below from a dedicated search of the estate.*
+**The honest answer: they are not written down anywhere findable.** Tom says he has them. The
+content itself does not exist in any file, note, document or conversation transcript on this
+machine. That is a real finding, and it is the most important line in this section — a
+fabricated or inferred set of "Tom's principles" would be worse than nothing.
 
-<!-- PENDING: worker #485 report -->
+### What was actually found in his own words
+
+One quote, and it is the assertion rather than the principles. Voice-dictated, 2026-08-20,
+17:27 — from `~/.cs-accounts/account-4/projects/-home-tomcassidy-command-surface-rbf/2a762842-49c8-4c85-9b21-1871b2919555.jsonl`:
+
+> "…my thinking was that reasonable shape would incorporate the main principles of reasonable
+> eating. It would also layer in Ideas that relate to movement and relate to sleeping. And
+> potentially other areas, potentially breathing as well. I'm not entirely sure, but I'm
+> thinking about the same ideas that applied a minimum will system for eating reasonably.
+> Which works really well. Then applied to shape. Now, I've done quite a few things on this
+> already. One thing that I… No, is that I've been doing a lot of the exercise on the physical
+> and the movement stuff, and I've got some principles already."
+
+The self-corrections mark it as live dictation — genuinely him. He states the principles exist.
+He never enumerates them, in that conversation or any later turn of it.
+
+And, five minutes later in the same file:
+
+> "…Eating is probably the biggest shortcut to actually getting into good shape… nothing is
+> ruled in, nothing is ruled out."
+
+### One thing he *has* written about movement
+
+Not principles, but his own authored prose, and directly useful — the worked example of the
+brother-in-law test in `src/content/essays/fourth-dogma-a-reasonable-plan.md` (lines 56–76) is
+about exercise. Tom's own words:
+
+> **B-I-L:** So is that what those new running shoes are all about then?
+>
+> **You:** Running shoes? Oh no. These are walking shoes. All I'm going to do is walk the dog
+> at the weekends. Sally usually does it on her own, but I'm going to do Saturdays and Sundays
+> from now on with her.
+>
+> **B-I-L:** Nice one. That'll work.
+
+That is his own register for a movement focus point, set by him, in writing. It is walking,
+socially embedded, twice a week, attached to something already happening. Candidates 8 and 10
+below are the closest things in Part 4 to it.
+
+The same passage has him citing a German study — "as little as 30 minutes of low-level, aerobic
+exercise per week reduced blood pressure by 50% for over 90% of subjects." **I could not verify
+that study, and the effect size looks far too large to be real.** It is written as illustrative
+dialogue, not as a sourced claim, so this is a note rather than a correction — but it should
+not be reused as evidence.
+
+### Where the search looked, and found nothing
+
+Worker #485 ran the sweep: the `alexander` repo (a maths-tutoring product, nothing to do with
+the Alexander Technique); `~/wt-rbf-phone` and the RBF mission material; `~/Desktop`;
+`~/Library`; a filename sweep of the whole home directory three levels deep; and a full scan of
+**all 8,115 Claude conversation transcripts** across every account — every non-sidechain
+user-role message, filtered on movement, exercise, kettlebell, zone 2, VO2, squat, posture,
+Alexander technique, NEAT, yoga, pilates, sauna, gym, weights, stairs, sedentary, "in shape",
+"reasonable shape". `~/Documents` and `~/Downloads` do not exist on this machine.
+
+Every other hit was noise: SSi code, casual chat, or sibling scout dispatches echoing this very
+search back.
+
+**So: if Tom's movement principles exist, they are in his head, on paper, or on a device this
+machine cannot see. Asking him directly is the only way to get them.**
 
 ---
 
@@ -332,6 +394,11 @@ training prescription, not an object of attention. That gap is a finding, not an
 **Two candidates are load-bearing duplicates.** `Take the stairs` and `Puff once a day` are the
 same physiological claim at different altitudes; `Walk after you eat` and `Stand up every hour`
 are the same sedentary-interruption claim. Ten candidates is really about seven distinct ideas.
+
+**Your own movement principles aren't anywhere I can reach.** A full sweep of the estate —
+including all 8,115 conversation transcripts — found you *saying* you have them and nowhere
+saying what they are. Part 3 has the detail. If you dictate them, they should probably outrank
+anything in Part 4.
 
 **One candidate belongs to another scout.** `Walk after you eat` is the strongest thing in the
 document on evidence-per-unit-effort, and its mechanism is glucose. If eating claims it,
