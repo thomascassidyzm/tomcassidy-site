@@ -100,3 +100,19 @@ but the natural "extremely nuanced" top of the same ladder.
 *Assembled by RBF from Tom's spoken dictation, 2026-08-20. Status: PLAYING (his word), not
 canon. Supersedes the movement scout's Part 3 negative; the scout's placeholder MOVE titles
 should be replaced from this document at the selection sitting.*
+
+## 8. The register ruling — REASONABLE shape, added same dictation
+
+> "What we're doing is reasonable shape here. We're not doing a reasonable program to get,
+> you know, the best people in the world to be super fit. We're not doing a program which
+> is designed to get everyone in, like, excellent shape. Or Perfect Shape, or Fighting Fit.
+> It's reasonable shape, that's the whole point. This is accessible to everybody, hence the
+> notion of minimum will, or as we've now defined, **minimum setup latency**. Has to be zero
+> planning… has to be all about a change of focus and something you can be aware of, [the]
+> second you think about it and you can do it."
+
+**[ASSEMBLER]** The ambition level is part of the specification, not a compromise of it:
+the name is the promise. Any candidate focus point that quietly raises the bar toward
+fitness excellence fails the register the same way equipment fails principle 1. And note
+Tom adopted the definition into his own vocabulary — "as we've now defined, minimum setup
+latency" — which is the phrase's first freezing.
