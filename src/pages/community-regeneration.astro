@@ -1,0 +1,31 @@
+---
+/**
+ * Community Regeneration pre-brief — a single dated public page, deliberately
+ * NOT an essays-collection entry so it stays out of the /writing index and its
+ * series machinery. Reached by its URL alone; nothing links to it.
+ *
+ * The prose lives in src/data/community-regeneration.md, byte-faithful to the
+ * source Tom wrote. It is imported raw and rendered here rather than through
+ * the content layer so the file stays diffable and re-publishable, and so the
+ * leading H1 can be dropped (EssayLayout already sets the title).
+ */
+import EssayLayout from '@/layouts/EssayLayout.astro';
+import { marked } from 'marked';
+import source from '@/data/community-regeneration.md?raw';
+
+export const prerender = true;
+
+// Drop the leading "# ..." line; the layout header renders the title.
+const body = source.replace(/^#[^\n]*\n+/, '');
+const html = marked.parse(body, { async: false });
+---
+
+<EssayLayout
+  title="Community Regeneration as Applied Configuration Economics"
+  slug="community-regeneration"
+  summary="Using Configuration Economics as a practical framework for participating in the regeneration of multiple local communities internationally."
+  date={new Date('2026-08-24')}
+  epistemicStatus="open"
+>
+  <Fragment set:html={html} />
+</EssayLayout>
