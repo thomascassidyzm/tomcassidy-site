@@ -213,9 +213,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Resolve the live essay text from the content collection. On non-essay
     // surfaces, fall back to a catalogue overview of all essays.
-    const essayMarkdown = context.currentSlug
-      ? await getEssayMarkdown(context.currentSlug)
-      : await getEssayOverview();
+    // A slug that resolves to nothing falls back to the catalogue rather than
+    // leaving the guide with no context at all — a reader on a page we cannot
+    // resolve still gets a guide that knows what this site contains.
+    const essayMarkdown =
+      (context.currentSlug ? await getEssayMarkdown(context.currentSlug) : null) ??
+      (await getEssayOverview());
 
     const systemPrompt = buildPromptWithContext(message, context, essayMarkdown);
 

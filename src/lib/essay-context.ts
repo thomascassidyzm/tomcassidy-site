@@ -12,8 +12,22 @@
 // /api/guide endpoint (which runs on POST only — never at build time).
 
 import { getCollection, type CollectionEntry } from 'astro:content';
+import communityRegeneration from '@/data/community-regeneration.md?raw';
 
 type EssayEntry = CollectionEntry<'essays'>;
+
+// Standalone pages: prose that lives in src/data and is rendered by its own
+// .astro page rather than through the essays collection, deliberately, so it
+// stays out of /writing and the series machinery. The guide still has to be
+// able to read it — a reader on such a page asks about the page in front of
+// them, and a guide that answers "I don't see which essay you mean" is worse
+// than no guide. Keyed by the same `slug` the page hands to EssayLayout.
+const STANDALONE_PAGES: Record<string, { title: string; source: string }> = {
+  'community-regeneration': {
+    title: 'Community Regeneration as Applied Configuration Economics',
+    source: communityRegeneration,
+  },
+};
 
 function statusLine(status?: string): string {
   return status ? `[epistemic status: ${status}]\n` : '';
@@ -21,6 +35,12 @@ function statusLine(status?: string): string {
 
 /** Full markdown of a single essay, identified by its frontmatter `slug`. */
 export async function getEssayMarkdown(slug: string): Promise<string | null> {
+  const standalone = STANDALONE_PAGES[slug];
+  if (standalone) {
+    // The source already opens with its own "# " title line.
+    return `${standalone.source}\n`;
+  }
+
   const essays = await getCollection('essays');
   const entry = essays.find((e: EssayEntry) => e.data.slug === slug);
   if (!entry) return null;
