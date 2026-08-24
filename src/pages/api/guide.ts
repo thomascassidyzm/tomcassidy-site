@@ -36,30 +36,39 @@ const MAX_BODY_BYTES = 50_000;
 // can't grow unbounded.
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 15;
+// This endpoint has a single tier, so there is one log and one budget. The
+// (ip, log, max) shape matches distinction-physics and zenjin, where a tighter
+// ESCALATED_RATE_LIMIT_MAX_REQUESTS spends from a second log as a SUB-limit of
+// this one — never a bypass. If a deep tier is ever added here, it is one
+// constant and one Map away rather than a rewrite.
 const requestLog = new Map<string, number[]>();
 
-function isRateLimited(ip: string): { limited: boolean; retryAfterSeconds: number } {
+function isRateLimited(
+  ip: string,
+  log: Map<string, number[]>,
+  max: number,
+): { limited: boolean; retryAfterSeconds: number } {
   const now = Date.now();
   const cutoff = now - RATE_LIMIT_WINDOW_MS;
 
-  for (const [key, timestamps] of requestLog) {
+  for (const [key, timestamps] of log) {
     const fresh = timestamps.filter((t) => t > cutoff);
     if (fresh.length === 0) {
-      requestLog.delete(key);
+      log.delete(key);
     } else {
-      requestLog.set(key, fresh);
+      log.set(key, fresh);
     }
   }
 
-  const timestamps = requestLog.get(ip) ?? [];
-  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+  const timestamps = log.get(ip) ?? [];
+  if (timestamps.length >= max) {
     // Retry-After counts from the OLDEST request still in the window — that is
     // when a slot actually frees up, not a flat full window.
     const retryAfterSeconds = Math.ceil((timestamps[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
     return { limited: true, retryAfterSeconds: Math.max(retryAfterSeconds, 1) };
   }
   timestamps.push(now);
-  requestLog.set(ip, timestamps);
+  log.set(ip, timestamps);
   return { limited: false, retryAfterSeconds: 0 };
 }
 
@@ -71,9 +80,33 @@ function getClientIp(request: Request): string {
   return 'unknown';
 }
 
+// The set of hostnames that count as "this site" for the same-origin check.
+//
+// `new URL(request.url).host` is NOT the public hostname behind Vercel's proxy —
+// the serverless invocation sees an internal host, so comparing Origin against it
+// rejected every real browser request with a 403 while curl (which sends no
+// Origin) sailed through. The public hostname arrives in the forwarding headers
+// instead. Neither `x-forwarded-host` nor `host` is reachable from page JS —
+// browsers set Host themselves and refuse `x-forwarded-host` as a forbidden
+// header, and Vercel's edge overwrites both — so trusting them here does not
+// widen the guard: a genuine cross-site caller still fails on its own Origin.
+function allowedHosts(request: Request): string[] {
+  const hosts = [
+    request.headers.get('x-forwarded-host'),
+    request.headers.get('host'),
+  ];
+  try {
+    hosts.push(new URL(request.url).host);
+  } catch {
+    // request.url unparseable; the forwarding headers still carry the answer.
+  }
+  return hosts.filter((h): h is string => Boolean(h)).map((h) => h.toLowerCase());
+}
+
 // Same-origin check: reject cross-site callers while keeping the deployed
-// site's own guide panel working. Origin is derived from the request's own URL
-// rather than a hardcoded list, so it holds on every preview deployment too.
+// site's own guide panel working. Origin is derived from the request's own
+// hostname rather than a hardcoded list, so it holds on every preview
+// deployment too, and keeps working unchanged if a domain is added later.
 function isSameOrigin(request: Request): boolean {
   const originHeader = request.headers.get('origin');
   // Same-origin fetches from a browser normally carry Origin. Missing Origin
@@ -84,8 +117,7 @@ function isSameOrigin(request: Request): boolean {
 
   try {
     const origin = new URL(originHeader);
-    const requestUrl = new URL(request.url);
-    return origin.host === requestUrl.host;
+    return allowedHosts(request).includes(origin.host.toLowerCase());
   } catch {
     return false;
   }
@@ -101,7 +133,11 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const clientIp = getClientIp(request);
-    const { limited, retryAfterSeconds } = isRateLimited(clientIp);
+    const { limited, retryAfterSeconds } = isRateLimited(
+      clientIp,
+      requestLog,
+      RATE_LIMIT_MAX_REQUESTS,
+    );
     if (limited) {
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
