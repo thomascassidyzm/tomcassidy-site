@@ -263,7 +263,12 @@ export const POST: APIRoute = async ({ request }) => {
     // inferred escalation declines quietly to base rather than 429ing a reader
     // who never asked for the dear tier.
     if (decision.tier === 'deep') {
-      const budgetSpent = isRateLimited(
+      // NOTE the shape: this site's isRateLimited() returns
+      // { limited, retryAfterSeconds }, NOT a boolean. Destructure it —
+      // assigning the object straight to a flag makes it permanently truthy,
+      // which silently downgrades every inferred escalation to base and 429s
+      // every explicit one.
+      const { limited: budgetSpent, retryAfterSeconds: deepRetryAfter } = isRateLimited(
         clientIp,
         escalatedRequestLog,
         ESCALATED_RATE_LIMIT_MAX_REQUESTS,
@@ -274,7 +279,7 @@ export const POST: APIRoute = async ({ request }) => {
             status: 429,
             headers: {
               'Content-Type': 'application/json',
-              'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)),
+              'Retry-After': String(deepRetryAfter),
             },
           });
         }
