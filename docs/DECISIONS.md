@@ -6,6 +6,52 @@ falsify it.
 
 ---
 
+## 2026-08-25 — Writing search reads bodies, and sees every published page
+
+**Decision.** The /writing search matches full body text, and standalone
+published pages join the index alongside the essays collection.
+
+Tom, at four in the morning: *"can we improve search on my own site???? I can't
+find the kenyan article anywhere..."* The piece was live the whole time, at
+`/community-regeneration`, and unfindable for two independent reasons. First,
+`searchBlob()` joined title, summary, topics and series only, so any word that
+appears solely inside a piece — "kenya" being the specimen — returned "Nothing
+matches that". Second, that page is deliberately not an essays-collection
+entry, so the index could not see it at all whatever it searched.
+
+His framing of what this is: *"it is pure findability."* Nothing is published
+here that was not already public.
+
+**Shape, and why.** Metadata blobs stay inline as `data-search`; body text
+ships as a build-time `/writing-index.json` fetched once by the client. The
+bodies are 161KB — inlining them would have taken /writing from 34KB to roughly
+195KB for every visitor whether they searched or not. As shipped the page grows
+3KB and the index is paid only by browsers that load the page's script, in the
+background, after render. Better: the search finds what is actually written.
+Simpler: no server, no search service, prerendering intact, one new file and no
+new dependency. Cheaper: 3KB on the hot path, and a static JSON on a CDN.
+
+**Standalone pages appear in their own block, hidden until a query matches
+inside it.** The page was kept out of the /writing listing on purpose and that
+intent still stands; browsing is byte-for-byte the experience it was, and the
+block appears the moment he goes looking. Each card carries a plain kind marker
+— "Pre-brief — forming" — so a forming piece never reads as a finished essay.
+The registry stays the single `STANDALONE_PAGES` home in `essay-context.ts`,
+extended in place with card fields; `guide-tools.ts` reads it unchanged.
+
+**Ranking.** Title, summary and topic hits sort above body-only hits via CSS
+`order` inside each block. No stemming and no fuzzy matching: plain lowercased
+substring, all words present, which is what the site already did and is honest
+about its limits.
+
+**What would falsify it.** If the JSON grows past roughly half a megabyte the
+fetch-everything shape stops paying and it wants a real inverted index. If
+standalone pages ever outnumber the essays, the hidden-until-matched block
+becomes a way to lose writing rather than find it, and they should join the
+browse view properly.
+
+---
+
 ## 2026-08-24 — Alexander goes live on tomcassidy.co
 
 **Decision.** The reading-companion guide is enabled in production. The
