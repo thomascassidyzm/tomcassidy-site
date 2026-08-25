@@ -107,6 +107,60 @@ Match the reader's resolution: high-level when they're orienting across the writ
  * catalogue in `readingInstructions` is the orientation, and any essay the
  * conversation turns to is read on demand rather than shipped up front.
  */
+/**
+ * The GLOBAL layer: identical for every reader on every surface, changing only
+ * when Tom publishes. Base prompt, coaching script, and the generated
+ * catalogue of his writing.
+ *
+ * Returned SEPARATELY from the reader-context layer so the two can be sent as
+ * distinct cacheable blocks with a `cache_control` breakpoint between them
+ * (see guide-request.ts). Glued into one string — as this used to be — there
+ * is one cache entry keyed on whichever page the reader is on, so moving
+ * between essays paid to re-read the whole coaching script every time.
+ */
+export function buildGlobalPrompt(readingInstructions: string): string {
+  let prompt = BASE_PROMPT;
+
+  prompt += `\n\n---\nCOACHING VOICE & METHOD (Tom's Script & the Sausage Machine — canonical, build from this, do not recite it)\n\n${COACHING_SCRIPT}\n`;
+
+  // The GENERATED catalogue of Tom's published writing, plus the instruction
+  // to read on demand. Derived from the essays collection (see guide-tools.ts),
+  // not hand-maintained, so it cannot drift from what is published. Essay TEXT
+  // is never carried here — only the essay the reader is currently on is
+  // injected by buildSectionContext; everything else Alexander reads at
+  // request time through the read_section tool.
+  prompt += `\n\n---\n${readingInstructions}\n`;
+
+  return prompt;
+}
+
+/**
+ * The PER-PAGE layer: which surface the reader is on, and the live text of the
+ * page they have open. Stable for a reading session, so it earns its own
+ * cache breakpoint behind the global one.
+ */
+export function buildSectionContext(
+  context: GuideContext,
+  essayMarkdown: string | null,
+): string | null {
+  let prompt = `READER CONTEXT\n`;
+  prompt += `Surface: ${context.mode ?? 'unknown'}\n`;
+  if (context.currentTitle) prompt += `Currently reading: ${context.currentTitle}\n`;
+  if (context.epistemicStatus) prompt += `Declared epistemic status: ${context.epistemicStatus}\n`;
+
+  if (essayMarkdown) {
+    prompt += `\n---\nLIVE PAGE TEXT (build from this; do not recite it)\n\n${essayMarkdown}\n`;
+  }
+
+  const trimmed = prompt.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * The old single-string form. Kept for any caller that still wants one string,
+ * but it is NOT the cacheable path — prefer buildGlobalPrompt() plus
+ * buildSectionContext(), assembled by buildSystemBlocks().
+ */
 export function buildPromptWithContext(
   _message: string,
   context: GuideContext,

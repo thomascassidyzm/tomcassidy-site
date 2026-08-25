@@ -1,5 +1,11 @@
 import type { APIRoute } from 'astro';
-import { buildPromptWithContext, type GuideContext } from '@/lib/guide-prompt';
+import { buildGlobalPrompt, buildSectionContext, type GuideContext } from '@/lib/guide-prompt';
+import {
+  MODEL,
+  selectTier,
+  buildSystemBlocks,
+  buildUserTurn,
+} from '@/lib/guide-request';
 import { extractAndRenderMath } from '@/lib/math';
 import { getEssayMarkdown } from '@/lib/essay-context';
 import {
@@ -27,8 +33,13 @@ interface ChatMessage {
 // other model, and Opus is not reachable at all. A request that names a model
 // or a tier is rejected outright (400) rather than silently downgraded, so the
 // refusal is visible to whoever sent it.
-const MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 2048;
+// This site now has the same ladder as the other two Alexanders: base is
+// Sonnet 5 at low effort, and a turn earns a dearer rung from the reader's own
+// words. Every rung is Sonnet 5 — the rungs differ by `effort`, not by model,
+// because caches are model-scoped and a model switch would void the whole
+// cached prefix, while effort is not part of the prefix at all. The model and
+// the ladder live in guide-request.ts; nothing here reads either from the
+// request body.
 
 interface GuideRequest {
   message: string;
@@ -50,7 +61,13 @@ const RATE_LIMIT_MAX_REQUESTS = 15;
 // ESCALATED_RATE_LIMIT_MAX_REQUESTS spends from a second log as a SUB-limit of
 // this one — never a bypass. If a deep tier is ever added here, it is one
 // constant and one Map away rather than a rewrite.
+// A deep answer costs materially more than a base one, so it gets its own,
+// much tighter budget. Escalated requests spend from BOTH — the deep limit is
+// a sub-limit of the chat limit above, never a bypass — and that holds whether
+// the reader pressed Deeper or the server inferred the escalation.
+const ESCALATED_RATE_LIMIT_MAX_REQUESTS = 4;
 const requestLog = new Map<string, number[]>();
+const escalatedRequestLog = new Map<string, number[]>();
 
 function isRateLimited(
   ip: string,
@@ -230,16 +247,54 @@ export const POST: APIRoute = async ({ request }) => {
       : null;
 
     const readingInstructions = await buildReadingInstructions();
-    const systemPrompt = buildPromptWithContext(
-      message,
-      context,
-      essayMarkdown,
-      readingInstructions,
-    );
+
+    // The Deeper button's signal. Strict equality, so 'true', 1 and every
+    // other creative value read as false. (A body naming a `model` or a
+    // `tier` is already refused with a 400 above.)
+    const escalate = (body as { escalate?: unknown })?.escalate === true;
+
+    // Which rung this turn earned. Decided here and nowhere else, from the
+    // message and history the client already sends.
+    let decision = selectTier({ message, history, escalate });
+
+    // Every deep answer spends from the escalated budget, whether the reader
+    // pressed Deeper or the server inferred it — otherwise auto-escalation is
+    // a hole in that budget. When the budget is gone the two cases diverge: an
+    // inferred escalation declines quietly to base rather than 429ing a reader
+    // who never asked for the dear tier.
+    if (decision.tier === 'deep') {
+      const budgetSpent = isRateLimited(
+        clientIp,
+        escalatedRequestLog,
+        ESCALATED_RATE_LIMIT_MAX_REQUESTS,
+      );
+      if (budgetSpent) {
+        if (decision.explicit) {
+          return new Response(JSON.stringify({ error: 'Too many deeper requests' }), {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000)),
+            },
+          });
+        }
+        decision = selectTier({ message, history, escalate, escalatedBudgetSpent: true });
+      }
+    }
+
+    // The layered, cacheable prompt: global material first with a breakpoint
+    // on it, then the page the reader has open with a second breakpoint, then
+    // nothing — the conversation goes in `messages`, after both.
+    const systemBlocks = buildSystemBlocks({
+      globalPrompt: buildGlobalPrompt(readingInstructions),
+      sectionContext: buildSectionContext(context, essayMarkdown),
+    });
 
     const messages = [
       ...history.map((msg) => ({ role: msg.role, content: msg.content })),
-      { role: 'user' as const, content: message },
+      // Any tier-specific instruction rides the USER turn, after the last
+      // breakpoint — never the system prompt, which would discard the cache.
+      { role: 'user' as const, content: buildUserTurn(message, decision) },
     ];
 
     // ---------------------------------------------------------------------
@@ -269,6 +324,8 @@ export const POST: APIRoute = async ({ request }) => {
     let toolRounds = 0;
     let toolCharsUsed = 0;
     let data: any;
+    // Accumulated across ALL tool rounds, not just the final call.
+    const totals = { input: 0, cache_write: 0, cache_read: 0, output: 0 };
 
     for (;;) {
       const toolsAllowed = toolRounds < MAX_TOOL_ROUNDS && toolCharsUsed < MAX_TOOL_CHARS_TOTAL;
@@ -282,10 +339,19 @@ export const POST: APIRoute = async ({ request }) => {
         },
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: MAX_TOKENS,
-          system: systemPrompt,
+          max_tokens: decision.maxTokens,
+          // Sonnet 5 defaults to `high` effort when omitted, so silence here
+          // means silently paying for `high` on every trivial question.
+          output_config: { effort: decision.effort },
+          system: systemBlocks,
           messages: conversation,
-          ...(toolsAllowed ? { tools: GUIDE_TOOLS } : {}),
+          // `tools` ALWAYS goes on the wire, byte-identical, every round.
+          // Tools render at position 0 of the prefix — ahead of `system` — so
+          // dropping the array would change byte 0 and invalidate the ENTIRE
+          // cache on the last and most context-heavy call. tool_choice
+          // reaches the same end and preserves the tools+system cache.
+          tools: GUIDE_TOOLS,
+          ...(toolsAllowed ? {} : { tool_choice: { type: 'none' } }),
         }),
       });
 
@@ -299,6 +365,11 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       data = await response.json();
+      const ru = data?.usage ?? {};
+      totals.input += ru.input_tokens ?? 0;
+      totals.cache_write += ru.cache_creation_input_tokens ?? 0;
+      totals.cache_read += ru.cache_read_input_tokens ?? 0;
+      totals.output += ru.output_tokens ?? 0;
 
       if (!toolsAllowed || data?.stop_reason !== 'tool_use') break;
 
@@ -332,6 +403,15 @@ export const POST: APIRoute = async ({ request }) => {
       conversation.push({ role: 'user', content: toolResults });
     }
 
+    // Cache verification. If cache_read stays at zero across repeated
+    // identical-prefix requests, a silent invalidator has crept into the
+    // prefix and the layering above is doing nothing.
+    console.log(
+      `[guide] model=${MODEL} effort=${decision.effort} reason=${decision.reason} ` +
+        `rounds=${toolRounds} input=${totals.input} cache_write=${totals.cache_write} ` +
+        `cache_read=${totals.cache_read} output=${totals.output}`,
+    );
+
     // Take the first TEXT block rather than content[0]: a thinking-capable
     // model can put a thinking block first.
     const textBlock = Array.isArray(data.content)
@@ -352,6 +432,14 @@ export const POST: APIRoute = async ({ request }) => {
         // Diagnostic, not display: it is how you tell "he read it" from
         // "he talked about it".
         reads: readIds,
+        // Which tier served this answer, decided server-side and nowhere else.
+        // The client uses it to label the response and hide the Deeper button
+        // once the deep tier has already answered.
+        tier: decision.tier,
+        // Why this tier. Never taken from the request.
+        tierReason: decision.reason,
+        // Token accounting, returned so the caching is verifiable from outside.
+        usage: { ...totals, rounds: toolRounds },
         context,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
