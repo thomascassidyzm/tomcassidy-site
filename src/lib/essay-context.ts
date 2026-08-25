@@ -22,7 +22,9 @@ type EssayEntry = CollectionEntry<'essays'>;
 // able to read it — a reader on such a page asks about the page in front of
 // them, and a guide that answers "I don't see which essay you mean" is worse
 // than no guide. Keyed by the same `slug` the page hands to EssayLayout.
-const STANDALONE_PAGES: Record<string, { title: string; source: string }> = {
+// Exported so guide-tools.ts can register these in the read_section registry
+// from the same list — one home, no second copy to keep in step.
+export const STANDALONE_PAGES: Record<string, { title: string; source: string }> = {
   'community-regeneration': {
     title: 'Community Regeneration as Applied Configuration Economics',
     source: communityRegeneration,
