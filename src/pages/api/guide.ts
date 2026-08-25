@@ -1,7 +1,16 @@
 import type { APIRoute } from 'astro';
 import { buildPromptWithContext, type GuideContext } from '@/lib/guide-prompt';
 import { extractAndRenderMath } from '@/lib/math';
-import { getEssayMarkdown, getEssayOverview } from '@/lib/essay-context';
+import { getEssayMarkdown } from '@/lib/essay-context';
+import {
+  GUIDE_TOOLS,
+  runGuideTool,
+  truncate,
+  buildReadingInstructions,
+  MAX_TOOL_ROUNDS,
+  MAX_TOOL_CHARS_TOTAL,
+  MAX_TOOL_CHARS_PER_RESULT,
+} from '@/lib/guide-tools';
 
 // SSR-only. This route is never prerendered, so NO Anthropic API call can
 // happen at build time. The fetch to Anthropic only runs inside POST.
@@ -212,46 +221,117 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Resolve the live essay text from the content collection. On non-essay
-    // surfaces, fall back to a catalogue overview of all essays.
-    // A slug that resolves to nothing falls back to the catalogue rather than
-    // leaving the guide with no context at all — a reader on a page we cannot
-    // resolve still gets a guide that knows what this site contains.
-    const essayMarkdown =
-      (context.currentSlug ? await getEssayMarkdown(context.currentSlug) : null) ??
-      (await getEssayOverview());
+    // surfaces, and where a slug resolves to nothing, nothing is shipped: the
+    // generated catalogue in the reading instructions is always in the prompt,
+    // so the guide already knows what this site contains, and anything the
+    // conversation turns to is read on demand rather than pre-loaded.
+    const essayMarkdown = context.currentSlug
+      ? await getEssayMarkdown(context.currentSlug)
+      : null;
 
-    const systemPrompt = buildPromptWithContext(message, context, essayMarkdown);
+    const readingInstructions = await buildReadingInstructions();
+    const systemPrompt = buildPromptWithContext(
+      message,
+      context,
+      essayMarkdown,
+      readingInstructions,
+    );
 
     const messages = [
       ...history.map((msg) => ({ role: msg.role, content: msg.content })),
       { role: 'user' as const, content: message },
     ];
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages,
-      }),
-    });
+    // ---------------------------------------------------------------------
+    // Bounded tool loop.
+    //
+    // Alexander carries the CATALOGUE of Tom's writing in his prompt and reads
+    // the TEXT on demand through read_section, so publishing an essay and
+    // updating the guide are the same act. The loop is a plain `while` around
+    // the same non-streaming call the endpoint always made — no SSE plumbing.
+    //
+    // It is bounded twice over: at most MAX_TOOL_ROUNDS rounds, and at most
+    // MAX_TOOL_CHARS_TOTAL characters of fetched content per user message.
+    // When either bound is reached the final call is made with no `tools`
+    // array at all, so the model cannot ask again and must answer in text.
+    //
+    // Tool rounds sit INSIDE one already-rate-limited request, so the per-IP
+    // limit above is unchanged, and max_tokens caps each call's own output
+    // rather than the transcript; tool results are input tokens. A question
+    // that makes Alexander read does cost more than one that does not — worth
+    // knowing on a BILLED endpoint, which is why the bounds are tight.
+    //
+    // Resolution is in-process (see guide-tools.ts) — no network hop, no path
+    // or URL ever taken from the model, and drafts are not in the registry.
+    // ---------------------------------------------------------------------
+    const conversation: unknown[] = [...messages];
+    const readIds: string[] = [];
+    let toolRounds = 0;
+    let toolCharsUsed = 0;
+    let data: any;
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Anthropic API error:', error);
-      return new Response(JSON.stringify({ error: 'Guide unavailable' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+    for (;;) {
+      const toolsAllowed = toolRounds < MAX_TOOL_ROUNDS && toolCharsUsed < MAX_TOOL_CHARS_TOTAL;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: systemPrompt,
+          messages: conversation,
+          ...(toolsAllowed ? { tools: GUIDE_TOOLS } : {}),
+        }),
       });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Anthropic API error:', error);
+        return new Response(JSON.stringify({ error: 'Guide unavailable' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      data = await response.json();
+
+      if (!toolsAllowed || data?.stop_reason !== 'tool_use') break;
+
+      const blocks: any[] = Array.isArray(data.content) ? data.content : [];
+      const toolUses = blocks.filter((b) => b?.type === 'tool_use');
+      if (toolUses.length === 0) break;
+
+      toolRounds += 1;
+      // Push the assistant turn back VERBATIM — thinking blocks and their
+      // signatures must survive intact on a thinking-capable model.
+      conversation.push({ role: 'assistant', content: blocks });
+
+      const toolResults = [];
+      for (const tu of toolUses) {
+        const remaining = MAX_TOOL_CHARS_TOTAL - toolCharsUsed;
+        let text: string;
+        if (remaining <= 0) {
+          text =
+            'Reading budget for this question is used up. Answer from what you ' +
+            'have already read, and say plainly if that means you cannot fully ' +
+            'answer.';
+        } else {
+          const result = await runGuideTool(tu.name, tu.input);
+          text = truncate(result.text, Math.min(MAX_TOOL_CHARS_PER_RESULT, remaining));
+          toolCharsUsed += text.length;
+          if (result.found && typeof tu.input?.id === 'string') readIds.push(tu.input.id);
+        }
+        toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: text });
+      }
+
+      conversation.push({ role: 'user', content: toolResults });
     }
 
-    const data = await response.json();
     // Take the first TEXT block rather than content[0]: a thinking-capable
     // model can put a thinking block first.
     const textBlock = Array.isArray(data.content)
@@ -268,6 +348,10 @@ export const POST: APIRoute = async ({ request }) => {
         // Raw version (LaTeX intact) — the client stores this in history so
         // subsequent turns send real LaTeX, not placeholder tokens.
         rawMessage: assistantMessage,
+        // Which essays Alexander actually went and read to answer this.
+        // Diagnostic, not display: it is how you tell "he read it" from
+        // "he talked about it".
+        reads: readIds,
         context,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },

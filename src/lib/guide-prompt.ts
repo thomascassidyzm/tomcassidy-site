@@ -103,16 +103,27 @@ Match the reader's resolution: high-level when they're orienting across the writ
 /**
  * Build the full system prompt. `essayMarkdown` is the live, rendered text of
  * the essay the reader is currently on (resolved by the endpoint from the
- * content collection); pass an overview catalogue for non-essay surfaces.
+ * content collection), or null on non-essay surfaces — where the generated
+ * catalogue in `readingInstructions` is the orientation, and any essay the
+ * conversation turns to is read on demand rather than shipped up front.
  */
 export function buildPromptWithContext(
   _message: string,
   context: GuideContext,
   essayMarkdown: string | null,
+  readingInstructions: string,
 ): string {
   let prompt = BASE_PROMPT;
 
   prompt += `\n\n---\nCOACHING VOICE & METHOD (Tom's Script & the Sausage Machine — canonical, build from this, do not recite it)\n\n${COACHING_SCRIPT}\n`;
+
+  // The GENERATED catalogue of Tom's published writing, plus the instruction
+  // to read on demand. The catalogue is derived from the essays collection
+  // (see guide-tools.ts), not hand-maintained, so it cannot drift from what is
+  // published. Essay TEXT is never carried here — only the essay the reader is
+  // currently on is injected below; everything else Alexander reads at request
+  // time through the read_section tool.
+  prompt += `\n\n---\n${readingInstructions}\n`;
 
   prompt += `\n\n---\nREADER CONTEXT\n`;
   prompt += `Surface: ${context.mode ?? 'unknown'}\n`;
