@@ -230,3 +230,23 @@ describe('cross-site reference notations', () => {
     }
   });
 });
+
+describe('slug references that begin with an article', () => {
+  // Real slugs on tomcassidy.co start with "the-": the-sausage-machine,
+  // the-cassidy-method. An over-eager stop-word guard threw these away, so a
+  // reader quoting a genuine id got the cheap rung.
+  it('escalates on a real slug beginning with the-', () => {
+    const d = selectTier({ message: 'compare this with `the-sausage-machine` please' });
+    expect(d.reason).toBe('cross-section-comparison');
+  });
+
+  it('still ignores ordinary hyphenated English', () => {
+    expect(selectTier({ message: 'is this a well-known result?' }).effort).toBe('low');
+    expect(selectTier({ message: 'that seems counter-intuitive' }).effort).toBe('low');
+  });
+
+  it('trusts a backticked token even when it looks like ordinary English', () => {
+    const d = selectTier({ message: 'how does this differ from `well-known`?' });
+    expect(d.reason).toBe('cross-section-comparison');
+  });
+});

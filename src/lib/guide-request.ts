@@ -119,18 +119,27 @@ const COMPARISON_VERB =
 const CONFUSION_MARKER =
   /\b(still (?:don'?t|do not|not|unclear|confus)|i'?m confus|i don'?t (?:get|understand|follow|see)|doesn'?t make sense|makes no sense|not following|lost me|you said|as i said|again[,:]|rephrase|say that again|what do you mean|i asked)\b/i;
 
-// Common English kebab compounds that are not site identifiers. Without this
-// "well-known" or "so-called" would read as a reference to a named page.
+// Common English kebab compounds that are not site identifiers. Without this,
+// "well-known" or "counter-intuitive" would read as a reference to a named
+// page. Deliberately does NOT list articles like `the-`: real slugs begin with
+// them (`the-sausage-machine`, `the-cassidy-method`), so excluding them threw
+// away genuine references. A backticked token is always taken as a reference
+// regardless — backticks are how a reader quotes an id.
 const NOT_A_SLUG =
-  /^(well|so|self|non|semi|pre|post|re|co|multi|inter|intra|anti|counter|long|short|high|low|first|second|third|day|year|state|open|close|built|based|driven|related|specific|the|and|but|for|not)-/;
+  /^(well|so|self|non|semi|pre|post|re|co|multi|inter|intra|anti|counter|long|short|high|low|first|second|third|day|year|state|open|close|built|based|driven|related|specific|and|but|for|not)-/;
 
 function sectionRefs(text: string): string[] {
   const out = new Set<string>();
   for (const m of text.matchAll(SECTION_REF)) {
     const numeric = m[1];
     const slug = m[2];
-    if (numeric) out.add(numeric);
-    else if (slug && !NOT_A_SLUG.test(slug)) out.add(slug);
+    if (numeric) {
+      out.add(numeric);
+    } else if (slug) {
+      // Backticked means the reader is quoting an id at us; trust it outright.
+      const backticked = m[0].startsWith('`');
+      if (backticked || !NOT_A_SLUG.test(slug)) out.add(slug);
+    }
   }
   return [...out];
 }
