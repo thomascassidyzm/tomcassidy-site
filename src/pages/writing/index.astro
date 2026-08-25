@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import EssayCard from '@/components/EssayCard.astro';
 import { SERIES, type SeriesDef } from '@/content/series';
+import { metaBlob, essayKey, standaloneItems } from '@/lib/search-index';
 
 export const prerender = true;
 
@@ -15,10 +16,24 @@ const featuredFirst = (a: Essay, b: Essay) =>
   Number(b.data.featured) - Number(a.data.featured) || a.data.title.localeCompare(b.data.title);
 
 // Granular topics are no longer filter chips; they feed the search box.
+//
+// This blob is METADATA ONLY and stays inline, so the first keystroke matches
+// with nothing to wait for. Body text is far too big to inline — it ships as
+// /writing-index.json and is fetched once by the client script below, which
+// then matches metadata OR body. See src/lib/search-index.ts.
 const searchBlob = (e: Essay): string =>
-  [e.data.title, e.data.summary, (e.data.topics ?? []).join(' '), e.data.series ?? '']
-    .join(' ')
-    .toLowerCase();
+  metaBlob({
+    title: e.data.title,
+    summary: e.data.summary,
+    topics: e.data.topics,
+    series: e.data.series,
+  });
+
+// Standalone published pages — real prose at their own top-level URLs, kept
+// deliberately out of the series machinery. They render in their own block,
+// which is hidden until a query matches inside it, so browsing is unchanged
+// and searching finds them.
+const standalone = standaloneItems();
 
 interface Block {
   def: SeriesDef;
@@ -98,7 +113,12 @@ const blocks: Block[] = SERIES.map((def) => {
           </header>
 
           {b.lead && (
-            <div class="lead piece" data-series={b.def.name} data-search={searchBlob(b.lead)}>
+            <div
+              class="lead piece"
+              data-series={b.def.name}
+              data-key={essayKey(b.lead.data.slug)}
+              data-search={searchBlob(b.lead)}
+            >
               {b.def.kind === 'framework' && <span class="lead-eyebrow">Start here</span>}
               <EssayCard
                 title={b.lead.data.title}
@@ -120,6 +140,7 @@ const blocks: Block[] = SERIES.map((def) => {
                     class="seq-row piece"
                     href={`/writing/${p.e.data.slug}`}
                     data-series={b.def.name}
+                    data-key={essayKey(p.e.data.slug)}
                     data-search={searchBlob(p.e)}
                   >
                     <span class="seq-num">{p.numeral}</span>
@@ -136,7 +157,12 @@ const blocks: Block[] = SERIES.map((def) => {
           {b.cards.length > 0 && (
             <div class="cards">
               {b.cards.map((e) => (
-                <div class="piece" data-series={b.def.name} data-search={searchBlob(e)}>
+                <div
+                  class="piece"
+                  data-series={b.def.name}
+                  data-key={essayKey(e.data.slug)}
+                  data-search={searchBlob(e)}
+                >
                   <EssayCard
                     title={e.data.title}
                     slug={e.data.slug}
@@ -151,6 +177,35 @@ const blocks: Block[] = SERIES.map((def) => {
           )}
         </section>
       ))}
+
+      {/* `hidden` from the start: the block is search-only, so it must not
+          flash into the browse view before the client script runs. */}
+      {standalone.length > 0 && (
+        <section class="series-block standalone-block hidden" data-search-only>
+          <header class="series-head">
+            <h2 class="series-name">Notes and pre-briefs</h2>
+            <p class="series-blurb">
+              Published pages that sit outside the essay series. Forming work, shown as it forms.
+            </p>
+          </header>
+          <div class="cards">
+            {standalone.map((s) => (
+              <div class="piece" data-key={s.key} data-search={s.search}>
+                <EssayCard
+                  title={s.title}
+                  slug={s.slug}
+                  href={s.href}
+                  summary={s.summary}
+                  date={s.date}
+                  topics={s.topics}
+                  label={s.label}
+                  epistemicStatus={s.epistemicStatus}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
 
     <p class="empty" id="empty-state" hidden>
@@ -228,6 +283,9 @@ const blocks: Block[] = SERIES.map((def) => {
 
   .piece.hidden { display: none; }
 
+  /* Search-only block: never part of browsing, only ever a search result. */
+  .standalone-block .series-name { font-size: clamp(1.35rem, 2.4vw, 1.7rem); }
+
   /* The "door" — a full-width lead card with an eyebrow */
   .lead { margin-bottom: 1.6rem; }
   .lead-eyebrow {
@@ -280,23 +338,67 @@ const blocks: Block[] = SERIES.map((def) => {
     let activeSeries = '';
     let query = '';
 
+    // Body text for every published piece, keyed the same way as data-key.
+    // Fetched once, in the background, from the build-time /writing-index.json.
+    // Until it lands the search still works on metadata alone — which is
+    // exactly what the page did before — so nothing waits on the network.
+    let bodies: Record<string, string> = {};
+    let bodiesReady = false;
+
+    // Words must ALL be present somewhere in the haystack. No stemming, no
+    // fuzzy matching: plain lowercased substring, honest about its limits.
+    function hits(haystack: string, words: string[]): boolean {
+      return words.every((w) => haystack.includes(w));
+    }
+
     function apply() {
+      const words = query === '' ? [] : query.split(/\s+/).filter(Boolean);
       let anyVisible = false;
+      let anyBodyPending = false;
+
       sblocks.forEach((block) => {
-        const seriesOk = activeSeries === '' || block.dataset.series === activeSeries;
+        const searchOnly = block.hasAttribute('data-search-only');
+        // A search-only block belongs to no series, so it shows only under
+        // "All", and only once there is a query to match inside it.
+        const seriesOk = searchOnly
+          ? activeSeries === '' && words.length > 0
+          : activeSeries === '' || block.dataset.series === activeSeries;
+
         let blockHasVisible = false;
         block.querySelectorAll<HTMLElement>('.piece').forEach((piece) => {
-          const queryOk = query === '' || (piece.dataset.search ?? '').includes(query);
+          const meta = piece.dataset.search ?? '';
+          const metaHit = words.length === 0 || hits(meta, words);
+          const body = bodies[piece.dataset.key ?? ''] ?? '';
+          const bodyHit = !metaHit && words.length > 0 && body !== '' && hits(body, words);
+          const queryOk = metaHit || bodyHit;
           const show = seriesOk && queryOk;
           piece.classList.toggle('hidden', !show);
+          // Metadata hits sort above body-only hits inside their block.
+          piece.style.order = bodyHit ? '1' : '0';
           if (show) blockHasVisible = true;
         });
+
         const showBlock = seriesOk && blockHasVisible;
         block.classList.toggle('hidden', !showBlock);
         if (showBlock) anyVisible = true;
       });
-      if (empty) empty.hidden = anyVisible;
+
+      // Don't flash "Nothing matches that" while the body index is still in
+      // flight — the answer might be in it.
+      if (!bodiesReady && !anyVisible && query !== '') anyBodyPending = true;
+      if (empty) empty.hidden = anyVisible || anyBodyPending;
     }
+
+    fetch('/writing-index.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) bodies = data as Record<string, string>;
+      })
+      .catch(() => { /* metadata-only search still works */ })
+      .finally(() => {
+        bodiesReady = true;
+        apply();
+      });
 
     filters.forEach((btn) => {
       btn.addEventListener('click', () => {

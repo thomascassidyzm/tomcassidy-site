@@ -23,11 +23,42 @@ type EssayEntry = CollectionEntry<'essays'>;
 // them, and a guide that answers "I don't see which essay you mean" is worse
 // than no guide. Keyed by the same `slug` the page hands to EssayLayout.
 // Exported so guide-tools.ts can register these in the read_section registry
-// from the same list — one home, no second copy to keep in step.
-export const STANDALONE_PAGES: Record<string, { title: string; source: string }> = {
+// from the same list, and so search-index.ts can put them in the /writing
+// search — one home, no second copy to keep in step.
+//
+// The card fields (summary/date/label/…) exist because these pages are now
+// findable through the /writing search box: a search hit has to render as a
+// card, and a card needs a summary, a date and an honest label saying what
+// kind of thing it is. They stay OUT of the browse listing — the block that
+// holds them appears only when a query matches inside it.
+export interface StandalonePage {
+  title: string;
+  source: string;
+  /** One-line description, shown on the search-result card. */
+  summary: string;
+  /** ISO date, as printed on the page itself. */
+  date: string;
+  /** Plain-register kind marker, e.g. "Pre-brief — forming". */
+  label: string;
+  /** Where the page actually lives. NOT under /writing/. */
+  href: string;
+  epistemicStatus?: 'established' | 'derived' | 'contested' | 'open';
+  topics?: string[];
+  /** Explicit opt-out of the search index. Default: indexed. */
+  indexed?: boolean;
+}
+
+export const STANDALONE_PAGES: Record<string, StandalonePage> = {
   'community-regeneration': {
     title: 'Community Regeneration as Applied Configuration Economics',
     source: communityRegeneration,
+    summary:
+      'Using Configuration Economics as a practical framework for participating in the regeneration of multiple local communities internationally.',
+    date: '2026-08-24',
+    label: 'Pre-brief — forming',
+    href: '/community-regeneration',
+    epistemicStatus: 'open',
+    topics: ['configuration-economics', 'community-regeneration'],
   },
 };
 

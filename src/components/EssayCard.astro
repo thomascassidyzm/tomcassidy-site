@@ -10,15 +10,27 @@ interface Props {
   topics?: string[];
   epistemicStatus?: string;
   series?: string;
+  /**
+   * Kind marker, e.g. "Pre-brief — forming". Standalone pages surfaced by the
+   * writing search use it so a forming piece never reads as a finished essay.
+   */
+  label?: string;
+  /**
+   * Where the card points. Defaults to /writing/<slug>, which is right for
+   * every essays-collection entry; standalone pages live at their own
+   * top-level URL and must pass it, or the card 404s.
+   */
+  href?: string;
 }
 
-const { title, slug, summary, date, topics = [], epistemicStatus, series } = Astro.props;
+const { title, slug, summary, date, topics = [], epistemicStatus, series, label, href } = Astro.props;
 const dateStr = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 ---
 
-<a href={`/writing/${slug}`} class="essay-card" data-status={epistemicStatus}>
+<a href={href ?? `/writing/${slug}`} class="essay-card" data-status={epistemicStatus}>
   <div class="card-meta">
     <span class="card-date">{dateStr}</span>
+    {label && <span class="card-label">{label}</span>}
     {series && <span class="card-series">{series}</span>}
     {epistemicStatus && (
       <span class={`pigment-chip is-${epistemicStatus}`}>{epistemicStatus}</span>
@@ -73,6 +85,13 @@ const dateStr = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'shor
   }
 
   .card-series { color: var(--text-secondary); }
+
+  .card-label {
+    color: var(--text-secondary);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    padding: 0.1rem 0.45rem;
+  }
 
   .card-title {
     font-family: var(--font-display);
