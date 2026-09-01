@@ -1,188 +1,173 @@
-# Reason-Ability coaching engine: what is actually alive
+# Reason-Ability coaching engine: it worked for one person
 
-*1 September 2026. Read-only scout. Every claim below is from a live probe of production, the
-GitHub deployments API, or the code itself.*
-
----
-
-## The verdict
-
-**Half-alive, and the missing half is the half you care about.** The engine is deployed, the
-service worker is real, and — this changed since the last audit — the VAPID push keys are now
-genuinely set in production, so the browser side can build a subscription. But **there is no
-store configured in production**, and I can prove it: the live server itself reports
-`canPersist: false`. That means the moment anyone presses the button and subscribes, the server
-has nowhere to write their subscription — it hands back a blob of JSON for you to paste into
-Vercel by hand, while the page cheerfully says *"You're set."*
-
-So: written, deployed, and never closed. I found **no evidence anywhere on this box that a push
-notification has ever been delivered to a real device**, and I could not obtain any either way —
-the only test that would settle it is firing the cron, which would send to your phone, and this
-job was read-only.
+*1 September 2026. Read-only scout, revised after Tom confirmed the push path genuinely worked
+and notifications arrived on his device. That is taken as established fact, not re-tested.*
 
 ---
 
-## 1. Is it deployed, and where?
+## The headline
 
-Yes. Production is **tomcassidy-site.vercel.app** (Vercel team `zenjin`), currently serving
-build `260825-0327.7f62d14` — the head of `main`, deployed **25 August 2026, 03:27 UTC**.
+It worked for one person, and the thing standing between that and the first stranger is not the
+push machinery — that is real and it delivered. **It is that there is no store.** The live server
+reports `canPersist: false`, which means Vercel KV is not configured on the current production
+deployment, and the only place a subscription can live is a **hand-pasted environment variable**.
 
-**tomcassidy.com is not this site.** It answers 200, but it is a GoDaddy parking page — every
-Reason-Ability route on it 404s. The custom domain is not attached to the Vercel project.
+That single fact reconciles everything. It explains how it worked for you — you pasted your
+phone's subscription into Vercel as `PUSH_SUBSCRIPTION` and redeployed, exactly as the code's own
+comment instructs. And it explains why nobody else can ever be subscribed: **the subscriber list
+is a config value with one slot in it, editable only by you.**
 
-**Reasonable Wealth is not live.** Tonight's commit went out as a *preview* deployment only
-(14:00 UTC). It is visible at the preview URL under `/explore/reasonable-wealth`, but there is
-no `/reasonable-wealth` page anywhere — it is registry data plus the Explore route, not yet a
-programme page. `git cherry main` shows the commit as `+`, i.e. not in main.
-
-## 2. Does the cron actually fire?
-
-**No evidence of a run, and I could not get any.** The three schedules are declared in
-`vercel.json`, and Vercel only honours crons on production deployments — the current production
-deployment does carry that file, so they *should* exist. But I could not confirm they are
-registered on the host: the `vercel` CLI is not installed on this Linux box, and function
-invocation logs are only reachable through it or the dashboard.
-
-Worse, **the cron leaves no trace even when it works.** It sends and returns; it writes nothing
-to any store, so there is no artefact to find. The loop is currently unobservable from outside.
-
-One flag worth your attention: `vercel.json` declares **three** cron schedules. Vercel's Hobby
-plan allows **two**, and triggers them only approximately once a day. If the project is on
-Hobby, the 07:47 / 12:13 / 18:09 rhythm you designed is not what is happening. I could not check
-the plan without CLI access.
-
-## 3. Has a push ever genuinely reached a phone?
-
-**No evidence that it has.** Positively:
-
-- VAPID keys **are** set in production — `/api/push/vapid` returns a real public key. (It was
-  503ing as recently as the 4 August audit, so this got done.)
-- The service worker's `push` and `notificationclick` handlers are real and correct — it shows
-  the notification and taps land you on the right week.
-
-Against:
-
-- No commit message, doc, log or note anywhere in the repo records a delivery to a device.
-- Nothing in the code writes a record of a send, so there is nothing that *could* record one.
-- The only remaining test is hitting the cron endpoint, which sends a real push to whatever
-  subscription is stored. I did not do that.
-
-**Honest statement: as far as any evidence on this box shows, the subscribe path has never been
-exercised end to end.** To settle it in ten seconds: on your phone, open
-`tomcassidy-site.vercel.app/reasonable-eating` and press "🔔 Tom in your pocket". If the reply
-is anything other than a clean save, you have your answer — see the next section for why it
-will not be.
-
-## 4. Where does state persist? It doesn't.
-
-`push-store.ts` picks between Vercel KV and a read-only env-var fallback. Production has
-**neither KV nor a subscription store you can write to**: the live endpoint reports
-`canPersist: false`.
-
-In your terms: **someone who subscribes from their phone is not subscribed.** The server takes
-their subscription, cannot save it, and returns a "paste this into Vercel and redeploy" payload.
-The button then tells them "You're set. I'll bring this week's one thing to mind." That sentence
-is currently false for everybody, including you.
-
-Same for the weekly goal. The Today page will accept your one thing, show it back for blessing,
-and warn in small text "there's no store configured — it won't survive." It doesn't survive.
-
-And the scale ceiling is baked in and stated in the file's own header: **SOLO DOGFOOD — one
-user, no accounts.** The keys are singular — `pocketcoach:subscription`, `pocketcoach:startMs`,
-`pocketcoach:goal`. Even with KV switched on tomorrow, the second person to subscribe overwrites
-the first.
-
-## 5. What does the engine actually decide, and is it separated from the content?
-
-**The separation is real in the engine and absent in the wiring.**
-
-`coach-engine.ts` is genuinely programme-agnostic: every function takes a `Program` and works
-out the rotation order, which week is live, the focus for that week, and a tone-weighted line
-drawn from that focus's banks — falling back to the focus's single wisdom line where banks
-aren't authored yet. Point it at wealth or teaching and it works, untouched. That is the
-compiler you described.
-
-But the two things that *use* it both hard-wire one programme. The cron opens with
-`const PROGRAM = reasonableEating`. The Today page imports the same one, and lives at
-`/reasonable-eating/today` rather than `/[slug]/today`. And **Reasonable Eating is the only one
-of the nine programmes with tone banks** — the other eight have a single wisdom line per week,
-so pointing the engine at them today gives you the same sentence repeated all week.
-
-Also still present, from the August audit: `today.ts` computes total weeks as
-cycles × domains, which is right for eating and wrong for any programme with a hub in rotation
-(Ultimate 13×4 would read 12, not 13). `coach-engine.ts` gets it right; the Today page doesn't
-use it. It bites the day you generalise.
-
-## 6. The real journey, and where it breaks
-
-Someone lands on `/reasonable-eating`. They see the wheel and a "🔔 Tom in your pocket" button.
-They press it, grant permission, the browser builds a subscription against a real VAPID key,
-and it posts to the server.
-
-**That is where it breaks.** The server cannot store it, returns the paste payload, and the
-button says "You're set." It is not set. No cron will ever push to them, because nothing knows
-they exist.
-
-Two further breaks behind that one, both real:
-
-- **The Today page is unreachable.** Nothing on the site links to `/reasonable-eating/today`.
-  It is designed to be opened by tapping a push — which never arrives. So the goal capture, the
-  own-voice interrupt that is the whole point, is a screen no user can find.
-- **On iPhone, push requires the site added to the Home Screen first.** The page carries an
-  install prompt, but a first-time visitor who just presses the bell on Safari gets nothing.
+The second stranger doesn't overwrite the first. The *first* stranger overwrites **you**.
 
 ---
 
-## The gaps, ranked by what blocks a first real user
+## What is deployed
 
-**1. There is no store. Nothing survives a subscribe.**
-What exists: a complete two-backend store and a subscribe endpoint that both work. What's
-missing: KV provisioned and `KV_REST_API_URL` + `KV_REST_API_TOKEN` set in production. This
-blocks literally everything else — until it's done, no one but you can ever be reminded of
-anything, and the UI lies to them while failing.
+Production is **tomcassidy-site.vercel.app** (Vercel team `zenjin`), serving build
+`260825-0327.7f62d14` — the head of `main`, deployed **25 August 2026**. VAPID keys are set and
+live; `/api/push/vapid` hands out a real public key. The service worker's push and tap handlers
+are correct.
 
-**2. One subscription slot, for one person.**
-What exists: working single-user persistence. What's missing: a key per subscriber and something
-to key it by. `pocketcoach:subscription` is a single value; the second lead-magnet signup
-deletes the first. This blocks the loop having more than one customer, which is to say it blocks
-the loop.
+**tomcassidy.com is not this site** — it answers, but it's a GoDaddy parking page and every
+programme route on it 404s. The custom domain has never been attached to the Vercel project.
 
-**3. Nobody can find the noticing screen.**
-What exists: the Today page, with the set-and-bless loop, which is the best thing in this
-codebase — it serves noticing rather than knowing, exactly as the 70% rule asks. What's missing:
-a link to it, and a generalised `/[slug]/today` route. This blocks anyone experiencing the
-product at all without a working push first.
+**Reasonable Wealth is not live.** Tonight's commit deployed as a *preview* only. It's visible on
+the preview URL at `/explore/reasonable-wealth`; there is no `/reasonable-wealth` page anywhere
+yet, and the commit is not in `main`.
 
-**4. No proof of delivery, and no way to get proof.**
-What exists: a correct sender and a correct service worker. What's missing: any record that a
-push has ever landed, and any log the cron writes. This is written but never run, and it stays
-that way until someone deliberately closes the loop once and writes down that it worked.
+---
 
-**5. Eight of nine programmes have no coach banks.**
-What exists: an engine that reads banks from any programme, and one fully voiced programme.
-What's missing: tone banks for wealth and the rest — roughly 13 focuses × 4 tones each. This
-blocks pointing the lead magnet at anything other than eating; the PDF can promise a wealth
-programme that the app cannot yet speak in.
+## 1. Is it still working, or has it silently stopped?
 
-**6. No "start my programme" step.**
-What exists: a start date that is a constant in code, plus whatever the wheel keeps in the
-browser. What's missing: a per-person start date captured when they sign up. This blocks a
-personalised 13×4 being on *their* week one rather than yours.
+**I could not get positive evidence either way, and I'll say plainly why: the only test that
+would settle it is firing the cron, which sends a real push to your phone, and this job was
+forbidden from doing that.** There is no `vercel` CLI and no Vercel auth token on this machine,
+so the invocation logs are closed to me. Worse, **the cron writes nothing** — it sends and
+returns — so even a perfect run leaves no artefact anyone could find afterwards. The loop is
+currently unobservable from outside.
 
-**7. Nothing joins the PDF to the app.**
-What exists: nothing yet — no questionnaire, no profile, no PDF, no handover. Named here only so
-it isn't mistaken for something already half-built. Everything above must be true first, because
-the thing they are signing up for is the remembering.
+What I *can* do is name the three ways it stops silently, and rank them:
+
+**(a) The subscription expired or was revoked. Most likely.** Web push subscriptions die when the
+PWA is deleted, when the browser reissues, or on their own. When that happens the cron gets a
+404/410, logs it, and returns `sent: false` — and nothing on the site changes, so you'd never
+know. Nothing re-subscribes you automatically.
+
+**(b) The store went away.** `canPersist: false` is precise: it means the KV credentials are
+**absent from the project environment**, not that KV is unreachable. So either you were always on
+the env-var path (very likely), or a KV integration existed and has since been removed or reaped.
+Which one is a ten-second look at the dashboard.
+
+**(c) The crons aren't firing as designed.** `vercel.json` declares **three** schedules. Vercel's
+Hobby plan allows **two**, and fires them approximately once a day rather than at your chosen
+minute. If this project is on Hobby, the 07:47 / 12:13 / 18:09 rhythm you designed is not what is
+happening. I couldn't check the plan without CLI access.
+
+**The cheapest evidence in the world is yours, not mine: did anything arrive on your phone
+today?** Your answer settles this faster than any log I could pull. If yes, the whole loop is
+alive and only the one-user shape is in the way. If no, it's (a) until proven otherwise.
+
+From your Mac, two commands close the rest: `vercel env ls` lists which variables exist (names
+only), and `vercel logs` shows whether the cron has been invoked.
+
+## 2. The one-user shape, and exactly what it takes to fix
+
+The file says it out loud: **"SOLO DOGFOOD — one user, no accounts."** The keys are singular —
+`pocketcoach:subscription`, `pocketcoach:startMs`, `pocketcoach:goal` — and on the env-var path
+it's worse than singular, it's a value you edit by hand and redeploy.
+
+The good news is that **this needs no accounts, no login and no auth system at all**, because the
+push subscription already *is* an identity: the endpoint URL the browser generates is unique to
+that device. Hash it and you have a user id, for free, with nobody signing up for anything.
+
+What it takes, concretely:
+
+- **Provision KV.** Nothing per-user is possible while the store is an env var. Set
+  `KV_REST_API_URL` and `KV_REST_API_TOKEN`; the code then switches backend on its own with no
+  changes.
+- **Key everything by that id.** `pocketcoach:sub:<id>`, `pocketcoach:start:<id>`,
+  `pocketcoach:goal:<id>`, where `<id>` is a hash of the subscription endpoint.
+- **Keep an index.** One set, `pocketcoach:subs`, holding the ids — because the cron needs
+  something to iterate. Upstash speaks set operations over the same plain REST fetch the file
+  already uses, so this adds no dependency.
+- **Make the cron a loop.** Read the index, and for each subscriber compute *their* week from
+  *their* start date and send *their* blessed goal. Today it computes one week for one person.
+- **Prune on delivery failure.** The sender already sees the 404/410 that means "this device is
+  gone" and currently just logs it. Delete that id instead, and the list stays clean by itself —
+  which also fixes silent-stop (a) for everyone but you.
+- **Let the Today page know who's asking.** It reads the single goal today. The browser can hand
+  it its own subscription endpoint, so the page shows *your* one thing without a login.
+
+That is a focused half-day, and it is the whole difference between a dogfood and a product.
+
+## 3. The journey for someone who is not you
+
+They land on `/reasonable-eating`, see the wheel and a "🔔 Tom in your pocket" button, press it,
+grant permission. The browser builds a genuine subscription against the live VAPID key and posts
+it to the server.
+
+**That is where it breaks, on the first press.** The server has nowhere to write, so it returns a
+"paste this into Vercel and redeploy" payload — and the page tells them: *"You're set. I'll bring
+this week's one thing to mind, gently, a couple of times a day."* It's a promise the system
+cannot keep, and they have no way to know it was never kept except by the silence afterwards.
+
+Two further breaks sit behind that one:
+
+- **The Today page is unreachable.** Nothing on the site links to `/reasonable-eating/today`. It
+  is designed to be opened by tapping a push. So the set-and-bless capture — the own-voice
+  interrupt, the one thing in this codebase that serves *noticing* rather than knowing — is a
+  screen no visitor can find.
+- **On iPhone, push needs the site on the Home Screen first.** There's an install prompt on the
+  page, but a first-timer who just presses the bell in Safari gets nothing.
+
+And on the engine itself: `coach-engine.ts` is genuinely programme-agnostic — the separation you
+described is real, it takes any programme and works out the rotation, the live week and a
+tone-weighted line. But everything that *uses* it hard-wires one programme: the cron opens with
+`const PROGRAM = reasonableEating`, and the Today page is `/reasonable-eating/today` rather than
+`/[slug]/today`. **Reasonable Eating is also the only one of the nine programmes with tone
+banks** — the other eight have a single wisdom line per week, so pointing the engine at wealth
+today gives the same sentence every day for a week.
+
+---
+
+## The gaps, ranked by what blocks the first stranger
+
+**1. No store, so no stranger can ever subscribe.** The two-backend store and the subscribe
+endpoint both work; what's missing is KV provisioned. Until it is, every signup silently fails
+while being told it succeeded.
+
+**2. One slot, and the newcomer takes yours.** Single keys, a single env value. Fixed by the
+per-user shape above — no accounts needed, the subscription endpoint is the identity.
+
+**3. The UI lies when the save fails.** Subscribe returns `persisted: 'manual'` and the button
+still says "You're set." The Today page's goal box handles this honestly; the bell doesn't. This
+one is twenty minutes and it stops the loop burning the first people who try it.
+
+**4. The noticing screen is unreachable.** The Today page needs a link and a `/[slug]/today`
+route. Without it, the product experience is a notification and nothing to arrive at.
+
+**5. Nothing records a send, so you cannot tell it has stopped.** The cron leaves no trace. One
+timestamp written per run turns "is it still working?" from an investigation into a glance.
+
+**6. Eight of nine programmes have no coach banks.** Roughly 13 focuses × 4 tones each. This
+blocks pointing the lead magnet at anything but eating — the PDF would promise a wealth programme
+the app can't yet speak in.
+
+**7. No per-person start date.** The start is a constant in code plus whatever the browser keeps.
+A stranger needs to be on *their* week one, not yours.
+
+**8. Nothing joins the PDF to the app.** No questionnaire, no profile, no PDF, no handover — named
+last only so it isn't mistaken for something half-built. Everything above has to be true first,
+because what they're signing up for is the remembering.
 
 ---
 
 ## What I could not settle, and why
 
-- **Whether the crons are registered on the Vercel host, and whether any has ever run.** No
-  `vercel` CLI on this machine; invocation logs are CLI/dashboard-only. `vercel logs` from your
-  Mac closes this in one command.
-- **Which Vercel plan the project is on** — and therefore whether three crons is over the Hobby
-  limit of two.
-- **Whether `PUSH_SUBSCRIPTION`, `CRON_SECRET` or the KV variables exist in the project
-  environment.** `vercel env ls` from your Mac lists the names without exposing values. The only
-  probe available from here was the cron endpoint, which would have sent a real push.
+- **Whether the loop is still live today.** No CLI, no token, no logs, and the cron writes nothing
+  — and the one available runtime probe sends a real push, which I was forbidden to do. Your own
+  phone answers this better than I can.
+- **Whether `PUSH_SUBSCRIPTION` and `CRON_SECRET` exist in the project environment.**
+  `vercel env ls` from your Mac lists the names without exposing values.
+- **Whether the crons are registered on the host and which plan the project is on** — and so
+  whether three schedules exceeds Hobby's limit of two.
