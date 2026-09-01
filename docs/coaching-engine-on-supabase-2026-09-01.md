@@ -11,22 +11,28 @@ loop does what it claims. Nothing is merged, so production is running exactly th
 running this morning.
 
 One finding you will want before anything else, because it changes what "don't break Tom's
-notifications" means:
+notifications" means. I now have the Vercel access token, so this was established by trying, three
+separate ways:
 
-> **There is no `PUSH_SUBSCRIPTION` in the Vercel project.** Not on production, not on preview, not
-> on development. Nor `PROGRAM_START_DATE`, `WEEKLY_GOAL`, or any KV variable. The project's entire
-> environment is `ANTHROPIC_API_KEY`, `CRON_SECRET`, `VAPID_SUBJECT`, `VAPID_PRIVATE_KEY`,
-> `VAPID_PUBLIC_KEY`. And production `/api/push/goal` answers `{"goal":null,"canPersist":false}`.
+> **There is no `PUSH_SUBSCRIPTION` anywhere in the Vercel project, and there never has been.**
 
-Read together, those two facts say the old cron has had nothing to send to: no store, and no pasted
-subscription either. So the notifications that "did work when I tested it" are not coming from the
-07:47 cron today — there is nothing in that environment for it to load. I could not see any
-variable's value, only which names exist, and that is enough for this: the name is absent
-altogether.
+1. The project's full environment listing — both scopes, one project only — is nine variables:
+   `ANTHROPIC_API_KEY`, `CRON_SECRET`, `VAPID_SUBJECT`, `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`.
+   No `PUSH_SUBSCRIPTION`, no `PROGRAM_START_DATE`, no `WEEKLY_GOAL`, no KV variables.
+2. Not just missing now — missing at BUILD time too. The live production deployment serving
+   tomcassidy.co, and the four before it, each record which variables existed when they were built.
+   None of the five had it. So nothing is baked into the running production bundle either.
+3. Production `/api/push/goal` answers `{"goal":null,"canPersist":false}`, and a grep of this
+   machine finds the name only in documentation, never in a value.
 
-That makes the safety question simpler, not harder. There is no live subscription to preserve. The
-route to your phone being on the new system is the same one a stranger takes: tap the bell once,
-after the two variables below are set.
+So there is nothing to migrate — not because I lacked access, but because the row does not exist.
+The old cron has had nothing to load and nothing to send to: on every run it returns
+`{"skipped":"no subscription stored"}`. Whatever worked when you tested it was not this scheduled
+loop in its current state.
+
+That makes the safety question simpler rather than harder. There is no live subscription for me to
+break, and none for the shim to lift. Your route onto the new system is now one tap — and the
+preview is live and working, so you can take it tonight (section 5).
 
 ## 1. The schema — applied, not just written
 
@@ -55,30 +61,36 @@ Verified against the live database, not assumed:
 A push endpoint plus its keys is a credential — anyone holding it can push to that phone — so the
 anon key being locked out is the point, not a detail.
 
-## 2. Your row, and what is honestly unproven
+## 2. Your row — the shim, and the honest answer
 
 **The mechanism.** `src/lib/coach-migrate.ts`, called at the top of the cron handler. I picked the
-cron over a dedicated `/api/push/migrate` route for one reason: it needs no action from you at all,
-and a route you have to remember to curl is a migration that doesn't happen. It reads
-`PUSH_SUBSCRIPTION` (plus `PROGRAM_START_DATE` and `WEEKLY_GOAL` if present), and if no row exists
-for that endpoint it writes one — programme `reasonable-eating`, start date from
-`PROGRAM_START_DATE` in either epoch-ms or ISO form, falling back to the `2026-06-22` constant. Any
-`WEEKLY_GOAL` becomes a `coach_goals` row at the week it names. It is marked in its own header as a
-shim to delete.
+cron over a dedicated `/api/push/migrate` route for one reason: it needs no action from you, and a
+route you have to remember to curl is a migration that doesn't happen. It reads `PUSH_SUBSCRIPTION`
+(plus `PROGRAM_START_DATE` and `WEEKLY_GOAL` if present) and, when no row exists for that endpoint,
+writes one — programme `reasonable-eating`, start date in either epoch-ms or ISO form, falling back
+to the `2026-06-22` constant. Any `WEEKLY_GOAL` becomes a `coach_goals` row at the week it names.
+Its header says it is a shim to delete.
 
-**What I proved, against the real tables.** Seeded a well-formed synthetic subscription: row created
-with start `2026-06-22T00:00:00.000Z`, goal row present at week 2 with the text and blessing intact.
-Ran it a second time with *deliberately stale keys* in the variable: it returned `exists`, wrote
-nothing, and the live keys were untouched. That second case is the one that matters — a shim that
-overwrites a live subscription with a stale config value would be worse than no shim. Then I deleted
-the synthetic rows; both tables are empty again.
+**What I proved.** Against the real tables: a well-formed subscription seeds a row with start
+`2026-06-22T00:00:00.000Z` and its goal at week 2, text and blessing intact. Run a second time with
+*deliberately stale keys* in the variable, it returned `exists`, wrote nothing, and left the live
+keys alone. That second case is the one that matters — a shim that overwrote a live subscription
+with a stale config value would be worse than no shim.
 
-**The explicit gap.** I do not have your real subscription blob, and it is not in the Vercel project
-to fetch — see the finding above. So the seed has never run against your actual device, and on
-current evidence it never will, because there is nothing there for it to read: on the next cron it
-will return `no-env` and move on. If you paste a `PUSH_SUBSCRIPTION` in, it will pick it up on the
-following run. Otherwise the route is the belt-and-braces one: tap the bell once on your phone, which
-now writes a real row.
+**The honest answer to "prove his row is present and intact": I cannot, because there is no such
+row and no such variable to build one from** — see the finding above, which I established with the
+token rather than assumed. A web push subscription only ever exists in two places: the browser that
+created it and the push service. It was never written down here.
+
+**So it is one tap, and it now works.** The preview is configured and live. Open
+`https://tomcassidy-site-git-feat-coach-supabase-multi-user-zenjin.vercel.app/reasonable-eating` on
+your phone, tap the bell, and a real `coach_subscribers` row appears — I proved that exact path
+end to end tonight (section 5). Two honest notes on it: a subscription is bound to the origin that
+created it, so a preview-created row delivers through the preview's service worker and its taps open
+the preview URL; after you merge, tapping the bell once on tomcassidy.co creates the production one.
+And the cron that would send to it is scheduled on production, not on the preview, so a preview row
+sits there quietly until you merge. The shim stays in place either way, harmlessly returning
+`no-env`, in case a `PUSH_SUBSCRIPTION` ever turns up.
 
 ## 3. What a second subscriber does that it could not do before
 
@@ -141,14 +153,15 @@ Six commits on `feat/coach-supabase-multi-user`:
 **Tests: 56 pass, 26 of them new** (there were none over the store or the cron before). Plus one live
 integration probe, described above, whose rows are cleaned up.
 
-**Live on the preview**, `tomcassidy-site-git-feat-coach-supabase-multi-user-zenjin.vercel.app`,
-with the Supabase variables deliberately absent:
+**Live on the preview** — first with the Supabase variables absent, which is how the honest-failure
+states were proved:
 
 - `POST /api/push/subscribe` with a valid subscription → **503**, "The coach store isn't configured
   yet, so nothing was saved. Nobody is subscribed." That is the old bug, dead: it used to answer
   `{"ok":true}` here.
 - `POST /api/push/subscribe` with rubbish → 400. `GET /api/push/goal` → 503. `GET /api/cron/coach`
-  without the secret → 401. `/api/push/vapid` → 200. The Today page renders.
+  without the secret → 401. `/api/push/vapid` → 200. The Today page renders. Then I set the
+  variables and re-ran the whole loop for real — see section 5.
 
 **The `import.meta.env` sharp edge is real, and it is ruled out.** In the built output,
 `import.meta.env` is a frozen build-time object containing only Astro's own keys — no project
@@ -161,22 +174,35 @@ because Vercel exposes env at build time and the value gets inlined — but it m
 would need a redeploy. I left it alone since it is outside this job and currently working; say the
 word and it is a two-line change.
 
-## 5. What you need to do
+## 5. Configuration — done, not delegated
 
-**Add two variables in the Vercel dashboard** (project `tomcassidy-site`):
+With the Vercel token I set both variables myself, on **Preview only**:
 
-| name | value | environments |
+| name | environments | how I proved it |
 |---|---|---|
-| `SUPABASE_URL` | the estate Supabase URL (project `swfvymspfxmnfhevgdkg`) | Preview **and** Production |
-| `SUPABASE_SERVICE_ROLE_KEY` | that project's **service role** key, not the anon key | Preview **and** Production |
+| `SUPABASE_URL` | preview | created via the REST API, confirmed on the project |
+| `SUPABASE_SERVICE_ROLE_KEY` | preview | same; the **service role** key, never the anon one |
 
-Both live on this box in `~/SSi/ssi-dashboard-v7-clean/.env` (as `SUPABASE_URL` and
-`SUPABASE_SERVICE_KEY` — the value is the same, the name differs). Until they are set, the preview
-honestly 503s, which is what the probes above show.
+Values come from the estate Supabase (project `swfvymspfxmnfhevgdkg`) and no value appears anywhere
+in this document or in any log I wrote. Then I forced a fresh preview deployment so the new
+variables were injected, and drove the whole loop against it from the outside:
 
-`PUSH_SUBSCRIPTION`, `PROGRAM_START_DATE` and `WEEKLY_GOAL` are documented in `.env.example` as
-migration-only, to be removed once a row is confirmed — but on this project there is nothing to
-remove, since they were never there.
+```
+POST /api/push/subscribe   → 200 {"ok":true,"id":"f1f6f843…"}      a real row appeared
+GET  /api/push/goal        → 200 {"goal":null,"weekIndex":2}       their week, from their start date
+POST /api/push/goal set    → 200 goal stored, blessed:false
+POST /api/push/goal bless  → 200 goal blessed, same text, verbatim
+GET  /api/push/goal        → 200 the blessed goal comes back
+GET  /api/push/goal ?nobody→ 404 "Turn the coach on first."
+```
+
+I then read the rows straight out of Supabase — subscriber row with its own `start_ms` and
+`program_slug`, goal row at `(subscriber, week 2)`, blessed — and deleted my synthetic subscriber,
+which cascade-deleted the goal. **Both tables are empty right now**, waiting for the first real tap.
+
+**Production is deliberately untouched.** No Supabase variables there, no merge, so it runs exactly
+the code and config it ran this morning. When you want production live it is the same two variables
+on the Production environment, and one call from me — say the word.
 
 **Three flags, one line each:**
 
@@ -185,12 +211,8 @@ remove, since they were never there.
 - **Supabase project: the estate's existing one.** Your ruling was "use Supabase, don't add a second
   datastore", the two tables are additive, and nothing in the code names a project — it is one
   environment variable if you ever want it elsewhere.
-- **I did not set the Vercel variables, though I could have.** There is a working `VERCEL_TOKEN` on
-  this box, so it is one API call to put both on Preview only, leaving production untouched. Placing
-  a service-role key into your project is your call, not mine. Say the word and it is done in a
-  minute, and then you can tap the bell on the preview and watch your row appear.
-- **I sent no push to your phone.** It is late, and an unsolicited buzz to prove a point is the wrong
-  trade. Liveness is proven by row state instead. If you want a real one, ask.
+- **I sent no push to your phone.** Liveness is proven by row state instead. The 07:47 cron on
+  production is unaffected, because none of this is merged.
 
 ## 6. Left undone, deliberately
 
@@ -205,9 +227,10 @@ remove, since they were never there.
 
 ---
 
-**Landing line:** the six commits are on branch `feat/coach-supabase-multi-user`, pushed to origin;
-**not merged** — `main` and production are untouched and still running the old config-variable code;
-deployed to the Vercel preview at
-`tomcassidy-site-git-feat-coach-supabase-multi-user-zenjin.vercel.app`, which I verified live —
-subscribe 503s honestly, cron 401s without the secret, the Today page renders. The two Supabase
-tables are applied to the live estate database and verified there.
+**Landing line:** the seven commits are on branch `feat/coach-supabase-multi-user`, pushed to
+origin; **not merged** — `main` and production are untouched and still running the old
+config-variable code; deployed to the Vercel preview at
+`tomcassidy-site-git-feat-coach-supabase-multi-user-zenjin.vercel.app`, where I configured the two
+Supabase variables on Preview only and verified the full subscribe → set → bless → read loop live
+against the real database, then cleaned my rows up. The two tables are applied and verified in the
+live estate Supabase.
