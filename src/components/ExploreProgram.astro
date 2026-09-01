@@ -185,6 +185,23 @@ const dogmas = [
       )}
     </div>
 
+    {program.innerRing && (
+      <section class="inner-ring">
+        <p class="eyebrow">The inner ring · the wheel's second band</p>
+        <p class="dd-note">
+          These lines sit inside the rim on the wheel itself, recorded here in
+          the order they read round it. The source does not establish which
+          line belongs to which spoke, so they are listed whole rather than
+          paired by guesswork.
+        </p>
+        <ul class="ir-list">
+          {program.innerRing.map((line) => (
+            <li class="ir-line">{line}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+
     {sections.map((sec) => (
       <section class="domain" style={`--pig: var(--${sec.pigment}); --pig-wash: var(--${sec.pigment}-wash)`}>
         <div class="domain-head">
@@ -250,6 +267,14 @@ const dogmas = [
 
 <style>
   .explore { max-width: 820px; margin: 0 auto; }
+
+  .inner-ring { margin: 2.5rem 0 1rem; }
+  .ir-list { list-style: none; padding: 0; margin: 1rem 0 0; }
+  .ir-line {
+    font-family: var(--font-body); font-size: 1.02rem; line-height: 1.6;
+    color: var(--text-secondary); padding: 0.35rem 0 0.35rem 1rem;
+    border-left: 2px solid var(--border, currentColor);
+  }
 
   .eyebrow {
     font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;

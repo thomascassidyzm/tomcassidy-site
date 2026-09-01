@@ -6,6 +6,43 @@ falsify it.
 
 ---
 
+## 2026-09-01 — Reasonable Wealth enters the registry as data, inner ring unbound
+
+**Decision.** Reasonable Wealth is added to `ALL_PROGRAMS` as a data file only:
+twelve spokes in two interleaved domains (THINKING = odd numerals, the right
+half; ACTING = even, the left half), a week-13 in-rotation hub, and the wheel's
+inner ring recorded whole on a new optional `Program.innerRing`. No programme
+page, no weeks, no coach copy, no FAST teachings — the wheel, and only the wheel.
+
+**Why it wins.** *Better*: the estate's most mature 13×4 specimen — and its only
+distinction-form wheel — stops existing solely as an image, and is reachable at
+`/explore/reasonable-wealth`. *Simpler*: it is one data file plus one optional
+field; the shape it needs (two halves × six, in-rotation hub) is the interleaved
+rotation the engine already runs, so no engine, geometry or validator change.
+*Cheaper*: the render surface is the existing generated Explore route, so the
+new programme costs one file and no new page to maintain.
+
+**The inner ring is UNBOUND, deliberately.** The source gives the twelve lines
+in reading-round order, which on an odd-right / even-left wheel is not numeral
+order, so it does not establish which line sits under which spoke. Pairing them
+would have been an agent guessing at Tom's own methodology, so `innerRing` holds
+the list whole and the Explore surface says plainly that it is unpaired. The
+smallest honest extension: one optional field, rendered behind a guard, which no
+existing programme sets and therefore cannot alter.
+
+**Coach wisdom is a placeholder, not draft prose.** `coach.wisdom` is a
+validator requirement and this programme has no coach copy written. Each week
+restates its own distinction verbatim rather than inventing lines in Tom's
+voice. This is the one programme in the family whose wisdom lines are NOT drafts
+to be finessed — they are empty slots wearing the spoke's own words.
+
+**What would falsify it.** Tom saying the inner ring does pair spoke by spoke
+(then the twelve lines move into `coach.wisdom` and `innerRing` is deleted), or
+that spoke 2 — "REPETITIVE, EMOTIONAL, DETAILED", the one spoke not in X > Y
+form — is unfinished rather than a deliberate exception.
+
+---
+
 ## 2026-08-25 — Writing search reads bodies, and sees every published page
 
 **Decision.** The /writing search matches full body text, and standalone

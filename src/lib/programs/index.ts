@@ -15,6 +15,7 @@ import { reasonableEating } from './reasonable-eating';
 import { reasonableLeadership } from './reasonable-leadership';
 import { reasonableSuccess } from './reasonable-success';
 import { reasonableTeaching } from './reasonable-teaching';
+import { reasonableWealth } from './reasonable-wealth';
 import { ultimate13x4 } from './ultimate-13x4';
 
 export const ALL_PROGRAMS: Program[] = [
@@ -25,6 +26,7 @@ export const ALL_PROGRAMS: Program[] = [
   reasonableLeadership,
   reasonableSuccess,
   reasonableTeaching,
+  reasonableWealth,
   ultimate13x4,
 ];
 

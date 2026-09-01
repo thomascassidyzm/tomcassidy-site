@@ -269,6 +269,20 @@ export interface Program {
   cycleDepths?: { name: string; instruction: string }[];
   /** The standing questions the whole programme keeps returning to. */
   metaQuestions?: { question: string; gloss?: string }[];
+  /**
+   * The INNER RING of the wheel, when the diagram carries one — a second,
+   * concentric band of wisdom lines sitting inside the rim, transcribed in the
+   * order they read round the wheel.
+   *
+   * Deliberately NOT attached to individual focus points: on the one wheel that
+   * has an inner ring (Reasonable Wealth), the artefact gives the lines in
+   * reading-round order, which is not the same as the numeral order of the
+   * spokes, so which line belongs to which spoke is not established by the
+   * source. Recorded whole and unbound rather than paired by guesswork. If the
+   * pairing is later settled by the author, these become `FocusPoint.coach`
+   * material and this field can go.
+   */
+  innerRing?: string[];
   /** The central focus at the hub (Algorithm Zero for eating; the keystone for 9×4). */
   hub: {
     /** Hub label, multi-line, e.g. ['EAT', 'MORE']. */
