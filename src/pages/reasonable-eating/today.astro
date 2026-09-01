@@ -1,7 +1,6 @@
 ---
 import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
 import { todaysFocus } from '@/lib/today';
-import { currentGoal } from '@/lib/push-store';
 
 // The everyday PRACTICE screen — and the page a push notification opens.
 // It shows ONE thing: this week's focus. Computed fresh on each request so it
@@ -10,9 +9,10 @@ export const prerender = false;
 
 const { week, totalWeeks, focus, domain } = todaysFocus(program);
 
-// This week's one thing, in your own words — rendered server-side so the page a
-// push opens already knows where you are in the loop. Null means "not set yet".
-const goal = await currentGoal();
+// The goal is NOT rendered server-side any more. Whose goal it is depends on
+// which device is asking, and the server only learns that from the browser's
+// own push subscription — so the goal box loads client-side, after the
+// service-worker handshake below hands it an identity.
 ---
 
 <!doctype html>
@@ -40,12 +40,18 @@ const goal = await currentGoal();
         point: we show back exactly what we heard, and nothing is ever pushed
         until you've confirmed it's actually what you said.
       -->
-      <section
-        class="goal"
-        id="goal"
-        data-state={goal ? (goal.blessed ? 'blessed' : 'unblessed') : 'empty'}
-      >
-        <form class="goal-set" id="goal-set" hidden={!!goal}>
+      <section class="goal" id="goal" data-state="loading">
+        <p class="goal-loading" id="goal-loading">Finding your one thing…</p>
+
+        <div class="goal-off" id="goal-off" hidden>
+          <p class="goal-label">Your one thing this week</p>
+          <p class="line">
+            Turn the coach on first — tap <a href="/reasonable-eating">🔔 Tom in your pocket</a> on
+            the programme page, and this is where your one thing lives.
+          </p>
+        </div>
+
+        <form class="goal-set" id="goal-set" hidden>
           <label class="goal-label" for="goal-text">Your one thing this week</label>
           <textarea
             id="goal-text"
@@ -57,18 +63,18 @@ const goal = await currentGoal();
           <button type="submit" class="goal-btn">Set it</button>
         </form>
 
-        <div class="goal-confirm" id="goal-confirm" hidden={!goal || goal.blessed}>
+        <div class="goal-confirm" id="goal-confirm" hidden>
           <p class="goal-label">Is this exactly what you said?</p>
-          <blockquote class="goal-text" id="goal-echo">{goal?.text}</blockquote>
+          <blockquote class="goal-text" id="goal-echo"></blockquote>
           <div class="goal-row">
             <button type="button" class="goal-btn" id="goal-bless">Yes, that's it</button>
             <button type="button" class="goal-link" id="goal-redo">No — say it again</button>
           </div>
         </div>
 
-        <div class="goal-done" id="goal-done" hidden={!goal?.blessed}>
+        <div class="goal-done" id="goal-done" hidden>
           <p class="goal-label">Your one thing this week</p>
-          <blockquote class="goal-text" id="goal-blessed">{goal?.text}</blockquote>
+          <blockquote class="goal-text" id="goal-blessed"></blockquote>
           <button type="button" class="goal-link" id="goal-change">Change it</button>
         </div>
 
@@ -80,16 +86,24 @@ const goal = await currentGoal();
       // The blessed-confirmation loop. `set` stores the text unblessed; `bless`
       // confirms the server's copy without re-sending any text, so what you
       // confirmed and what gets pushed cannot drift apart.
+      //
+      // Identity comes from this device's own push subscription: the server
+      // hashes the endpoint to an id, so every call has to carry the endpoint
+      // and nothing works until the coach is switched on.
       (function () {
         const root = document.getElementById('goal');
         const setForm = document.getElementById('goal-set') as HTMLFormElement | null;
         const confirmBox = document.getElementById('goal-confirm');
         const doneBox = document.getElementById('goal-done');
+        const offBox = document.getElementById('goal-off');
+        const loading = document.getElementById('goal-loading');
         const field = document.getElementById('goal-text') as HTMLTextAreaElement | null;
         const echo = document.getElementById('goal-echo');
         const blessedOut = document.getElementById('goal-blessed');
         const status = document.getElementById('goal-status');
         if (!root || !setForm || !confirmBox || !doneBox || !field) return;
+
+        let endpoint: string | null = null;
 
         function say(msg: string) {
           if (!status) return;
@@ -97,8 +111,10 @@ const goal = await currentGoal();
           status.hidden = !msg;
         }
 
-        function show(state: 'empty' | 'unblessed' | 'blessed') {
+        function show(state: 'loading' | 'off' | 'empty' | 'unblessed' | 'blessed') {
           root!.dataset.state = state;
+          if (loading) loading.hidden = state !== 'loading';
+          if (offBox) offBox.hidden = state !== 'off';
           setForm!.hidden = state !== 'empty';
           confirmBox!.hidden = state !== 'unblessed';
           doneBox!.hidden = state !== 'blessed';
@@ -108,17 +124,12 @@ const goal = await currentGoal();
           const res = await fetch('/api/push/goal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ ...payload, endpoint }),
           });
-          const out = await res.json();
-          if (!res.ok) throw new Error(out.error || 'That didn’t save.');
-          // No KV configured means nothing was written at runtime — say so
-          // rather than letting it look saved.
-          if (out.persisted === 'manual') {
-            say('Saved for now, but there’s no store configured — it won’t survive.');
-          } else {
-            say('');
-          }
+          const out = await res.json().catch(() => ({}) as any);
+          // Only treat it as saved when the server says it saved.
+          if (!res.ok || !out.ok) throw new Error(out.error || 'That didn’t save.');
+          say('');
           return out;
         }
 
@@ -156,6 +167,60 @@ const goal = await currentGoal();
           show('empty');
           field.focus();
         });
+
+        // The handshake: this device's push endpoint IS the identity. No
+        // subscription means there is nobody to be, so we say so rather than
+        // showing a box that cannot save.
+        (async function load() {
+          try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+              show('off');
+              return;
+            }
+            // `serviceWorker.ready` never resolves when nothing is registered
+            // for this scope, so it gets a deadline rather than a spinner that
+            // hangs forever.
+            const reg = await Promise.race([
+              navigator.serviceWorker.ready,
+              new Promise<null>((r) => setTimeout(() => r(null), 3000)),
+            ]);
+            if (!reg) {
+              show('off');
+              return;
+            }
+            const sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+              show('off');
+              return;
+            }
+            endpoint = sub.endpoint;
+            const res = await fetch(`/api/push/goal?endpoint=${encodeURIComponent(endpoint)}`);
+            const out = await res.json().catch(() => ({}) as any);
+            if (res.status === 404) {
+              // Subscribed in this browser, but the server has no row — the
+              // subscription never landed. Send them back to the bell.
+              show('off');
+              return;
+            }
+            if (!res.ok) {
+              show('off');
+              say(out.error || 'Couldn’t reach the coach just now.');
+              return;
+            }
+            const goal = out.goal;
+            if (!goal) {
+              show('empty');
+            } else if (goal.blessed) {
+              if (blessedOut) blessedOut.textContent = goal.text;
+              show('blessed');
+            } else {
+              if (echo) echo.textContent = goal.text;
+              show('unblessed');
+            }
+          } catch {
+            show('off');
+          }
+        })();
       })();
     </script>
 
@@ -279,6 +344,18 @@ const goal = await currentGoal();
         color: #a39b86;
         text-decoration: underline;
         cursor: pointer;
+      }
+      .goal-loading {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #a39b86;
+      }
+      .goal-off .line {
+        font-size: 1rem;
+        color: #d8d2c4;
+      }
+      .goal-off a {
+        color: #f3efe6;
       }
       .goal-status {
         margin: 0;

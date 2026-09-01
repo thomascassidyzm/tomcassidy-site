@@ -204,10 +204,21 @@ const countWord = COUNT_WORDS[instrumentCount] ?? String(instrumentCount);
           const save = await fetch('/api/push/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscription: sub.toJSON(), startMs }),
+            body: JSON.stringify({
+              subscription: sub.toJSON(),
+              startMs,
+              programSlug: 'reasonable-eating',
+            }),
           });
-          const out = await save.json();
-          if (!save.ok) throw new Error(out.error || 'Could not subscribe.');
+          const out = await save.json().catch(() => ({}));
+          // Only say it worked when the server says it was saved. Anything else
+          // — a 503 with no store, a failed write — says so plainly, because a
+          // promise the system can't keep is worse than no promise.
+          if (!save.ok || !out.ok) {
+            throw new Error(
+              out.error || 'That didn’t save, so you’re not subscribed yet. Try again in a bit.',
+            );
+          }
 
           cta.textContent = '🔔 Pocket coach on';
           say('You’re set. I’ll bring this week’s one thing to mind, gently, a couple of times a day.');
