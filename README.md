@@ -1,7 +1,7 @@
 # tomcassidy-site
 
 Tom Cassidy's personal hub — a sibling to **Distinction Physics** and
-**Configuration Economics**. Built with Astro 5 (`output: 'server'`,
+**Configuration Economics**. Built with Astro 6 (`output: 'server'`,
 `@astrojs/vercel`), inline-CSS-in-Astro, a shared design-token system, an
 Astro **content collection** for prose essays, a typed **programme** system
 (the Reason-Ability kit), and a context-aware reading **guide** (wired but not
