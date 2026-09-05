@@ -109,3 +109,14 @@ Newsreader (body) / IBM Plex Mono (mono).
 | `npm run build`   | Production build to `./dist/`           |
 | `npm run check`   | `astro check` (types)                   |
 | `npm run preview` | Preview the build                       |
+
+## Proposal microsites
+
+`/proposals/<slug>` are unlisted, noindexed client proposals (also disallowed
+in `public/robots.txt`). Each proposal is **data, not markup**: add a new file
+under `src/lib/proposals/` exporting a `Proposal` (see `types.ts`), list it in
+`src/lib/proposals/index.ts`, and the route `src/pages/proposals/[slug].astro`
+renders it. If the proposal wants design mockups, build a bespoke showcase
+component (see `src/components/proposals/DtsShowcase.astro`) and register it in
+the `showcases` map inside the route — that is the one deliberately per-client
+part.

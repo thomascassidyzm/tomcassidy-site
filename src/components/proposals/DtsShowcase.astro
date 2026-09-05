@@ -1,0 +1,772 @@
+---
+/**
+ * DtsShowcase — the three design directions for dreamtravelstudy.com,
+ * rendered with Tania's REAL directory, fetched live in the visitor's browser
+ * from her own open WordPress REST API (which allows cross-origin reads).
+ *
+ * Nothing of hers is committed to this public repo: the markup below holds
+ * only post IDs and neutral placeholder text. If her site is unreachable when
+ * the page is opened, the placeholders stay — composed layouts with neutral
+ * labels, never a broken one.
+ *
+ * The three directions are deliberately three different ideas of what the
+ * site IS: a warm prospectus, a precise reference instrument, an editorial
+ * travel journal. Different type, different structure, different logic.
+ */
+---
+
+<div class="showcase">
+  <!-- ============ DIRECTION 1 — THE PROSPECTUS ============ -->
+  <section class="direction" id="direction-prospectus">
+    <header class="direction-head">
+      <span class="direction-num">Design one</span>
+      <h3 class="direction-name">The Prospectus</h3>
+      <p class="direction-for">
+        For the family falling in love with a school — the site as a beautifully printed
+        school prospectus: calm, classical, one school at a time.
+      </p>
+    </header>
+
+    <div class="frame prospectus">
+      <div class="p-masthead">
+        <span class="p-mark">Dream Travel Study</span>
+        <span class="p-tag">Schools abroad, chosen with care</span>
+      </div>
+
+      <figure class="p-feature" data-sid="7116">
+        <div class="ph p-feature-img" data-f="img"></div>
+        <figcaption>
+          <span class="p-feature-label">Featured school</span>
+          <span class="p-feature-name" data-f="name">One of your 317 schools</span>
+          <span class="p-feature-loc" data-f="loc">From your directory, as it is today</span>
+        </figcaption>
+      </figure>
+
+      <div class="p-cards">
+        <figure class="p-card" data-sid="7169">
+          <div class="ph p-card-img" data-f="img"></div>
+          <p class="p-card-name" data-f="name">One of your schools</p>
+          <p class="p-card-loc" data-f="loc">&nbsp;</p>
+          <p class="p-card-age" data-f="age">&nbsp;</p>
+        </figure>
+        <figure class="p-card" data-sid="7166">
+          <div class="ph p-card-img" data-f="img"></div>
+          <p class="p-card-name" data-f="name">One of your schools</p>
+          <p class="p-card-loc" data-f="loc">&nbsp;</p>
+          <p class="p-card-age" data-f="age">&nbsp;</p>
+        </figure>
+        <figure class="p-card" data-sid="8660">
+          <div class="ph p-card-img" data-f="img"></div>
+          <p class="p-card-name" data-f="name">One of your schools</p>
+          <p class="p-card-loc" data-f="loc">&nbsp;</p>
+          <p class="p-card-age" data-f="age">&nbsp;</p>
+        </figure>
+        <figure class="p-card" data-sid="7204">
+          <div class="ph p-card-img" data-f="img"></div>
+          <p class="p-card-name" data-f="name">One of your schools</p>
+          <p class="p-card-loc" data-f="loc">&nbsp;</p>
+          <p class="p-card-age" data-f="age">&nbsp;</p>
+        </figure>
+      </div>
+
+      <div class="p-foot">Enquire · Visit · Compare — in five languages</div>
+    </div>
+
+    <div class="choose">
+      <button class="choose-btn" data-choice="The Prospectus">This is the one</button>
+      <span class="choose-hint">— or just tell Tom its name.</span>
+    </div>
+  </section>
+
+  <!-- ============ DIRECTION 2 — THE ATLAS ============ -->
+  <section class="direction" id="direction-atlas">
+    <header class="direction-head">
+      <span class="direction-num">Design two</span>
+      <h3 class="direction-name">The Atlas</h3>
+      <p class="direction-for">
+        For the parent comparing four schools in three countries at eleven at night — the
+        site as a precise, fast reference instrument you can filter and trust.
+      </p>
+    </header>
+
+    <div class="frame atlas">
+      <div class="a-bar">
+        <span class="a-mark">DTS<em>·</em>Atlas</span>
+        <span class="a-search">Search 317 schools…</span>
+      </div>
+      <div class="a-chips">
+        <span class="a-chip on">All countries</span>
+        <span class="a-chip">Spain · 36</span>
+        <span class="a-chip">UK · 62</span>
+        <span class="a-chip">Switzerland · 12</span>
+        <span class="a-chip">Age 3–18</span>
+      </div>
+
+      <div class="a-rows">
+        {
+          ['8570', '8264', '8273', '8660', '6499', '8978', '6493', '6602'].map((sid) => (
+            <div class="a-row" data-sid={sid}>
+              <div class="ph a-thumb" data-f="img" />
+              <div class="a-main">
+                <p class="a-name" data-f="name">
+                  One of your schools
+                </p>
+                <p class="a-loc" data-f="loc">
+                  &nbsp;
+                </p>
+              </div>
+              <div class="a-data">
+                <span class="a-tag" data-f="age" />
+                <span class="a-tag a-tag-cur" data-f="cur" />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      <div class="a-foot">317 schools · 5 languages · filtered in an instant</div>
+    </div>
+
+    <div class="choose">
+      <button class="choose-btn" data-choice="The Atlas">This is the one</button>
+      <span class="choose-hint">— or just tell Tom its name.</span>
+    </div>
+  </section>
+
+  <!-- ============ DIRECTION 3 — THE JOURNAL ============ -->
+  <section class="direction" id="direction-journal">
+    <header class="direction-head">
+      <span class="direction-num">Design three</span>
+      <h3 class="direction-name">The Journal</h3>
+      <p class="direction-for">
+        For the reader dreaming by destination — the site as an editorial travel journal,
+        led by countries and photography, with the five languages up front.
+      </p>
+    </header>
+
+    <div class="frame journal">
+      <div class="j-masthead">
+        <span class="j-mark">DREAM TRAVEL STUDY</span>
+        <span class="j-langs">EN · РУ · ES · RO · УК</span>
+      </div>
+
+      <div class="j-dest">
+        <div class="j-dest-head">
+          <h4>Spain</h4>
+          <span class="j-count">36 schools</span>
+        </div>
+        <figure class="j-lead" data-sid="7113">
+          <div class="ph j-lead-img" data-f="img"></div>
+          <p class="j-lead-name" data-f="name">One of your schools</p>
+          <p class="j-lead-loc" data-f="loc">&nbsp;</p>
+        </figure>
+        <div class="j-minis">
+          <figure class="j-mini" data-sid="7137">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+          <figure class="j-mini" data-sid="7134">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+        </div>
+      </div>
+
+      <div class="j-dest">
+        <div class="j-dest-head">
+          <h4>Italy</h4>
+          <span class="j-count">11 schools</span>
+        </div>
+        <div class="j-minis">
+          <figure class="j-mini" data-sid="7175">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+          <figure class="j-mini" data-sid="7197">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+        </div>
+      </div>
+
+      <div class="j-dest">
+        <div class="j-dest-head">
+          <h4>Switzerland</h4>
+          <span class="j-count">12 schools</span>
+        </div>
+        <div class="j-minis">
+          <figure class="j-mini" data-sid="7098">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+          <figure class="j-mini" data-sid="6499">
+            <div class="ph j-mini-img" data-f="img"></div>
+            <p class="j-mini-name" data-f="name">One of your schools</p>
+          </figure>
+        </div>
+      </div>
+
+      <div class="j-foot">Every country · every age · every curriculum</div>
+    </div>
+
+    <div class="choose">
+      <button class="choose-btn" data-choice="The Journal">This is the one</button>
+      <span class="choose-hint">— or just tell Tom its name.</span>
+    </div>
+  </section>
+
+  <p class="showcase-note">
+    Everything above is your own directory — the photographs and school names load straight
+    from your site as it is right now. In the finished version every photograph is a
+    replaced, licensed one.
+  </p>
+</div>
+
+<script>
+  // Fetch Tania's real schools from her open WordPress REST API and fill the
+  // mockups. On any failure the neutral placeholders simply remain.
+  const IDS = [
+    7113, 7116, 7134, 7137, 7166, 7169, 7175, 7197, 7204, 7098, 6499, 6493, 6602, 8264,
+    8273, 8570, 8660, 8978,
+  ];
+  const API =
+    'https://dreamtravelstudy.com/wp-json/wp/v2/school?per_page=20&_embed=wp:featuredmedia,wp:term&include=' +
+    IDS.join(',');
+
+  const decode = (s: string) => {
+    const el = document.createElement('textarea');
+    el.innerHTML = s;
+    return el.value;
+  };
+
+  interface School {
+    name: string;
+    img: string;
+    loc: string;
+    age: string;
+    cur: string;
+  }
+
+  function parseSchool(raw: any): School {
+    const media = raw?._embedded?.['wp:featuredmedia']?.[0];
+    const groups: any[][] = raw?._embedded?.['wp:term'] ?? [];
+    const by: Record<string, string[]> = {};
+    for (const group of groups) {
+      for (const t of group ?? []) {
+        if (typeof t?.name === 'string' && !t.name.startsWith('#')) {
+          (by[t.taxonomy] ??= []).push(decode(t.name));
+        }
+      }
+    }
+    const country = by.school_country?.[0] ?? '';
+    const city = (by.region ?? []).find((r) => r !== country) ?? '';
+    return {
+      name: decode(raw?.title?.rendered ?? ''),
+      img: media?.source_url ?? '',
+      loc: [city, country].filter(Boolean).join(', '),
+      age: (by.age?.[0] ?? '').replace('Age:', 'Ages'),
+      cur: (by.curriculum ?? []).slice(0, 2).join(' · '),
+    };
+  }
+
+  function fill(schools: Map<number, School>) {
+    document.querySelectorAll<HTMLElement>('.showcase [data-sid]').forEach((slot) => {
+      const s = schools.get(Number(slot.dataset.sid));
+      if (!s || !s.name) return;
+      slot.querySelectorAll<HTMLElement>('[data-f]').forEach((el) => {
+        const field = el.dataset.f as keyof School;
+        if (field === 'img') {
+          if (!s.img) return;
+          const img = new Image();
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = s.name;
+          img.src = s.img;
+          img.addEventListener('load', () => el.classList.add('ph-loaded'));
+          el.appendChild(img);
+        } else if (s[field]) {
+          el.textContent = s[field];
+        }
+      });
+    });
+  }
+
+  fetch(API)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then((list: any[]) => {
+      const schools = new Map<number, School>();
+      for (const raw of list) schools.set(raw.id, parseSchool(raw));
+      fill(schools);
+    })
+    .catch(() => {
+      /* placeholders remain — composed, neutral, never broken */
+    });
+
+  // "This is the one" — compose a message for Tania to send Tom, with no
+  // backend: the phone's own share sheet, falling back to the clipboard.
+  document.querySelectorAll<HTMLButtonElement>('.choose-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = `Tom — of the three designs, I like "${btn.dataset.choice}" best.`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ text });
+          btn.textContent = 'Sent ✓';
+          return;
+        }
+        throw new Error('no share');
+      } catch {
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Copied — paste it to Tom';
+        } catch {
+          btn.textContent = `Tell Tom: ${btn.dataset.choice}`;
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+    margin-top: 2rem;
+  }
+
+  /* ---------- shared direction chrome (Tom's voice) ---------- */
+  .direction-head {
+    max-width: 680px;
+    margin-bottom: 1.1rem;
+  }
+  .direction-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .direction-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.8rem;
+    margin: 0.2rem 0 0.4rem;
+  }
+  .direction-for {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .frame {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lift);
+    border: 1px solid var(--border);
+  }
+
+  /* placeholder blocks: warm neutral gradient until the real image lands */
+  .ph {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #d8d0c0, #c4bba8);
+  }
+  .ph :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .ph :global(img.ph-loaded),
+  .ph.ph-loaded :global(img) {
+    opacity: 1;
+  }
+
+  .choose {
+    margin-top: 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .choose-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .choose-btn:active {
+    transform: translateY(1px);
+  }
+  .choose-hint {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .showcase-note {
+    font-family: 'Newsreader', serif;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    max-width: 680px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 1rem;
+  }
+
+  /* ================= 1 · THE PROSPECTUS =================
+     Cormorant Garamond, deep green on cream, gold rules. */
+  .prospectus {
+    background: #f9f5ec;
+    color: #22382c;
+    font-family: 'Cormorant Garamond', serif;
+    padding: 1.6rem 1.3rem 0;
+  }
+  .p-masthead {
+    text-align: center;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid #c8a95e;
+    margin-bottom: 1.4rem;
+  }
+  .p-mark {
+    display: block;
+    font-size: 1.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #1d3325;
+  }
+  .p-tag {
+    display: block;
+    font-style: italic;
+    font-size: 1.02rem;
+    color: #5c705f;
+    margin-top: 0.15rem;
+  }
+  .p-feature {
+    margin: 0 0 1.5rem;
+  }
+  .p-feature-img {
+    aspect-ratio: 16 / 8.5;
+    border-radius: 4px;
+  }
+  .p-feature figcaption {
+    padding-top: 0.8rem;
+    text-align: center;
+  }
+  .p-feature-label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #b08a3e;
+  }
+  .p-feature-name {
+    display: block;
+    font-size: 1.65rem;
+    font-weight: 500;
+    line-height: 1.15;
+    margin-top: 0.25rem;
+  }
+  .p-feature-loc {
+    display: block;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: #5c705f;
+  }
+  .p-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem 1rem;
+    padding-bottom: 1.5rem;
+  }
+  .p-card {
+    margin: 0;
+  }
+  .p-card-img {
+    aspect-ratio: 4 / 3;
+    border-radius: 3px;
+  }
+  .p-card-name {
+    font-size: 1.12rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0.55rem 0 0.1rem;
+  }
+  .p-card-loc {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #5c705f;
+    margin: 0;
+  }
+  .p-card-age {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #b08a3e;
+    margin: 0.25rem 0 0;
+  }
+  .p-foot {
+    text-align: center;
+    font-style: italic;
+    font-size: 0.98rem;
+    color: #5c705f;
+    border-top: 1px solid #c8a95e;
+    padding: 0.9rem 0 1.1rem;
+  }
+
+  /* ================= 2 · THE ATLAS =================
+     IBM Plex Sans/Mono, ink blue on cool white, tabular precision. */
+  .atlas {
+    background: #fbfcfe;
+    color: #182636;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .a-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem 1rem;
+    background: #16457c;
+    color: #fff;
+  }
+  .a-mark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .a-mark em {
+    color: #7fb2ec;
+    font-style: normal;
+  }
+  .a-search {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .a-chips {
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    border-bottom: 1px solid #e2e8f1;
+  }
+  .a-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid #c8d4e4;
+    color: #3c526e;
+    white-space: nowrap;
+  }
+  .a-chip.on {
+    background: #16457c;
+    border-color: #16457c;
+    color: #fff;
+  }
+  .a-rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .a-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .a-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #dde5ee, #c9d4e2);
+  }
+  .a-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .a-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    line-height: 1.25;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .a-loc {
+    font-size: 0.8rem;
+    color: #64748c;
+    margin: 0.1rem 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .a-data {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    max-width: 42%;
+  }
+  .a-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    padding: 0.18rem 0.5rem;
+    border-radius: 4px;
+    background: #eaf1f9;
+    color: #16457c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .a-tag:empty {
+    display: none;
+  }
+  .a-tag-cur {
+    background: #f0ede4;
+    color: #7a6428;
+  }
+  .a-foot {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: #64748c;
+    text-align: center;
+    padding: 0.85rem;
+  }
+
+  /* ================= 3 · THE JOURNAL =================
+     Archivo display, warm editorial, destination-led. */
+  .journal {
+    background: #fffdf8;
+    color: #2b2118;
+    font-family: 'Newsreader', serif;
+    padding-bottom: 0.2rem;
+  }
+  .j-masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 1.1rem 1.2rem;
+    border-bottom: 3px solid #2b2118;
+  }
+  .j-mark {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 1.02rem;
+    letter-spacing: 0.03em;
+  }
+  .j-langs {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: #8c5b2f;
+    white-space: nowrap;
+  }
+  .j-dest {
+    padding: 1.2rem 1.2rem 0.4rem;
+  }
+  .j-dest-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin-bottom: 0.8rem;
+  }
+  .j-dest-head h4 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 0;
+    color: #2b2118;
+  }
+  .j-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: #fff;
+    background: #b3562e;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+  }
+  .j-lead {
+    margin: 0 0 0.9rem;
+  }
+  .j-lead-img {
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+  }
+  .j-lead-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.25;
+    margin: 0.6rem 0 0.05rem;
+  }
+  .j-lead-loc {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #8a7561;
+    margin: 0;
+  }
+  .j-minis {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+  }
+  .j-mini {
+    margin: 0;
+  }
+  .j-mini-img {
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+  }
+  .j-mini-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    margin: 0.45rem 0 0;
+  }
+  .j-foot {
+    font-style: italic;
+    text-align: center;
+    color: #8a7561;
+    font-size: 0.95rem;
+    padding: 1.1rem 0 1.2rem;
+    border-top: 1px solid #e8ddcd;
+    margin-top: 1rem;
+  }
+
+  /* wider screens: give the frames room, keep phone-first proportions */
+  @media (min-width: 720px) {
+    .p-cards {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .j-minis {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

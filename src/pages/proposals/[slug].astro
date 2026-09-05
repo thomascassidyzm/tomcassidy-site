@@ -1,0 +1,348 @@
+---
+/**
+ * /proposals/[slug] — the proposal microsite route.
+ *
+ * Everything on the page is driven by the proposal's data file
+ * (src/lib/proposals/<slug>.ts). The one pluggable, per-client part is the
+ * design showcase: where a proposal declares a `mockups` section, the
+ * component named in `showcases` below is rendered. A future proposal with no
+ * mockups simply omits that section.
+ */
+import ProposalLayout from '@/layouts/ProposalLayout.astro';
+import DtsShowcase from '@/components/proposals/DtsShowcase.astro';
+import { proposals } from '@/lib/proposals';
+
+const showcases: Record<string, any> = {
+  dreamtravelstudy: DtsShowcase,
+};
+
+const { slug } = Astro.params;
+const proposal = slug ? proposals[slug] : undefined;
+if (!proposal) return new Response('Not found', { status: 404 });
+
+const Showcase = showcases[proposal.slug];
+---
+
+<ProposalLayout title={proposal.title}>
+  <article class="proposal">
+    <header class="hero">
+      <p class="hero-kicker">A proposal for</p>
+      <h1 class="hero-title">{proposal.projectName}</h1>
+      <p class="hero-byline">{proposal.byline}</p>
+    </header>
+
+    <div class="greeting">
+      {proposal.greeting.map((p) => <p>{p}</p>)}
+    </div>
+
+    {
+      proposal.sections.map((section) => {
+        if (section.kind === 'prose') {
+          return (
+            <section class="block">
+              <h2>{section.heading}</h2>
+              {section.paragraphs.map((p) => (
+                <p>{p}</p>
+              ))}
+            </section>
+          );
+        }
+        if (section.kind === 'price') {
+          return (
+            <section class="block">
+              <h2>{section.heading}</h2>
+              <div class="price-card">
+                <p class="price-amount">{section.amount}</p>
+                <p class="price-qualifier">{section.qualifier}</p>
+                <ul class="price-includes">
+                  {section.includes.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <p class="price-market">
+                <span class="price-market-rate">Market rate: {section.marketRate}.</span>{' '}
+                {section.marketNote}
+              </p>
+            </section>
+          );
+        }
+        if (section.kind === 'facts') {
+          return (
+            <section class="block">
+              <h2>{section.heading}</h2>
+              {section.intro && <p>{section.intro}</p>}
+              <dl class="facts">
+                {section.items.map((f) => (
+                  <div class="fact">
+                    <dt>{f.value}</dt>
+                    <dd>{f.label}</dd>
+                  </div>
+                ))}
+              </dl>
+              {section.footnote && <p class="facts-footnote">{section.footnote}</p>}
+            </section>
+          );
+        }
+        if (section.kind === 'mockups') {
+          return (
+            <section class="block block-wide">
+              <h2>{section.heading}</h2>
+              {section.intro.map((p) => (
+                <p class="mockups-intro">{p}</p>
+              ))}
+              {Showcase && <Showcase />}
+            </section>
+          );
+        }
+        if (section.kind === 'optional') {
+          return (
+            <section class="block optional">
+              <h2>{section.heading}</h2>
+              {section.paragraphs.map((p) => (
+                <p>{p}</p>
+              ))}
+              <p class="optional-reassurance">{section.reassurance}</p>
+            </section>
+          );
+        }
+        if (section.kind === 'slots') {
+          return (
+            <section class="block">
+              <h2>{section.heading}</h2>
+              <p>{section.intro}</p>
+              <div class="slots">
+                {section.slots.map((s) => (
+                  <div class="slot">
+                    <span class="slot-day">{s.day}</span>
+                    <span class="slot-time">{s.time}</span>
+                  </div>
+                ))}
+              </div>
+              <p>{section.outro}</p>
+            </section>
+          );
+        }
+        return null;
+      })
+    }
+
+    <footer class="signoff">
+      {proposal.signoff.map((p) => <p>{p}</p>)}
+      <p class="signature">{proposal.signature}</p>
+    </footer>
+  </article>
+</ProposalLayout>
+
+<style>
+  .proposal {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 5rem;
+  }
+
+  /* ---- hero ---- */
+  .hero {
+    margin-bottom: 2.5rem;
+  }
+  .hero-kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+  }
+  .hero-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(2rem, 8vw, 3rem);
+    line-height: 1.08;
+    margin: 0 0 0.75rem;
+  }
+  .hero-byline {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ---- prose ---- */
+  .greeting p,
+  .block p {
+    font-family: 'Newsreader', serif;
+    font-size: 1.13rem;
+    line-height: 1.62;
+    margin: 0 0 1rem;
+  }
+  .block {
+    margin-top: 3rem;
+  }
+  .block h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* ---- price ---- */
+  .price-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.4rem;
+    box-shadow: var(--shadow-soft);
+    margin: 1.25rem 0;
+  }
+  .price-amount {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    font-weight: 500;
+    line-height: 1;
+    margin: 0 !important;
+  }
+  .price-qualifier {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin: 0.35rem 0 1rem !important;
+  }
+  .price-includes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .price-includes li {
+    font-family: 'Newsreader', serif;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    padding: 0.5rem 0 0.5rem 1.6rem;
+    position: relative;
+    border-top: 1px solid var(--border-soft);
+  }
+  .price-includes li::before {
+    content: '✓';
+    position: absolute;
+    left: 0.2rem;
+    color: var(--derived);
+    font-weight: 600;
+  }
+  .price-market {
+    font-size: 1.02rem !important;
+    color: var(--text-secondary);
+  }
+  .price-market-rate {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+  }
+
+  /* ---- facts ---- */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+  }
+  .fact {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+  }
+  .fact dt {
+    font-family: 'Fraunces', serif;
+    font-size: 1.9rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .fact dd {
+    font-family: 'Newsreader', serif;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    color: var(--text-secondary);
+    margin: 0.4rem 0 0;
+  }
+  .facts-footnote {
+    font-size: 1rem !important;
+    color: var(--text-secondary);
+    background: var(--contested-wash);
+    border-left: 3px solid var(--contested);
+    padding: 0.85rem 1rem;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ---- mockups block breaks out wider ---- */
+  .block-wide {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: max(1.25rem, calc(50vw - 340px));
+    padding-right: max(1.25rem, calc(50vw - 340px));
+  }
+  .mockups-intro {
+    max-width: 680px;
+  }
+
+  /* ---- optional extra ---- */
+  .optional {
+    background: var(--derived-wash);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 1.4rem 1.4rem 1rem;
+  }
+  .optional h2 {
+    border-top: none;
+    padding-top: 0;
+  }
+  .optional-reassurance {
+    font-style: italic;
+    color: var(--text-secondary);
+  }
+
+  /* ---- slots ---- */
+  .slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+  }
+  .slot {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .slot-day {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  .slot-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  /* ---- signoff ---- */
+  .signoff {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .signoff p {
+    font-family: 'Newsreader', serif;
+    font-size: 1.13rem;
+    line-height: 1.62;
+    margin: 0 0 1rem;
+  }
+  .signature {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem;
+    font-style: italic;
+  }
+</style>

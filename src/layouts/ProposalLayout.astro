@@ -1,0 +1,54 @@
+---
+/**
+ * ProposalLayout — the shell for client proposal microsites (/proposals/…).
+ *
+ * Deliberately NOT BaseLayout: a proposal addressed to a client should not
+ * carry the site's own navigation. It keeps Tom's house voice for the wrapper
+ * (tokens, Fraunces/Newsreader, warm paper) but pins the light theme — these
+ * pages are read once, on a phone, by a guest.
+ *
+ * Every proposal page is noindex/nofollow; /proposals/ is also disallowed in
+ * public/robots.txt. Both on purpose, because either alone can be missed.
+ */
+import '@/styles/tokens.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'A private proposal.' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- House faces for the proposal chrome, plus the three mockup voices:
+         IBM Plex Sans (Atlas), Cormorant Garamond (Prospectus), Archivo (Journal). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..600;1,9..144,360..560&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..520&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Archivo:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="proposal-main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  .proposal-main {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+</style>
