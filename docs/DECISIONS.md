@@ -6,6 +6,47 @@ falsify it.
 
 ---
 
+## 2026-09-06 — Whose week it is: the Today page counts from your start date, not Tom's
+
+**Decision.** `/reasonable-eating/today` shows the week the VIEWER is on,
+counted from their own subscription's start date. Somebody who has not switched
+the coach on keeps the server-rendered default, which is the rotation off the
+global `PROGRAM_START` — Tom's week.
+
+**What was wrong.** The coaching engine had already settled multi-user: identity
+is the sha-256 of the browser's push endpoint, and every week in the system —
+the push, the goal key, the wheel — counts from that subscriber's own `startMs`,
+so a newcomer's week 1 is the week they arrived, not the week Tom started. The
+Today page was the one surface that never converted. It called `todaysFocus()`,
+which counts from `PROGRAM_START` alone. So a person in their own week 2 would
+get a notification for one focus, tap it, land on a page headed with a different
+focus, and find their week-2 goal sitting underneath it. Verified on the preview
+deployment: a subscriber who started fourteen days ago now sees *Week 3 · Eat for
+the body & the taste buds*; the anonymous default is still *Week 11 · Eat for
+fun*. Before this change they saw week 11 too.
+
+**Shape, and why.** The rotation ships to the client as a twelve-entry JSON
+block and the heading is swapped from `weekIndex`, which the goal endpoint
+already returned — so the fix costs no extra round trip and adds no state. It
+indexes `rotationOrder()`, the same array the cron sends off, rather than
+re-deriving the arithmetic: a unit test pins `order[weekIndex % order.length]`
+to `currentWeekNumber()`, which is what stops the page and the push drifting
+apart again. Better: the page agrees with the notification that opened it.
+Simpler: one arithmetic, in one place, read by both. Cheaper: 12 short strings
+in the HTML against a second API call on every open.
+
+**And a way in.** Nothing linked to the Today page. The only route to it was to
+wait for a push, so a person who had just tapped the bell could not reach the
+screen where they say their one thing until hours later. The programme page now
+carries a *→ This week* link.
+
+**What would falsify it.** If a subscriber should see the programme's calendar
+week rather than their own — a cohort walking the rotation together — then the
+per-person start date is wrong everywhere, not just here, and the engine changes,
+not this page.
+
+---
+
 ## 2026-08-25 — Writing search reads bodies, and sees every published page
 
 **Decision.** The /writing search matches full body text, and standalone
