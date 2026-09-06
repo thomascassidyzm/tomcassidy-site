@@ -6,6 +6,30 @@ falsify it.
 
 ---
 
+## 2026-09-06 — The Script and the wheel are one method at three tick rates
+
+**Decision.** The 13x4 wheel coach and the Script are not two methods. They are one
+selector run at three tick rates: thought, week, year. The Script is the selector.
+The wheel is the same selector with the choosing done in advance and held for a
+week. The Sausage Machine is the coupling between altitudes. Full argument and
+the move-by-move mapping in `docs/SCRIPT-AND-WHEEL.md`.
+
+**Why it wins.** Better: one voice and one move for the coach, instead of a
+coaching mode and a reminder mode that never meet. Simpler: the conversation
+becomes the Script run inside this week's slot, which needs three inputs that
+all already exist in code. Cheaper: no new doctrine, no new persona, and the
+push loop stays free of model calls.
+
+**What it does not decide.** Who the daily voice is, Alexander or Tom, stays
+Tom's call. Discernment is a separate setup operation that the Script does not
+contain.
+
+**What would falsify it.** A Script move that has no counterpart at week or year
+altitude, or a wheel behaviour that cannot be read as a held selection. The
+mapping table lists every move; a row that will not fill is the test.
+
+---
+
 ## 2026-08-25 — Writing search reads bodies, and sees every published page
 
 **Decision.** The /writing search matches full body text, and standalone
