@@ -42,6 +42,12 @@ const countWord = COUNT_WORDS[instrumentCount] ?? String(instrumentCount);
       <h1 class="prog-title">{program.title}</h1>
       <p class="prog-lede">{program.blurb}</p>
       <div class="install-row">
+        <!--
+          The practice screen. Nothing linked to it before, so the only way in
+          was to wait for a push — which meant somebody who had just switched
+          the coach on could not reach the page where they say their one thing.
+        -->
+        <a href="/reasonable-eating/today" class="install-cta install-link">→ This week</a>
         <button id="pwa-install" class="install-cta" type="button" hidden>↓ Install as an app</button>
         <button id="notify-cta" class="install-cta" type="button" hidden>🔔 Tom in your pocket</button>
         <p id="ios-hint" class="ios-hint" hidden>Add to Home Screen: tap <strong>Share</strong>, then <strong>“Add to Home Screen.”</strong></p>
@@ -280,6 +286,7 @@ const countWord = COUNT_WORDS[instrumentCount] ?? String(instrumentCount);
     transition: background 0.2s ease;
   }
   .install-cta:hover { background: var(--derived-chip); }
+  .install-link { display: inline-block; text-decoration: none; }
   .ios-hint {
     font-family: var(--font-mono);
     font-size: 0.72rem;

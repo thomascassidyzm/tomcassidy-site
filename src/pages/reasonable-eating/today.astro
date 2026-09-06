@@ -1,18 +1,36 @@
 ---
 import { reasonableEating as program } from '@/lib/programs/reasonable-eating';
 import { todaysFocus } from '@/lib/today';
+import { focusForWeek, rotationOrder } from '@/lib/coach-engine';
 
 // The everyday PRACTICE screen — and the page a push notification opens.
 // It shows ONE thing: this week's focus. Computed fresh on each request so it
 // always reflects the live calendar week, never a stale build.
 export const prerender = false;
 
+// The DEFAULT view, for somebody who has not switched the coach on: the
+// rotation off Tom's own start date. A subscriber's view is not this — see
+// below.
 const { week, totalWeeks, focus, domain } = todaysFocus(program);
 
-// The goal is NOT rendered server-side any more. Whose goal it is depends on
-// which device is asking, and the server only learns that from the browser's
-// own push subscription — so the goal box loads client-side, after the
-// service-worker handshake below hands it an identity.
+// Neither the goal NOR the week is settled server-side. Whose they are depends
+// on which device is asking, and the server only learns that from the browser's
+// own push subscription — so both load client-side, after the service-worker
+// handshake below hands it an identity.
+//
+// A subscriber is on THEIR week, counted from THEIR start date, which is what
+// the push that brought them here was computed from. Rendering Tom's week to
+// them would contradict the notification they just tapped. The whole rotation
+// ships to the client so the swap needs no second round trip: it is twelve
+// short strings, and it is the same `rotationOrder` the cron sends off, so the
+// page and the push cannot disagree about which focus it is.
+const rotation = rotationOrder(program).map((w) => {
+  const f = focusForWeek(program, w);
+  const inDomain = program.domains.find((d) => d.focuses.some((x) => x.week === w));
+  return f === 'hub'
+    ? { week: w, name: program.hub.algorithmName, wisdom: program.hub.coach.wisdom, domain: '' }
+    : { week: w, name: f.name, wisdom: f.coach.wisdom, domain: inDomain?.name ?? '' };
+});
 ---
 
 <!doctype html>
@@ -31,9 +49,9 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
   </head>
   <body>
     <main class="today">
-      <p class="week">Week {week} of {totalWeeks}{domain ? ` · ${domain}` : ''}</p>
-      <h1 class="focus">{focus.name}</h1>
-      <p class="line">{focus.coach.wisdom}</p>
+      <p class="week" id="week-line">Week {week} of {totalWeeks}{domain ? ` · ${domain}` : ''}</p>
+      <h1 class="focus" id="focus-name">{focus.name}</h1>
+      <p class="line" id="focus-wisdom">{focus.coach.wisdom}</p>
 
       <!--
         One thing, one week, your words. Three states, and the middle one is the
@@ -82,6 +100,8 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
       </section>
     </main>
 
+    <script type="application/json" id="rotation" is:inline set:html={JSON.stringify(rotation)}></script>
+
     <script>
       // The blessed-confirmation loop. `set` stores the text unblessed; `bless`
       // confirms the server's copy without re-sending any text, so what you
@@ -104,6 +124,38 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
         if (!root || !setForm || !confirmBox || !doneBox || !field) return;
 
         let endpoint: string | null = null;
+
+        /**
+         * Put this page on the VIEWER's week, not Tom's.
+         *
+         * `weekIndex` is the absolute ordinal the server counted from their own
+         * start date — the very number the push was built from — so indexing
+         * the rotation with it is the same arithmetic `currentWeekNumber` runs
+         * server-side. Anyone who has not switched the coach on keeps the
+         * server-rendered default, which is the rotation off Tom's start.
+         */
+        function showWeek(weekIndex: number) {
+          const holder = document.getElementById('rotation');
+          if (!holder?.textContent) return;
+          let rotation: { week: number; name: string; wisdom: string; domain: string }[];
+          try {
+            rotation = JSON.parse(holder.textContent);
+          } catch {
+            return;
+          }
+          if (!rotation.length || !Number.isFinite(weekIndex) || weekIndex < 0) return;
+
+          const slot = rotation[weekIndex % rotation.length];
+          const weekLine = document.getElementById('week-line');
+          const nameOut = document.getElementById('focus-name');
+          const wisdomOut = document.getElementById('focus-wisdom');
+          if (weekLine) {
+            weekLine.textContent =
+              `Week ${slot.week} of ${rotation.length}` + (slot.domain ? ` · ${slot.domain}` : '');
+          }
+          if (nameOut) nameOut.textContent = slot.name;
+          if (wisdomOut) wisdomOut.textContent = slot.wisdom;
+        }
 
         function say(msg: string) {
           if (!status) return;
@@ -207,6 +259,10 @@ const { week, totalWeeks, focus, domain } = todaysFocus(program);
               say(out.error || 'Couldn’t reach the coach just now.');
               return;
             }
+            // Their week arrives with their goal, off the same row — so the
+            // heading stops being Tom's before the goal box paints.
+            if (typeof out.weekIndex === 'number') showWeek(out.weekIndex);
+
             const goal = out.goal;
             if (!goal) {
               show('empty');

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { isGone, payloadFor, runSends, type RunDeps } from '@/lib/coach-run';
+import { currentWeekNumber, rotationOrder, weekIndex } from '@/lib/coach-engine';
+import { reasonableEating } from '@/lib/programs/reasonable-eating';
 import type { Subscriber } from '@/lib/push-store';
 
 // The delivery loop, without a phone in sight. What matters here is that each
@@ -154,5 +156,34 @@ describe('runSends', () => {
   it('an empty list is a no-op, not an error', async () => {
     const { d } = deps(async () => 201);
     expect(await runSends([], d)).toEqual({ attempted: 0, sent: 0, pruned: 0, failed: 0 });
+  });
+});
+
+/**
+ * The Today page puts a subscriber on THEIR week by indexing the rotation it
+ * was handed with the `weekIndex` the goal endpoint returned. That is only
+ * correct if it lands on the same focus the cron would have pushed, so pin the
+ * two together: if this breaks, the page and the notification disagree, which
+ * is exactly the bug the per-person week was meant to end.
+ */
+describe('the Today page and the push agree about which week it is', () => {
+  const order = rotationOrder(reasonableEating);
+
+  it('indexing the rotation by weekIndex equals currentWeekNumber', () => {
+    const startMs = Date.UTC(2026, 5, 22);
+    for (let w = 0; w < order.length * 3 + 5; w++) {
+      const nowMs = startMs + w * 7 * 86_400_000;
+      expect(order[weekIndex(startMs, nowMs) % order.length]).toBe(
+        currentWeekNumber(reasonableEating, startMs, nowMs),
+      );
+    }
+  });
+
+  it('two people who started on different dates are on different weeks', () => {
+    const nowMs = Date.UTC(2026, 8, 6);
+    const tom = Date.UTC(2026, 5, 22);
+    const newcomer = nowMs - 14 * 86_400_000;
+    expect(weekIndex(tom, nowMs)).not.toBe(weekIndex(newcomer, nowMs));
+    expect(weekIndex(newcomer, nowMs)).toBe(2);
   });
 });
