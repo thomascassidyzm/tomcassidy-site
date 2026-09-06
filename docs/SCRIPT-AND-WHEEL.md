@@ -8,6 +8,65 @@
 
 ---
 
+## 0. The ruling: the daily voice is the user, quoting themselves
+
+> Tom, 2026-09-06, ruling on the daily voice after two options were put to him and he took
+> neither: *"I think we moved towards the voice is the user themselves as a result of creating
+> their own wheel, as an output from the WAYL assessment"*.
+
+Not Alexander. Not Tom. The person themselves. The daily line is what the user said they would
+do, given back to them in their own words. The wheel is an output of their own assessment, so
+what is on it is already theirs; the daily tick reflects it rather than advising on it.
+
+**This is the Gateway Question with a week between the asking and the arriving.** "What WOULD you
+choose?" is asked once, at the setup, and the answer arrives on a Tuesday morning in the voice of
+the person who gave it. Nobody coaches anybody. The coach's whole job at day altitude is custody:
+hold the sentence exactly as it was said, and hand it back at the moment it is useful.
+
+Three consequences, and they are the reason this ruling is cheap:
+
+- **The verbatim rule is now load-bearing, not a nicety.** `coach-engine.ts` already says of the
+  blessed goal: *"Verbatim. Never rewritten, tidied, capitalised or wrapped in encouragement."*
+  Under a coach voice that was a courtesy. Under this ruling it is the product. Rewriting, or
+  wrapping in encouragement, is not a lapse of style — it replaces the speaker.
+- **The day tick needs no model call, ever.** A voice that is the user's own has nothing to
+  generate. This was previously an efficiency; it is now a correctness property.
+- **The authored tone banks are demoted to scaffolding.** They are Tom's voice, and Tom's voice is
+  now what the daily line is *not*. They remain the honest fallback for a week where the person
+  has said nothing yet — silence would be worse — but the target state is that the bank fires
+  rarely, and every time it fires is a week where the machine failed to get the person's own words.
+
+### What this answers: the seam at §5.2
+
+Section 5.2 named pre-commitment as the strongest honest break in the analogy — *"the wheel decides
+in advance and holds. The Script never does. Every thought is a fresh selection."* That break only
+exists if the pre-commitment is made by somebody else. **A pre-commitment in the user's own words is
+not a rival to the Script; it is the Script deferred.** The selection still happened — the person
+still answered "what would you choose?" — it simply happened on Sunday and is delivered on
+Wednesday. The mechanism is identical; only the latency differs, and latency is the axis this whole
+document is already organised on. Three tick rates, one selector.
+
+So §5.2 is not a break at all once the voice is ruled. It downgrades to what §5.2's own last
+sentence already suspected: a division of labour by cost. The expensive part — choosing — is paid
+once, by the person, in their words. The cheap part — remembering, and returning — is paid daily by
+the machine. What made it look like a break was the unstated assumption that the wheel's content
+came from the coach. Under this ruling it comes from the user, and the seam closes.
+
+The other two breaks stand unchanged. **Content (§5.1)** is untouched: discernment still supplies
+what a wheel can be *about*, and that is not the user's own words — it is the reading Tom did before
+Reasonable Eating had thirteen points. **Lineage (§5.3)** is untouched: the joining is still Tom's,
+still recent, and this ruling is one more dated piece of it.
+
+### What it does not decide
+
+The setup conversation. Alexander, or a Socratic setup mode, or the WAYL instrument itself, is still
+whatever it is: the daily voice being the user's own does not make the *assessment* voice the user's
+own, because at setup the person is being asked, not quoted. §6's split — setup is understanding,
+the daily coach is choosing — survives, and is sharpened: **setup is where the words are obtained;
+the day is where they are returned.**
+
+---
+
 ## 1. The verdict
 
 Same method, different altitudes. Not two methods. But the altitude is time, not abstraction.
@@ -140,6 +199,10 @@ wheel exists: live selection at thought speed is exhausting if you also have to 
 select. The wheel is the Script with the expensive part paid up front. Frozen value at week
 scale, live selection at thought scale. Not a contradiction. A division of labour by cost.
 
+> **RULED, 2026-09-06 — this break closes.** It was a break only while the pre-commitment might
+> have been somebody else's. Tom's ruling on the daily voice makes it the user's own, and a
+> pre-commitment in your own words is the Script deferred, not a rival method. See §0.
+
 **5.3 Lineage.** Franklin, 1994, 2012. Wilkins, 2014. Two ancestors, two decades, two audiences.
 The 9x4 shipped to twenty thousand teachers with no Script in it. The 2014 groups coached
 hundreds of people with no wheel in sight. The synthesis is Tom's, and it is recent: the Thrive
@@ -176,6 +239,8 @@ would you choose to put in?"
 Tom's own split on 2026-08-04 gives this to Alexander, the Socratic teacher, and gives the daily
 companion to someone else. That fork is still his to rule, and this document does not rule it.
 But the mapping supports the split: setup is understanding, and the daily coach is choosing.
+**Ruled 2026-09-06 (§0): the daily companion speaks in the user's own words.** Setup is where
+the words are obtained; the day is where they are returned.
 
 ---
 
@@ -195,7 +260,9 @@ code path holds all three. That is a wiring job, not a doctrine job, and it is s
 is journaled in `docs/DECISIONS.md` as the position the build should follow.
 
 Two things it does not change. The push stays a bank line or a blessed goal with no model call.
-And the taste call on who the voice is stays with Tom.
+And the taste call on who the voice is stays with Tom — **taken, 2026-09-06: the voice is the
+user, quoting themselves (§0).** That does not change the wiring job described here; it changes
+what the wiring is for, and it promotes the blessed goal from the exception to the primary path.
 
 ---
 

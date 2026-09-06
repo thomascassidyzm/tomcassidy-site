@@ -6,6 +6,50 @@ falsify it.
 
 ---
 
+## 2026-09-06 — The daily voice is the user, quoting themselves
+
+**Decision.** The daily coaching line is the USER'S OWN WORDS given back to them. Not
+Alexander, not Tom. Tom, ruling after two options were put to him and he took neither:
+*"I think we moved towards the voice is the user themselves as a result of creating their
+own wheel, as an output from the WAYL assessment"*. The wheel is an output of the person's
+own assessment, so what is on it is already theirs; the daily tick reflects their commitment
+rather than advising on it. This is the Gateway Question — what WOULD you choose? — with a
+week between the asking and the arriving.
+
+**What it settles in the doctrine.** It closes the seam `docs/SCRIPT-AND-WHEEL.md` §5.2
+flagged as the strongest honest break in "the Script and the wheel are one selector": that
+the wheel pre-commits and the Script never does. That is a break only while the
+pre-commitment belongs to somebody else. A pre-commitment in the user's own words is the
+Script deferred — the same selection, made on Sunday, delivered on Wednesday. Same mechanism,
+different latency, and latency is the axis the whole paper is organised on. §5.1 (content
+comes from discernment) and §5.3 (lineage) stand unchanged. Recorded in that document as §0.
+
+**Why it wins.** Better: nobody is being coached at by a persona, so the line cannot be
+wrong about them — it is a quotation, and its authority is their own. Simpler: no voice to
+design, no persona to keep consistent, no register call per programme. Cheaper: a day tick
+that quotes has nothing to generate, so the push loop's zero model calls stops being an
+efficiency and becomes a correctness property.
+
+**What it changes in the code's status, not yet its shape.** `coach-engine.ts`'s verbatim
+rule — *"Never rewritten, tidied, capitalised or wrapped in encouragement"* — was a courtesy
+and is now the product. The authored tone banks in `src/lib/programs/*.ts` are Tom's voice,
+which is what the daily line is now *not*; they stay as the honest fallback for a week where
+the person has said nothing, and every time one fires is a week the machine failed to get
+their words.
+
+**The gap this exposes, reported not built.** The site already keeps the user's own words for
+one sentence a week — `coach_goals.text`, blessed by confirm-back — and already prefers it
+over the bank. What it does not have is any link to WAYL: the thirteen points are
+hand-authored programme data, a subscriber picks a published wheel, and no wheel is generated
+from any assessment. WAYL lives in a different repo and its retention was audited separately.
+
+**What would falsify it.** A daily line that lands as cold or accusing precisely *because* it
+is the person's own sentence — the Wednesday-guilt failure the no-civil-war doctrine exists to
+prevent. If quoting someone back reliably re-ignites the internal civil war, the voice is
+wrong however clean the doctrine is.
+
+---
+
 ## 2026-09-06 — The Script and the wheel are one method at three tick rates
 
 **Decision.** The 13x4 wheel coach and the Script are not two methods. They are one
