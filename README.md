@@ -36,7 +36,7 @@ request**. It is wired but deliberately **not enabled**:
 ├── astro.config.mjs          # server output, Vercel adapter, Svelte, git build-number injection
 ├── vercel.json               # cron schedule for the pocket coach
 ├── tsconfig.json             # strict + "@/*" -> "src/*"
-├── .env.example              # ANTHROPIC_API_KEY, VAPID push keys, CRON_SECRET (all empty)
+├── .env.example              # ANTHROPIC_API_KEY, VAPID push keys, CRON_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (all empty)
 ├── src/
 │   ├── styles/tokens.css     # design system — dark+light tokens (single source of truth)
 │   ├── content.config.ts     # "essays" collection schema (glob loader)
