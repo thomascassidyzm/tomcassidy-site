@@ -1,8 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/coach", "schedule": "47 7 * * *" },
-    { "path": "/api/cron/coach", "schedule": "13 12 * * *" },
-    { "path": "/api/cron/coach", "schedule": "9 18 * * *" }
-  ]
+    {
+      "path": "/api/cron/coach",
+      "schedule": "47 7 * * *"
+    },
+    {
+      "path": "/api/cron/coach",
+      "schedule": "13 12 * * *"
+    },
+    {
+      "path": "/api/cron/coach",
+      "schedule": "9 18 * * *"
+    }
+  ],
+  "ignoreCommand": "bash -c 'case \"$VERCEL_GIT_COMMIT_REF\" in main|dev|staging) exit 1;; *) exit 0;; esac'"
 }
