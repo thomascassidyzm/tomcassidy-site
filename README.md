@@ -1,7 +1,7 @@
 # tomcassidy-site
 
 Tom Cassidy's personal hub — a sibling to **Distinction Physics** and
-**Configuration Economics**. Built with Astro 5 (`output: 'server'`,
+**Configuration Economics**. Built with Astro 6 (`output: 'server'`,
 `@astrojs/vercel`), inline-CSS-in-Astro, a shared design-token system, an
 Astro **content collection** for prose essays, a typed **programme** system
 (the Reason-Ability kit), and a context-aware reading **guide** (wired but not
@@ -36,7 +36,7 @@ request**. It is wired but deliberately **not enabled**:
 ├── astro.config.mjs          # server output, Vercel adapter, Svelte, git build-number injection
 ├── vercel.json               # cron schedule for the pocket coach
 ├── tsconfig.json             # strict + "@/*" -> "src/*"
-├── .env.example              # ANTHROPIC_API_KEY, VAPID push keys, CRON_SECRET (all empty)
+├── .env.example              # ANTHROPIC_API_KEY, VAPID push keys, CRON_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (all empty)
 ├── src/
 │   ├── styles/tokens.css     # design system — dark+light tokens (single source of truth)
 │   ├── content.config.ts     # "essays" collection schema (glob loader)
