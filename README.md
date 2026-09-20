@@ -4,8 +4,8 @@ Tom Cassidy's personal hub — a sibling to **Distinction Physics** and
 **Configuration Economics**. Built with Astro 6 (`output: 'server'`,
 `@astrojs/vercel`), inline-CSS-in-Astro, a shared design-token system, an
 Astro **content collection** for prose essays, a typed **programme** system
-(the Reason-Ability kit), and a context-aware reading **guide** (wired but not
-enabled — see the billing warning below).
+(the Reason-Ability kit), and a context-aware reading **guide** — live in
+production, see the billing note below.
 
 The prose and programme surfaces now carry **real content**: 21 essays in the
 collection and eight programmes in `src/lib/programs/`. A few surfaces are
@@ -15,16 +15,25 @@ still intentional placeholders (clearly marked `TODO` / `PLACEHOLDER`) —
 ## ⚠️ The guide is billing-sensitive
 
 `src/pages/api/guide.ts` calls the **Anthropic API**, which is **billed per
-request**. It is wired but deliberately **not enabled**:
+request**. It is live and enabled in production:
 
-- No `ANTHROPIC_API_KEY` is committed. With no key the endpoint returns `503`
-  and the panel shows a graceful "not enabled yet" message.
-- `src/lib/guide-prompt.ts` now ships the **real persona**: Alexander, the
+- `ANTHROPIC_API_KEY` is set on the tomcassidy-site Vercel project (see
+  `docs/DECISIONS.md`, "Alexander goes live on tomcassidy.co"), sourced from
+  the same key that already powers Alexander on zenjin.app and
+  dp.tomcassidy.co, so all three bill to one place. With no key the endpoint
+  returns `503` and the panel shows a graceful "not enabled yet" message —
+  that is the local-dev / unconfigured-preview state, not production's.
+- `src/lib/guide-prompt.ts` ships the **real persona**: Alexander, the
   shared epistemic guide across all of Tom's sites, plus the Socratic epistemic
   contract and Tom's canonical coaching voice imported verbatim from
-  `src/lib/the-script.md` (`?raw`). **Verify with `npm run build` / `npm run
-  check` only — do not wire a real key or live-test the guide**, because every
-  request is billed.
+  `src/lib/the-script.md` (`?raw`).
+- Spend is bounded, not open-ended: a per-IP sliding-window rate limit (15
+  requests / 5 minutes, with a tighter 4-request sub-limit for the escalated
+  "Deeper" tier), a 50 kB request-body cap, and a server-side model constant
+  the caller can never override (a request naming a `model` or `tier` is
+  refused with `400`). Locally, prefer `npm run build` / `npm run check` over
+  live-testing against a real key, since every request against a configured
+  key is billed — but production itself is meant to be live-tested by readers.
 - The endpoint is SSR-only (`prerender = false`) and only fetches Anthropic
   inside `POST`, so **no API call happens at build time**. The panel never
   auto-sends — a request only fires on explicit user action.

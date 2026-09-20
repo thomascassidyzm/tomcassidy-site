@@ -6,6 +6,23 @@ falsify it.
 
 ---
 
+## 2026-09-20 — Settled: the guide is live and billed in production
+
+**Fact, not a decision.** Four prior estate audits (2026-08-18, 2026-08-31,
+2026-09-05, 2026-09-20) found the README's "wired but not enabled" warning
+sitting next to this file's own 2026-08-24 "Alexander goes live" entry and
+none of them settled which was true. It has been settled here from live
+state, not from either document: `POST https://tomcassidy.co/api/guide` with
+a real message returned `200` with a genuine Anthropic-generated answer and
+non-zero `usage` (`cache_write: 7040`, `output: 68`), which only happens
+downstream of the `ANTHROPIC_API_KEY` check in `src/pages/api/guide.ts` —
+that check is what returns `503` when the key is absent. The guide is live
+and serving real, billed Anthropic calls on tomcassidy.co today, confirming
+the 2026-08-24 entry below and correcting the README, which described the
+pre-2026-08-24 state. `.env.example` corrected to match.
+
+---
+
 ## 2026-08-25 — Writing search reads bodies, and sees every published page
 
 **Decision.** The /writing search matches full body text, and standalone
