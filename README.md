@@ -36,9 +36,11 @@ What that means in practice:
 - The endpoint is SSR-only (`prerender = false`) and only fetches Anthropic
   inside `POST`, so **no API call happens at build time**. The panel never
   auto-sends — a request only fires on explicit user action.
-- Spend is bounded by a per-IP sliding-window rate limit with a tighter
-  sub-limit for deep answers, a same-origin refusal, a 50 kB body cap, and a
-  server-side-only model constant no caller can influence.
+- Spend is bounded by a per-IP sliding-window rate limit (15 requests per 5
+  minutes, with a tighter 4-request sub-limit for escalated "Deeper" answers),
+  a same-origin refusal, a 50 kB body cap, and a server-side-only model
+  constant no caller can influence — a request naming a `model` or `tier` is
+  refused with `400`.
 - The model ladder, the tool loop and the prompt-cache layering are documented
   in `CLAUDE.md`.
 

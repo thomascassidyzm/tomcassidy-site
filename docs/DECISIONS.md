@@ -6,6 +6,31 @@ falsify it.
 
 ---
 
+## 2026-09-20 — Settled: the guide is live and billed in production
+
+**Fact, not a decision.** Four prior estate audits (2026-08-18, 2026-08-31,
+2026-09-05, 2026-09-20) found the README's "wired but not enabled" warning
+sitting next to this file's own 2026-08-24 "Alexander goes live" entry and
+none of them settled which was true. It has been settled here from live
+state, not from either document: `POST https://tomcassidy.co/api/guide` with
+a real message returned `200` with a genuine Anthropic-generated answer and
+non-zero `usage` (`cache_write: 7040`, `output: 68`), which only happens
+downstream of the `ANTHROPIC_API_KEY` check in `src/pages/api/guide.ts` —
+that check is what returns `503` when the key is absent. The guide is live
+and serving real, billed Anthropic calls on tomcassidy.co today, confirming
+the 2026-08-24 entry below. The README and `CLAUDE.md` had already been
+rewritten the same morning to describe the guide as live, but on the strength
+of the 2026-08-24 entry alone, both explicitly marking Vercel's env state as
+unprovable from inside the repo; this entry closes that gap with live
+evidence, and `.env.example` is corrected to match.
+
+**What would falsify it.** A `503` from `POST /api/guide`, which would mean
+the key had been removed from the Vercel project. Note the cost of the probe:
+settling this took one billed request, and that is the only probe that can
+settle it. Do not repeat it to re-confirm — read this entry instead.
+
+---
+
 ## 2026-08-25 — Writing search reads bodies, and sees every published page
 
 **Decision.** The /writing search matches full body text, and standalone

@@ -69,12 +69,13 @@ State of play, and be precise about what is and is not verified:
   zenjin.app and dp.tomcassidy.co.
 - `README.md` and `.env.example` carried the older "wired but not enabled — do not
   wire a real key" warning. That warning **predates the ruling and is superseded by
-  it**. The README paragraph was rewritten on 2026-09-20 to say so; `.env.example`
-  still carries the old wording at the time of writing.
-- **Unverified from inside the repo:** nothing in the source can prove what is set
-  in Vercel's environment today. The only probe that would settle it is a live
-  POST, which is exactly the billed call. Treat the key as SET unless you have
-  another reason to think otherwise, and never resolve the question by spending.
+  it**. Both were rewritten on 2026-09-20 to say so.
+- **Settled live, once, on 2026-09-20:** nothing in the source can prove what is
+  set in Vercel's environment, so the question was closed with the one probe that
+  can close it — a single `POST /api/guide`, which returned 200 with a real
+  Anthropic answer and non-zero usage. The key is SET and the guide is live. That
+  call is spent; do not spend another to re-confirm it. See `docs/DECISIONS.md`,
+  2026-09-20.
 - What *is* verified live (free GETs, 2026-09-20): `https://tomcassidy.co/` serves
   200; `/api/push/vapid` returns a public key, so the VAPID vars are set in
   production; `/api/cron/coach` returns 401 unauthenticated, so `CRON_SECRET` is
