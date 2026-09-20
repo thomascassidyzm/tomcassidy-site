@@ -4,30 +4,43 @@ Tom Cassidy's personal hub — a sibling to **Distinction Physics** and
 **Configuration Economics**. Built with Astro 6 (`output: 'server'`,
 `@astrojs/vercel`), inline-CSS-in-Astro, a shared design-token system, an
 Astro **content collection** for prose essays, a typed **programme** system
-(the Reason-Ability kit), and a context-aware reading **guide** (wired but not
-enabled — see the billing warning below).
+(the Reason-Ability kit), and a context-aware reading **guide** (live in
+production and billed — see the warning below).
 
 The prose and programme surfaces now carry **real content**: 21 essays in the
 collection and eight programmes in `src/lib/programs/`. A few surfaces are
 still intentional placeholders (clearly marked `TODO` / `PLACEHOLDER`) —
 `src/pages/about.astro` most obviously.
 
-## ⚠️ The guide is billing-sensitive
+## ⚠️ The guide is live, and billed
 
 `src/pages/api/guide.ts` calls the **Anthropic API**, which is **billed per
-request**. It is wired but deliberately **not enabled**:
+request**. It is **enabled in production**: `ANTHROPIC_API_KEY` is set on the
+`tomcassidy-site` Vercel project across production, preview and development,
+sharing the key that powers Alexander on zenjin.app and dp.tomcassidy.co
+(`docs/DECISIONS.md`, 2026-08-24). The earlier "wired but not enabled — do not
+configure a key" warning in this file and in `.env.example` predates that ruling
+and is superseded by it.
 
-- No `ANTHROPIC_API_KEY` is committed. With no key the endpoint returns `503`
-  and the panel shows a graceful "not enabled yet" message.
-- `src/lib/guide-prompt.ts` now ships the **real persona**: Alexander, the
-  shared epistemic guide across all of Tom's sites, plus the Socratic epistemic
+What that means in practice:
+
+- **Do not load-test, loop over or casually live-test the endpoint** — every
+  request costs money. `npm run build`, `npm run check`, `npm run typecheck` and
+  `npm test` verify everything except that the remote model replies.
+- With no key the endpoint returns `503` and the panel shows a graceful "not
+  enabled yet" message. That is a missing-config state, not a resting state.
+- `src/lib/guide-prompt.ts` ships the **real persona**: Alexander, the shared
+  epistemic guide across all of Tom's sites, plus the Socratic epistemic
   contract and Tom's canonical coaching voice imported verbatim from
-  `src/lib/the-script.md` (`?raw`). **Verify with `npm run build` / `npm run
-  check` only — do not wire a real key or live-test the guide**, because every
-  request is billed.
+  `src/lib/the-script.md` (`?raw`).
 - The endpoint is SSR-only (`prerender = false`) and only fetches Anthropic
   inside `POST`, so **no API call happens at build time**. The panel never
   auto-sends — a request only fires on explicit user action.
+- Spend is bounded by a per-IP sliding-window rate limit with a tighter
+  sub-limit for deep answers, a same-origin refusal, a 50 kB body cap, and a
+  server-side-only model constant no caller can influence.
+- The model ladder, the tool loop and the prompt-cache layering are documented
+  in `CLAUDE.md`.
 
 ## Structure
 
@@ -108,6 +121,8 @@ Newsreader (body) / IBM Plex Mono (mono).
 | `npm run dev`     | Local dev server                        |
 | `npm run build`   | Production build to `./dist/`           |
 | `npm run check`   | `astro check` (types)                   |
+| `npm run typecheck` | `tsc --noEmit`                        |
+| `npm test`        | `vitest run` (unit tests)               |
 | `npm run preview` | Preview the build                       |
 
 ## Proposal microsites
