@@ -14,6 +14,7 @@ const {
   listLiveSubscribers,
   getGoal,
   saveGoal,
+  blessGoalIfUnchanged,
   markSent,
   revoke,
   weekIndexFor,
@@ -129,6 +130,22 @@ describe('listLiveSubscribers', () => {
     expect(subs).toHaveLength(2);
     expect(subs[0].startMs).toBe(1_750_000_000_000);
   });
+
+  it('pages past a full page rather than silently stopping at the row cap', async () => {
+    const full = Array.from({ length: 1000 }, (_, i) => ({ ...ROW, id: `p${i}` }));
+    const rest = [{ ...ROW, id: 'last' }];
+    responder = () => (calls.length === 1 ? { body: full } : { body: rest });
+    const subs = await listLiveSubscribers();
+    expect(subs).toHaveLength(1001);
+    expect(calls[0].url).toContain('offset=0');
+    expect(calls[1].url).toContain('offset=1000');
+  });
+
+  it('stops after a page shorter than the page size, without an extra empty request', async () => {
+    responder = () => ({ body: [ROW] });
+    await listLiveSubscribers();
+    expect(calls).toHaveLength(1);
+  });
 });
 
 describe('goals', () => {
@@ -149,6 +166,24 @@ describe('goals', () => {
     expect(calls[0].body).toMatchObject({ subscriber_id: 'aaa', week_index: 2, text: 'x' });
   });
 
+  it('blessGoalIfUnchanged blesses only the row matching the exact text just read', async () => {
+    responder = () => ({ body: [{ ...ROW, blessed: true }] });
+    const ok = await blessGoalIfUnchanged('aaa', 2, 'walk after lunch');
+    expect(ok).toBe(true);
+    expect(calls[0].method).toBe('PATCH');
+    expect(calls[0].url).toContain('text=eq.walk%20after%20lunch');
+    expect(calls[0].url).toContain('blessed=eq.false');
+    expect(calls[0].body).toEqual({ blessed: true });
+  });
+
+  it('blessGoalIfUnchanged reports a race rather than confirming stale text: a concurrent `set` matches zero rows', async () => {
+    // The conditional WHERE (text=eq.<what we read>) matches nothing once the
+    // text has moved on, so PostgREST returns an empty array — not an error.
+    responder = () => ({ body: [] });
+    const ok = await blessGoalIfUnchanged('aaa', 2, 'the text we read before the race');
+    expect(ok).toBe(false);
+  });
+
   it('currentGoal asks for the week the subscriber is actually on', async () => {
     responder = () => ({ body: [] });
     const sub = { id: 'aaa', startMs: 1_750_000_000_000 } as any;
@@ -167,6 +202,21 @@ describe('send bookkeeping', () => {
     expect(calls[0].url).toContain('id=eq.aaa');
     expect(calls[0].body.last_status).toBe(201);
     expect(calls[0].body.fail_count).toBe(0);
+  });
+
+  it('markSent increments fail_count on failure instead of leaving it dead at zero', async () => {
+    responder = (c) =>
+      c.method === 'GET' ? { body: [{ ...ROW, fail_count: 2 }] } : { body: null };
+    await markSent('aaa', 500, false);
+    const patch = calls.find((c) => c.method === 'PATCH')!;
+    expect(patch.body.fail_count).toBe(3);
+  });
+
+  it('markSent starts the streak at 1 for a subscriber with no prior failures', async () => {
+    responder = (c) => (c.method === 'GET' ? { body: [ROW] } : { body: null });
+    await markSent('aaa', 500, false);
+    const patch = calls.find((c) => c.method === 'PATCH')!;
+    expect(patch.body.fail_count).toBe(1);
   });
 
   it('revoke stamps revoked_at, which is what drops the row out of the run', async () => {

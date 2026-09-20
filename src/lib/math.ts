@@ -1,6 +1,7 @@
 // KaTeX server-side rendering for the guide's chat replies.
 // Copied from configuration-economics / distinction-physics so the guide
-// architecture matches its siblings exactly.
+// architecture matches its siblings exactly — EXCEPT `trust`, fixed here
+// 2026-09-20 (same bug confirmed present in both siblings; port the fix).
 
 import katex from 'katex';
 
@@ -11,7 +12,13 @@ export function renderMath(latex: string, displayMode: boolean): string {
       throwOnError: false,
       errorColor: '#cc0000',
       strict: false,
-      trust: true,
+      // `trust: true` enables \href (any scheme, including javascript:) and
+      // \includegraphics — and this HTML lands straight in the client via
+      // innerHTML (GuidePanel.astro's substituteMath). The LaTeX here is the
+      // MODEL'S output, not Tom's own essay source, and a reader can steer
+      // model output with an ordinary chat message — this was a live XSS
+      // sink. Untrusted math never needs either command; leave KaTeX's
+      // default (trust: false) rather than opting back in.
       output: 'html',
     });
   } catch (error) {

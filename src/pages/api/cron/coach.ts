@@ -27,13 +27,18 @@ function env(name: string): string | undefined {
 }
 
 export const GET: APIRoute = async ({ request }) => {
-  // Vercel sends `Authorization: Bearer <CRON_SECRET>` when CRON_SECRET is set.
+  // Vercel sends `Authorization: Bearer <CRON_SECRET>` when CRON_SECRET is
+  // set. FAIL CLOSED: a missing secret must never mean "anyone may trigger a
+  // send to every subscriber" — this route is unthrottled and has no
+  // day/slot dedup, so a bare GET would otherwise be free to hammer live
+  // devices repeatedly. Configure CRON_SECRET before this route can send.
   const secret = env('CRON_SECRET');
-  if (secret) {
-    const auth = request.headers.get('authorization');
-    if (auth !== `Bearer ${secret}`) {
-      return json({ error: 'Unauthorized' }, 401);
-    }
+  if (!secret) {
+    return json({ error: 'CRON_SECRET not configured' }, 503);
+  }
+  const auth = request.headers.get('authorization');
+  if (auth !== `Bearer ${secret}`) {
+    return json({ error: 'Unauthorized' }, 401);
   }
 
   const pub = env('VAPID_PUBLIC_KEY');
@@ -64,19 +69,33 @@ export const GET: APIRoute = async ({ request }) => {
   webpush.setVapidDetails(subject, pub, priv);
   const now = Date.now();
 
-  const summary = await runSends(subs, {
-    async send(sub) {
-      const goal = await currentGoal(sub, now);
-      const { payload } = payloadFor(sub, goal, now);
-      const res = await webpush.sendNotification(
-        toPushSubscription(sub) as unknown as webpush.PushSubscription,
-        payload,
-      );
-      return res?.statusCode ?? 201;
+  // One slow destination must not hold up the rest of the run: a per-send
+  // deadline (web-push's own `timeout` option, which aborts the socket) plus
+  // an overall wall-clock budget so the loop stops well inside Vercel's
+  // function time limit rather than leaving later chunks unattempted with no
+  // record of why.
+  const SEND_TIMEOUT_MS = 8_000;
+  const RUN_BUDGET_MS = 20_000;
+
+  const summary = await runSends(
+    subs,
+    {
+      async send(sub) {
+        const goal = await currentGoal(sub, now);
+        const { payload } = payloadFor(sub, goal, now);
+        const res = await webpush.sendNotification(
+          toPushSubscription(sub) as unknown as webpush.PushSubscription,
+          payload,
+          { timeout: SEND_TIMEOUT_MS },
+        );
+        return res?.statusCode ?? 201;
+      },
+      markSent,
+      revoke,
     },
-    markSent,
-    revoke,
-  });
+    10,
+    now + RUN_BUDGET_MS,
+  );
 
   return json({ ...summary, migration }, 200);
 };

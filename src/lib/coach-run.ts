@@ -62,22 +62,37 @@ export interface RunSummary {
   sent: number;
   pruned: number;
   failed: number;
+  /** Subscribers not reached at all because the run budget ran out first — retried next cron. */
+  skipped: number;
 }
 
 /**
  * Send to everyone, in chunks, with `Promise.allSettled` — so one dead endpoint
  * can neither stall the run nor take it down. A 404/410 revokes that row
  * forever; anything else is recorded and retried on the next cron.
+ *
+ * `deadlineMs`, if given, is an absolute `Date.now()`-scale wall-clock budget
+ * for the whole run: a chunk already in flight is never aborted mid-way (the
+ * per-send `timeout` the caller passes to `send` covers that), but no NEW
+ * chunk starts once the deadline has passed. What's left is reported as
+ * `skipped` — honestly unattempted, not lost — and picked up by the next
+ * scheduled cron.
  */
 export async function runSends(
   subs: Subscriber[],
   deps: RunDeps,
   chunkSize = 10,
+  deadlineMs = Infinity,
 ): Promise<RunSummary> {
-  const summary: RunSummary = { attempted: subs.length, sent: 0, pruned: 0, failed: 0 };
+  const summary: RunSummary = { attempted: 0, sent: 0, pruned: 0, failed: 0, skipped: 0 };
 
   for (let i = 0; i < subs.length; i += chunkSize) {
+    if (Date.now() > deadlineMs) {
+      summary.skipped += subs.length - i;
+      break;
+    }
     const chunk = subs.slice(i, i + chunkSize);
+    summary.attempted += chunk.length;
     const results = await Promise.allSettled(
       chunk.map(async (sub) => {
         try {

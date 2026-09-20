@@ -184,12 +184,26 @@ export async function getSubscriberByEndpoint(endpoint: string): Promise<Subscri
   return getSubscriber(await subscriberId(endpoint));
 }
 
-/** Everyone the cron should send to: every row that has not been revoked. */
+const LIST_PAGE_SIZE = 1000;
+
+/**
+ * Everyone the cron should send to: every row that has not been revoked.
+ *
+ * Paginated with PostgREST's Range header rather than one open-ended request:
+ * PostgREST (and Supabase's default) caps an unbounded select at a row limit,
+ * so past that many live subscribers the tail of the list would silently
+ * never be fetched, and never be sent to, forever.
+ */
 export async function listLiveSubscribers(): Promise<Subscriber[]> {
-  const rows = (await rest(
-    'coach_subscribers?revoked_at=is.null&select=*&order=created_at.asc',
-  )) as SubscriberRow[];
-  return (rows ?? []).map(toSubscriber);
+  const all: SubscriberRow[] = [];
+  for (let offset = 0; ; offset += LIST_PAGE_SIZE) {
+    const rows = (await rest(
+      `coach_subscribers?revoked_at=is.null&select=*&order=created_at.asc&offset=${offset}&limit=${LIST_PAGE_SIZE}`,
+    )) as SubscriberRow[];
+    all.push(...(rows ?? []));
+    if (!rows || rows.length < LIST_PAGE_SIZE) break;
+  }
+  return all.map(toSubscriber);
 }
 
 export async function getGoal(id: string, week: number): Promise<WeeklyGoal | null> {
@@ -220,13 +234,46 @@ export async function saveGoal(id: string, goal: WeeklyGoal): Promise<void> {
   });
 }
 
+/**
+ * Bless whatever is stored, ATOMICALLY — a conditional PATCH that only
+ * succeeds if the row still holds exactly the unblessed text the caller read.
+ * Without this, a `set` landing between the read and the write in `bless`
+ * would have its new, never-shown-to-the-user text silently confirmed by a
+ * `bless` call that read the OLD text. Returns false (a race, not an error)
+ * when the row has already moved on — the caller re-reads and retries.
+ */
+export async function blessGoalIfUnchanged(
+  id: string,
+  weekIndex: number,
+  expectedText: string,
+): Promise<boolean> {
+  const rows = (await rest(
+    `coach_goals?subscriber_id=eq.${encodeURIComponent(id)}&week_index=eq.${weekIndex}` +
+      `&text=eq.${encodeURIComponent(expectedText)}&blessed=eq.false`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ blessed: true }),
+      prefer: 'return=representation',
+    },
+  )) as GoalRow[] | null;
+  return Boolean(rows && rows.length > 0);
+}
+
 /** Record every attempt, success or not — this is what turns "is it still working?" into a glance. */
 export async function markSent(id: string, status: number | null, ok: boolean): Promise<void> {
   const row: Record<string, unknown> = {
     last_sent_at: new Date().toISOString(),
     last_status: status,
   };
-  if (ok) row.fail_count = 0;
+  if (ok) {
+    row.fail_count = 0;
+  } else {
+    // Read-modify-write: fail_count only ever existed as a column that got
+    // reset, never one that got set, so every subscriber's failure streak
+    // read zero regardless of how often sending to them actually failed.
+    const current = await getSubscriber(id);
+    row.fail_count = (current?.failCount ?? 0) + 1;
+  }
   await rest(`coach_subscribers?id=eq.${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(row),

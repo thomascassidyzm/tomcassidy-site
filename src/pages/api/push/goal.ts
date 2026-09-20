@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import type { WeeklyGoal } from '@/lib/coach-engine';
 import {
+  blessGoalIfUnchanged,
   canPersist,
   currentGoal,
   getSubscriberByEndpoint,
@@ -23,11 +23,16 @@ import {
 // one read and rewrite that person's goal.
 export const prerender = false;
 
-async function resolve(endpoint: string | null | undefined): Promise<Subscriber | Response> {
+async function resolve(endpoint: unknown): Promise<Subscriber | Response> {
   if (!canPersist()) {
     return json({ error: 'The coach store isn’t configured yet, so nothing was saved.' }, 503);
   }
-  if (!endpoint) return json({ error: 'Turn the coach on first.' }, 400);
+  // A JSON body can put anything here — `null`, a number, an object. Only a
+  // non-empty string is ever a real endpoint; anything else used to reach
+  // subscriberId()'s TextEncoder, which silently coerces non-strings (an
+  // object becomes the literal string "[object Object]") instead of failing
+  // cleanly.
+  if (typeof endpoint !== 'string' || !endpoint) return json({ error: 'Turn the coach on first.' }, 400);
   let sub: Subscriber | null;
   try {
     sub = await getSubscriberByEndpoint(endpoint);
@@ -63,23 +68,32 @@ export const POST: APIRoute = async ({ request }) => {
 
   const wi = weekIndexFor(sub);
 
-  let goal: WeeklyGoal;
   try {
     if (body.action === 'set') {
-      const text = (body.text ?? '').trim();
+      if (typeof body.text !== 'string') {
+        return json({ error: 'Say the one thing first.' }, 400);
+      }
+      const text = body.text.trim();
       if (!text) return json({ error: 'Say the one thing first.' }, 400);
       if (text.length > 280) return json({ error: 'One sentence is plenty — keep it under 280.' }, 400);
-      goal = { text, blessed: false, weekIndex: wi, setAtMs: Date.now() };
+      const goal = { text, blessed: false, weekIndex: wi, setAtMs: Date.now() };
+      await saveGoal(sub.id, goal);
+      return json({ ok: true, goal }, 200);
     } else if (body.action === 'bless') {
       const existing = await currentGoal(sub);
       if (!existing) return json({ error: 'Nothing to confirm for this week.' }, 409);
-      goal = { ...existing, blessed: true };
+      if (existing.blessed) return json({ ok: true, goal: existing }, 200);
+      // Atomic: only blesses the row if it still holds exactly the text we
+      // just read. A `set` landing in between makes this fail rather than
+      // silently confirming stale text — see blessGoalIfUnchanged.
+      const ok = await blessGoalIfUnchanged(sub.id, wi, existing.text);
+      if (!ok) {
+        return json({ error: 'The goal changed while confirming it — check and try again.' }, 409);
+      }
+      return json({ ok: true, goal: { ...existing, blessed: true } }, 200);
     } else {
       return json({ error: 'Unknown action' }, 400);
     }
-
-    await saveGoal(sub.id, goal);
-    return json({ ok: true, goal }, 200);
   } catch (e) {
     console.error('[pocket-coach] goal write failed', e);
     return json({ error: 'Could not store the goal — nothing was saved.' }, 500);

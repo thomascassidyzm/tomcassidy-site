@@ -97,7 +97,7 @@ describe('runSends', () => {
     const subs = [sub({ id: '1' }), sub({ id: '2' }), sub({ id: '3' })];
     const { d, marked } = deps(async () => 201);
     const out = await runSends(subs, d);
-    expect(out).toEqual({ attempted: 3, sent: 3, pruned: 0, failed: 0 });
+    expect(out).toEqual({ attempted: 3, sent: 3, pruned: 0, failed: 0, skipped: 0 });
     expect(marked.map((m) => m[0])).toEqual(['1', '2', '3']);
     expect(marked.every((m) => m[1] === 201 && m[2] === true)).toBe(true);
   });
@@ -109,7 +109,7 @@ describe('runSends', () => {
       return 201;
     });
     const out = await runSends(subs, d);
-    expect(out).toEqual({ attempted: 3, sent: 2, pruned: 1, failed: 0 });
+    expect(out).toEqual({ attempted: 3, sent: 2, pruned: 1, failed: 0, skipped: 0 });
     expect(revoked).toEqual([['dead', 410]]);
     expect(marked.map((m) => m[0]).sort()).toEqual(['live-1', 'live-2']);
   });
@@ -119,7 +119,7 @@ describe('runSends', () => {
       throw { statusCode: 500 };
     });
     const out = await runSends([sub({ id: 'x' })], d);
-    expect(out).toEqual({ attempted: 1, sent: 0, pruned: 0, failed: 1 });
+    expect(out).toEqual({ attempted: 1, sent: 0, pruned: 0, failed: 1, skipped: 0 });
     expect(revoked).toEqual([]);
     expect(marked).toEqual([['x', 500, false]]);
   });
@@ -148,11 +148,27 @@ describe('runSends', () => {
       },
       revoke: async () => {},
     });
-    expect(out).toEqual({ attempted: 1, sent: 0, pruned: 0, failed: 1 });
+    expect(out).toEqual({ attempted: 1, sent: 0, pruned: 0, failed: 1, skipped: 0 });
   });
 
   it('an empty list is a no-op, not an error', async () => {
     const { d } = deps(async () => 201);
-    expect(await runSends([], d)).toEqual({ attempted: 0, sent: 0, pruned: 0, failed: 0 });
+    expect(await runSends([], d)).toEqual({ attempted: 0, sent: 0, pruned: 0, failed: 0, skipped: 0 });
+  });
+
+  it('stops starting new chunks once the run budget has passed, and reports the rest as skipped, not lost', async () => {
+    // 25 subscribers, chunk size 10: the deadline expires right after chunk
+    // one lands, so chunks two and three (20 people) must never be attempted
+    // this run — they are retried on the next scheduled cron instead.
+    const subs = Array.from({ length: 25 }, (_, i) => sub({ id: `s${i}` }));
+    let sent = 0;
+    const { d } = deps(async () => {
+      sent++;
+      return 201;
+    });
+    const start = Date.now();
+    const out = await runSends(subs, d, 10, start - 1);
+    expect(out).toEqual({ attempted: 0, sent: 0, pruned: 0, failed: 0, skipped: 25 });
+    expect(sent).toBe(0);
   });
 });
