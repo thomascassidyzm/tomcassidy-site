@@ -26,7 +26,8 @@ import {
   type Side,
   type State,
 } from './engine';
-import { AXES, COPY, TRY, gapLine, inline, leanLine, tryLabel } from './skin';
+import { AXES, COPY, TRY, gapLine, inline, leanLine, paintFieldLine, tryLabel } from './skin';
+import { paint, toSvg } from './painting';
 
 let st: State = {};
 /* The outgoing card stays tappable through its exit fade; this closes it so a
@@ -473,9 +474,47 @@ function guessReveal() {
   return `<section class="screen enter">
     <p class="label">${COPY.guessHeading}</p>
     <h2 class="h2">${esc(COPY.guessRevealTitle(n, hit, gm.length))}</h2>
+    ${guessPaintings(them, st.gt!, COPY.paintPairGuessed(n), COPY.paintPairMine(n))}
     <ul class="glist">${items}</ul>
     <button class="pill primary" data-act="nowYours">${COPY.nowYours}</button>
   </section>`;
+}
+
+/* ---------- the painting ---------- */
+function painting(me: Person) {
+  const p = paint(readAll(me.answers));
+  const coloured = p.fields.filter((f) => f.hue !== 'white');
+  const white = p.fields.filter((f) => f.hue === 'white').map((f) => AXES[f.k].label);
+  const lines = [
+    ...coloured.map((f) => esc(paintFieldLine(f.hue, f.area, f.k, f.side))),
+    ...(white.length ? [esc(COPY.paintWhite(white))] : []),
+    esc(COPY.paintLines(answeredCount(me.answers))),
+  ];
+  return `<figure class="painting">
+    ${toSvg(p, COPY.paintAria)}
+    <figcaption>
+      <p class="pkey-h">${COPY.paintKey}</p>
+      <ul class="pkey">${lines.map((l) => `<li>${l}</li>`).join('')}</ul>
+      <p class="credit">${COPY.paintCredit}</p>
+    </figcaption>
+  </figure>`;
+}
+
+/** The person's real answers on the guessed moments beside the guess — same moments, so the gap is the reading. */
+function guessPaintings(person: Person, guesses: Record<number, Guess>, leftCap: string, rightCap: string) {
+  const qis = Object.keys(guesses).map(Number).filter((qi) => topOf(person.answers[qi]) !== undefined);
+  if (!qis.length) return '';
+  const real: Person['answers'] = [];
+  const guessed: Person['answers'] = [];
+  qis.forEach((qi) => {
+    real[qi] = person.answers[qi];
+    const g = guesses[qi];
+    guessed[qi] = Array.isArray(g) ? { o: g } : { p: g };
+  });
+  const svg = (a: Person['answers'], cap: string) =>
+    `<figure>${toSvg(paint(readAll(a)), cap)}<figcaption>${esc(cap)}</figcaption></figure>`;
+  return `<div class="paintpair">${svg(real, leftCap)}${svg(guessed, rightCap)}</div>
+    <p class="hint">${COPY.paintPairNote}</p>`;
 }
 
 /* ---------- the result ---------- */
@@ -618,6 +657,7 @@ function result() {
     const tn = nameOf(them);
     others = `<section class="block">
       <h3 class="h3">${esc(COPY.othersHeading(tn))}</h3>
+      ${guessPaintings(me, st.gm, COPY.paintPairYou(Object.keys(st.gm).length), COPY.paintPairThem(tn))}
       <ul class="glist">${Object.entries(st.gm)
         .map(([qs, g]) => {
           const qi = Number(qs);
@@ -665,6 +705,7 @@ function result() {
   return `<section class="screen result">
     <p class="label">${COPY.resultLabel}</p>
     <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : 'What you said, and how you ranked'}</h1>
+    ${painting(me)}
     ${portrait(me, them)}
     <p class="hint">${COPY.momentsSoFar(n)}</p>
     ${n < MAX_MOMENTS ? `<button class="pill quiet" data-act="more">${COPY.sharpen}</button>` : ''}

@@ -111,7 +111,25 @@ export const COPY = {
   sendBackBody: (n: string) => `${n} gets your guesses and the two of you side by side.`,
   yourName: 'Your first name',
   legendThem: (n: string) => `${n}`,
+
+  // the painting
+  paintAria: 'A painting after Mondrian, drawn from your answers',
+  paintKey: 'How to read your painting',
+  paintWhite: (labels: string[]) => `The white fields: nearer the middle — ${labels.join(', ')}.`,
+  paintLines: (n: number) => `The black lines: drawn from ${n} moments. More moments, finer lines.`,
+  paintCredit: 'after Piet Mondrian',
+  paintPairYou: (n: number) => `You, from these ${n} moments`,
+  paintPairThem: (n: string) => `As ${n} guessed you`,
+  paintPairGuessed: (n: string) => `${n}, from these moments`,
+  paintPairMine: (n: string) => `As you guessed ${n}`,
+  paintPairNote: 'Same moments, two paintings. Where they part is where the guess read differently.',
 };
+
+/** One key line per coloured field, in the indication register. */
+export function paintFieldLine(hue: string, area: number, k: AxisKey, side: Side): string {
+  const size = area > 0.3 ? 'wide ' : area < 0.12 ? 'small ' : '';
+  return `The ${size}${hue} field: a lean towards ${end(k, side)}`;
+}
 
 /** "You lean towards…" — one line per axis, self-scaled. */
 export function leanLine(k: AxisKey, side: Side, strong: boolean): string {
