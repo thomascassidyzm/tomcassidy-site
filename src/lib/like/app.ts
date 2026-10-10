@@ -18,7 +18,10 @@ import {
   readAll,
   returnState,
   sideOf,
+  topOf,
+  isRanked,
   type AxisKey,
+  type Guess,
   type Person,
   type Side,
   type State,
@@ -33,7 +36,11 @@ let busy = false;
 const ui: {
   started: boolean;
   qi: number | null;
-  least: number | null;
+  /** The ranking on screen: which card it belongs to, the cards placed so far
+      (most likely first), and the shuffled order the unplaced ones sit in. */
+  rankFor: string | null;
+  rank: number[];
+  shown: number[];
   stated: (number | null)[];
   tryPick: string | null;
   tryAll: boolean;
@@ -44,7 +51,9 @@ const ui: {
 } = {
   started: false,
   qi: null,
-  least: null,
+  rankFor: null,
+  rank: [],
+  shown: [],
   stated: [null, null, null, null, null, null],
   tryPick: null,
   tryAll: false,
@@ -82,7 +91,7 @@ function stage(): Stage {
   }
   if (!st.me) return 'front';
   if (st.me.stated === undefined) return 'stated';
-  if (firstUnanswered() >= 0 || ui.least !== null) return 'moment';
+  if (firstUnanswered() >= 0) return 'moment';
   return 'result';
 }
 
@@ -162,15 +171,48 @@ function stated() {
   </section>`;
 }
 
-function optionButtons(qi: number, mode: 'pick' | 'least' | 'guess', picked?: number) {
+/* ---------- the ranking card ----------
+   Cards arrive UNRANKED, in a fresh shuffle, so nothing on screen is an answer
+   until the person makes it one (the Cowch rank version arrived pre-ordered,
+   and a lazy "that's my order" saved the shuffle as if it were real). Tap in
+   the order you'd do them; hold and drag to adjust; tap a numbered card to
+   take it back out. ✅ appears only once every card is placed. */
+function shuffled(n: number): number[] {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let j = n - 1; j > 0; j--) {
+    const r = Math.floor(Math.random() * (j + 1));
+    [a[j], a[r]] = [a[r], a[j]];
+  }
+  return a;
+}
+
+function rankSetup(key: string, qi: number, preset?: number[]) {
+  if (ui.rankFor === key) return;
+  ui.rankFor = key;
+  ui.rank = preset ? preset.slice() : [];
+  ui.shown = shuffled(MOMENTS[qi].opts.length);
+}
+
+const visible = () => [...ui.rank, ...ui.shown.filter((i) => !ui.rank.includes(i))];
+const rankFull = (qi: number) => ui.rank.length === MOMENTS[qi].opts.length;
+
+function rankBlock(qi: number) {
   const m = MOMENTS[qi];
-  return m.opts
-    .map((o, i) => {
-      const isPick = picked === i;
-      const act = mode === 'guess' ? 'guess' : mode === 'least' ? (isPick ? '' : 'least') : 'pick';
-      return `<button class="opt${isPick ? ' picked' : ''}" style="--i:${i}" ${act ? `data-act="${act}"` : 'disabled aria-disabled="true"'} data-v="${i}">${esc(o.t)}</button>`;
+  const cards = visible()
+    .map((i, pos) => {
+      const r = ui.rank.indexOf(i);
+      return `<li class="rslot" data-v="${i}" style="--i:${pos}">
+        <button class="rcard${r >= 0 ? ' ranked' : ''}" data-act="rank" data-v="${i}" aria-pressed="${r >= 0}">
+          <span class="badge" aria-hidden="true">${r >= 0 ? r + 1 : ''}</span>
+          <span class="rtext">${esc(m.opts[i].t)}</span>
+        </button>
+      </li>`;
     })
     .join('');
+  return `<p class="rank-ends"><span>${COPY.rankTop}</span></p>
+    <ol class="rank" aria-label="${COPY.rankAria}">${cards}</ol>
+    <p class="rank-ends"><span>${COPY.rankBottom}</span></p>
+    <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>`;
 }
 
 function momentCard() {
@@ -179,8 +221,7 @@ function momentCard() {
   ui.qi = qi;
   const m = MOMENTS[qi];
   const a = me.answers[qi];
-  const inLeast = ui.least === qi && a && a !== 'x';
-  const picked = a && a !== 'x' ? a.p : undefined;
+  rankSetup('m' + qi, qi, isRanked(a) ? a.o : undefined);
   const blockStart = Math.floor(qi / BLOCK) * BLOCK;
   const done = answeredCount(me.answers.slice(blockStart, blockStart + BLOCK));
   const canBack = qi > blockStart;
@@ -190,14 +231,11 @@ function momentCard() {
       ${progress(done, BLOCK)}
     </div>
     <article class="card enter" aria-live="polite">
-      <p class="label">${inLeast ? COPY.leastLabel : COPY.pickLabel}</p>
+      <p class="label">${COPY.pickLabel}</p>
       <p class="scenario">${esc(m.s)}</p>
-      <div class="opts">${optionButtons(qi, inLeast ? 'least' : 'pick', picked)}</div>
-      ${
-        inLeast
-          ? `<button class="pill quiet skip" data-act="leastSkip">${COPY.leastSkip} →</button>`
-          : `<button class="exit${a === 'x' ? ' picked' : ''}" data-act="exit">${esc(m.x ?? COPY.exitDefault)}</button>`
-      }
+      <p class="hint rank-hint">${COPY.rankHint}</p>
+      ${rankBlock(qi)}
+      <button class="exit${a === 'x' ? ' picked' : ''}" data-act="exit">${esc(m.x ?? COPY.exitDefault)}</button>
     </article>
   </section>`;
 }
@@ -208,18 +246,205 @@ function guessCard() {
   const k = gm.findIndex((i) => st.gt?.[i] === undefined);
   const qi = gm[k];
   const m = MOMENTS[qi];
+  rankSetup('g' + qi, qi);
   return `<section class="screen moment">
     <div class="topbar"><span class="back-spacer"></span>${progress(k, gm.length)}</div>
     <article class="card enter" aria-live="polite">
       <p class="label">${esc(COPY.guessPick(nameOf(them)))}</p>
       <p class="scenario">${esc(m.s)}</p>
-      <div class="opts">${optionButtons(qi, 'guess')}</div>
+      <p class="hint rank-hint">${COPY.rankHint}</p>
+      ${rankBlock(qi)}
     </article>
   </section>`;
 }
 
+/* Re-order the cards already on screen (no re-render, so nothing re-enters)
+   and glide each from where it was to where it now belongs. `from` lets a drop
+   start the glide from the dragged positions rather than the resting ones. */
+function syncRank(qi: number, from?: Map<string, number>) {
+  const list = root().querySelector<HTMLOListElement>('.rank');
+  if (!list) return;
+  const slots = new Map<string, HTMLLIElement>();
+  list.querySelectorAll<HTMLLIElement>('.rslot').forEach((li) => slots.set(li.dataset.v!, li));
+  const before = from ?? new Map([...slots].map(([v, li]) => [v, li.getBoundingClientRect().top]));
+  visible().forEach((i) => {
+    const li = slots.get(String(i))!;
+    const r = ui.rank.indexOf(i);
+    const b = li.querySelector<HTMLButtonElement>('.rcard')!;
+    b.classList.toggle('ranked', r >= 0);
+    b.setAttribute('aria-pressed', String(r >= 0));
+    b.querySelector('.badge')!.textContent = r >= 0 ? String(r + 1) : '';
+    li.style.transition = 'none';
+    li.style.transform = '';
+    list.appendChild(li);
+  });
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  slots.forEach((li, v) => {
+    const dy = (before.get(v) ?? 0) - li.getBoundingClientRect().top;
+    if (!dy || reduce) return;
+    li.style.transform = `translateY(${dy}px)`;
+    void li.offsetHeight;
+    li.style.transition = 'transform 0.38s var(--spring)';
+    li.style.transform = '';
+  });
+  const done = root().querySelector<HTMLButtonElement>('.rank-done')!;
+  const full = rankFull(qi);
+  done.hidden = !full;
+  done.classList.toggle('show', full);
+}
+
+function rankTap(qi: number, v: number) {
+  const r = ui.rank.indexOf(v);
+  if (r >= 0) ui.rank.splice(r, 1);
+  else {
+    ui.rank.push(v);
+    // three placed means the fourth has only one place to go
+    const left = visible().filter((i) => !ui.rank.includes(i));
+    if (left.length === 1) ui.rank.push(left[0]);
+  }
+  syncRank(qi);
+}
+
+/* ---------- hold and drag ----------
+   Touch: a still hold of HOLD_MS lifts the card; moving first is a scroll, and
+   is left alone. Once lifted, a non-passive touchmove cancels the page scroll,
+   which is what keeps iOS Safari from stealing the gesture. Mouse: a small
+   movement lifts it straight away. */
+const HOLD_MS = 260;
+let drag: {
+  el: HTMLLIElement;
+  v: number;
+  qi: number;
+  startY: number;
+  y: number;
+  lifted: boolean;
+  timer?: number;
+  tops: number[];
+  heights: number[];
+  from: number;
+  to: number;
+  gap: number;
+} | null = null;
+let swallowClick = false;
+
+function currentQi(): number | null {
+  const s = stage();
+  if (s === 'moment') return ui.qi;
+  if (s === 'guess') {
+    const gm = guessMoments(st.them!);
+    return gm.find((i) => st.gt?.[i] === undefined) ?? null;
+  }
+  return null;
+}
+
+function dragStart(target: EventTarget | null, y: number, touch: boolean) {
+  const btn = (target as HTMLElement | null)?.closest<HTMLElement>('.rcard');
+  const qi = currentQi();
+  if (!btn || qi === null || busy) return;
+  const el = btn.closest<HTMLLIElement>('.rslot')!;
+  drag = { el, v: Number(el.dataset.v), qi, startY: y, y, lifted: false, tops: [], heights: [], from: 0, to: 0, gap: 0 };
+  if (touch) drag.timer = window.setTimeout(lift, HOLD_MS);
+}
+
+function lift() {
+  if (!drag) return;
+  const items = [...root().querySelectorAll<HTMLLIElement>('.rslot')];
+  drag.tops = items.map((li) => li.getBoundingClientRect().top);
+  drag.heights = items.map((li) => li.getBoundingClientRect().height);
+  drag.from = drag.to = items.indexOf(drag.el);
+  drag.gap = items.length > 1 ? drag.tops[1] - drag.tops[0] - drag.heights[0] : 10;
+  drag.lifted = true;
+  drag.el.classList.add('lifted');
+  root().querySelector('.rank')!.classList.add('dragging');
+  navigator.vibrate?.(8);
+}
+
+function dragMove(y: number, e?: Event) {
+  if (!drag) return;
+  drag.y = y;
+  const dy = y - drag.startY;
+  if (!drag.lifted) {
+    if (Math.abs(dy) > 8) {
+      if (drag.timer !== undefined) {
+        // moved before the hold landed: that's a scroll, not a drag
+        clearTimeout(drag.timer);
+        drag = null;
+        return;
+      }
+      lift(); // mouse
+    } else return;
+  }
+  e?.preventDefault();
+  const { tops, heights, from, gap } = drag;
+  const items = [...root().querySelectorAll<HTMLLIElement>('.rslot')];
+  const mid = tops[from] + heights[from] / 2 + dy;
+  let to = 0;
+  tops.forEach((t, i) => {
+    if (i !== from && mid > t + heights[i] / 2) to++;
+  });
+  drag.to = to;
+  const shift = heights[from] + gap;
+  items.forEach((li, i) => {
+    if (i === from) li.style.transform = `translateY(${dy}px) scale(1.03)`;
+    else {
+      const off = from < to && i > from && i <= to ? -shift : from > to && i < from && i >= to ? shift : 0;
+      li.style.transform = off ? `translateY(${off}px)` : '';
+    }
+  });
+}
+
+function dragEnd() {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  if (d.timer !== undefined) clearTimeout(d.timer);
+  if (!d.lifted) return; // a plain tap: the click handler has it
+  swallowClick = true;
+  setTimeout(() => (swallowClick = false), 400);
+  const list = root().querySelector('.rank');
+  list?.classList.remove('dragging');
+  d.el.classList.remove('lifted');
+  const items = [...root().querySelectorAll<HTMLLIElement>('.rslot')];
+  const from = new Map(items.map((li) => [li.dataset.v!, li.getBoundingClientRect().top]));
+  const order = visible().filter((i) => i !== d.v);
+  order.splice(d.to, 0, d.v);
+  const wasRanked = ui.rank.includes(d.v);
+  const rest = ui.rank.filter((i) => i !== d.v);
+  if (wasRanked) {
+    // a placed card stays placed: reorder among the placed ones
+    rest.splice(Math.min(d.to, rest.length), 0, d.v);
+    ui.rank = rest;
+  } else if (d.to <= rest.length) {
+    rest.splice(d.to, 0, d.v);
+    ui.rank = rest;
+    const left = order.filter((i) => !ui.rank.includes(i));
+    if (left.length === 1) ui.rank.push(left[0]);
+  } else {
+    // dropped among the unplaced: just move it there
+    ui.shown = order.filter((i) => !ui.rank.includes(i));
+  }
+  syncRank(d.qi, from);
+}
+
+function bindDrag() {
+  const r = root();
+  r.addEventListener('touchstart', (e) => e.touches.length === 1 && dragStart(e.target, e.touches[0].clientY, true), { passive: true });
+  r.addEventListener('touchmove', (e) => drag && dragMove(e.touches[0].clientY, drag.lifted ? e : undefined), { passive: false });
+  r.addEventListener('touchend', dragEnd);
+  r.addEventListener('touchcancel', dragEnd);
+  r.addEventListener('pointerdown', (e) => e.pointerType === 'mouse' && e.button === 0 && dragStart(e.target, e.clientY, false));
+  window.addEventListener('pointermove', (e) => e.pointerType === 'mouse' && drag && dragMove(e.clientY, e));
+  window.addEventListener('pointerup', (e) => e.pointerType === 'mouse' && dragEnd());
+  r.addEventListener('contextmenu', (e) => (e.target as HTMLElement).closest('.rcard') && e.preventDefault());
+}
+
 function pickText(qi: number, p: number) {
   return esc(inline(MOMENTS[qi].opts[p].t));
+}
+
+const guessTop = (g: Guess) => (Array.isArray(g) ? g[0] : g);
+function sameOrder(a: Person['answers'][number], g: Guess) {
+  return isRanked(a) && Array.isArray(g) && a.o.every((v, i) => v === g[i]);
 }
 
 function guessReveal() {
@@ -229,17 +454,19 @@ function guessReveal() {
   let hit = 0;
   const items = gm
     .map((qi, j) => {
-      const a = them.answers[qi] as { p: number };
+      const a = them.answers[qi];
       const g = st.gt![qi];
-      const right = g === a.p;
+      const top = topOf(a)!;
+      const gTop = guessTop(g);
+      const right = gTop === top;
       if (right) hit++;
       return `<li class="gitem" style="--i:${j}">
         <p class="gscene">${esc(MOMENTS[qi].s)}</p>
         ${
           right
-            ? `<p class="gline right"><span class="tag">${COPY.guessRight}</span> ${pickText(qi, a.p)}</p>`
-            : `<p class="gline"><span class="tag">${COPY.guessSurprise}</span> ${esc(COPY.youThought(n))}: ${pickText(qi, g)}.</p>
-               <p class="gline">${esc(COPY.theyPicked(n))}: ${pickText(qi, a.p)}.</p>`
+            ? `<p class="gline right"><span class="tag">${COPY.guessRight}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${COPY.wholeOrder}</p>` : ''}`
+            : `<p class="gline"><span class="tag">${COPY.guessSurprise}</span> ${esc(COPY.youThought(n))}: ${pickText(qi, gTop)}.</p>
+               <p class="gline">${esc(COPY.theyPicked(n))}: ${pickText(qi, top)}.</p>`
         }
       </li>`;
     })
@@ -305,8 +532,8 @@ function sharpen() {
 
 function evidenceLine(qi?: number) {
   if (qi === undefined) return '';
-  const a = st.me!.answers[qi] as { p: number };
-  return `<p class="evidence"><span>${esc(MOMENTS[qi].s)}</span> You picked: <em>${pickText(qi, a.p)}</em>.</p>`;
+  const a = st.me!.answers[qi];
+  return `<p class="evidence"><span>${esc(MOMENTS[qi].s)}</span> ${isRanked(a) ? COPY.youPutFirst : 'You picked'}: <em>${pickText(qi, topOf(a)!)}</em>.</p>`;
 }
 
 function trySuggestions(me: Person): { k: AxisKey; side: Side }[] {
@@ -396,11 +623,13 @@ function result() {
         .map(([qs, g]) => {
           const qi = Number(qs);
           const a = me.answers[qi];
-          if (!a || a === 'x') return '';
+          const top = topOf(a);
+          if (top === undefined) return '';
+          const gTop = guessTop(g);
           return `<li class="gitem"><p class="gscene">${esc(MOMENTS[qi].s)}</p>${
-            a.p === g
-              ? `<p class="gline right"><span class="tag">${esc(COPY.othersRight(tn))}</span> ${pickText(qi, a.p)}</p>`
-              : `<p class="gline">${COPY.youWent}: ${pickText(qi, a.p)}.</p><p class="gline">${esc(COPY.othersLine(tn))}: ${pickText(qi, g)}.</p>`
+            top === gTop
+              ? `<p class="gline right"><span class="tag">${esc(COPY.othersRight(tn))}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${COPY.wholeOrderThem}</p>` : ''}`
+              : `<p class="gline">${COPY.youWent}: ${pickText(qi, top)}.</p><p class="gline">${esc(COPY.othersLine(tn))}: ${pickText(qi, gTop)}.</p>`
           }</li>`;
         })
         .join('')}</ul>
@@ -436,7 +665,7 @@ function result() {
 
   return `<section class="screen result">
     <p class="label">${COPY.resultLabel}</p>
-    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : 'What you said, and what you picked'}</h1>
+    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : 'What you said, and how you ranked'}</h1>
     ${portrait(me, them)}
     <p class="hint">${COPY.momentsSoFar(n)}</p>
     ${n < MAX_MOMENTS ? `<button class="pill quiet" data-act="more">${COPY.sharpen}</button>` : ''}
@@ -487,7 +716,7 @@ function nameFrom(id: string): string | undefined {
 
 function onClick(e: Event) {
   const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-act]');
-  if (!btn || btn.disabled || busy) return;
+  if (!btn || btn.disabled || busy || swallowClick) return;
   const act = btn.dataset.act!;
   const v = btn.dataset.v !== undefined ? Number(btn.dataset.v) : NaN;
   const me = st.me;
@@ -522,21 +751,20 @@ function onClick(e: Event) {
     case 'statedSkip':
       me!.stated = [null, null, null, null, null, null];
       break;
-    case 'pick': {
-      const qi = ui.qi!;
-      me!.answers[qi] = { p: v };
+    case 'rank':
+      return rankTap(currentQi()!, v);
+    case 'rankDone': {
+      const qi = currentQi()!;
+      if (!rankFull(qi)) return;
+      if (stage() === 'guess') {
+        st.gt = { ...(st.gt ?? {}), [qi]: ui.rank.slice() };
+        ui.rankFor = null;
+        return advance(btn);
+      }
+      me!.answers[qi] = { o: ui.rank.slice() };
       for (let i = 0; i < qi; i++) if (me!.answers[i] === undefined) me!.answers[i] = null;
-      ui.least = qi;
-      save();
-      return render();
-    }
-    case 'least': {
-      const a = me!.answers[ui.qi!];
-      if (a && a !== 'x') a.l = v;
       return advance(btn);
     }
-    case 'leastSkip':
-      return advance(btn);
     case 'exit': {
       const qi = ui.qi!;
       me!.answers[qi] = 'x';
@@ -544,15 +772,8 @@ function onClick(e: Event) {
       return advance(btn);
     }
     case 'back':
-      ui.least = null;
       ui.qi = Math.max(Math.floor(ui.qi! / BLOCK) * BLOCK, ui.qi! - 1);
       return render();
-    case 'guess': {
-      const gm = guessMoments(st.them!);
-      const qi = gm.find((i) => st.gt?.[i] === undefined)!;
-      st.gt = { ...(st.gt ?? {}), [qi]: v };
-      break;
-    }
     case 'nowYours':
       st.me = { answers: [] };
       ui.stated = [null, null, null, null, null, null];
@@ -593,7 +814,7 @@ function onClick(e: Event) {
     case 'restart':
       if (!confirm('Start again? Your current link still holds this result if you’ve kept it.')) return;
       st = {};
-      Object.assign(ui, { started: false, qi: null, least: null, tryPick: null, tryAll: false, shareUrl: null, backUrl: null, animated: false });
+      Object.assign(ui, { started: false, qi: null, rankFor: null, tryPick: null, tryAll: false, shareUrl: null, backUrl: null, animated: false });
       break;
     default:
       return;
@@ -603,8 +824,8 @@ function onClick(e: Event) {
 }
 
 function advance(btn: HTMLElement) {
-  ui.least = null;
   ui.qi = null;
+  ui.rankFor = null;
   save();
   const card = btn.closest('.card');
   if (card && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -620,13 +841,14 @@ function advance(btn: HTMLElement) {
 function load() {
   st = decodeState(location.hash);
   ui.qi = null;
-  ui.least = null;
+  ui.rankFor = null;
   ui.animated = false;
   render();
 }
 
 export function boot() {
   root().addEventListener('click', onClick);
+  bindDrag();
   window.addEventListener('hashchange', load);
   load();
 }

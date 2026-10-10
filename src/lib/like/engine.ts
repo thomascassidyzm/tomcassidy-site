@@ -16,6 +16,15 @@
  * study /d/bb57af4a). Centred, a random tapper lands mid-scale, which is the
  * least we owe a scale that only ever speaks about you against yourself.
  * The tanh shape and the "width shrinks with evidence" idea are kept.
+ *
+ * Answers are RANKINGS (Tom, 2026-10-10: "rank all of them - most to least
+ * likely. This is a much better scoring mechanism"). The rank→weight
+ * conversion is the Cowch ranked variant's, ported verbatim
+ * (theracowch public/assets/js/what-are-you-like-rank.js, scoreRanking):
+ * +1, +0.33, −0.33, −1 over 2.66. Those coefficients sum to zero, so a
+ * ranking is centred by construction and the random-tapper property holds
+ * without any extra step. Pick-one answers ({p, l}) from links made before
+ * the switch still decode and still score.
  */
 import bankDoc from './bank.json';
 
@@ -37,8 +46,24 @@ export const MOMENTS: Moment[] = (bankDoc as { questions: Moment[] }).questions;
 export const BLOCK = 10;
 export const MAX_MOMENTS = MOMENTS.length; // 30
 
-/** One answer slot: null = not reached, 'x' = honest exit, else the pick and an optional least. */
-export type Answer = null | 'x' | { p: number; l?: number };
+/** A full ranking: option indices, most likely first. */
+export interface Ranked {
+  o: number[];
+}
+/** A pick-one answer, from links made before ranking. */
+export interface Picked {
+  p: number;
+  l?: number;
+}
+/** One answer slot: null = not reached, 'x' = honest exit, else a ranking (or a legacy pick). */
+export type Answer = null | 'x' | Ranked | Picked;
+
+export const isRanked = (a: Answer | undefined): a is Ranked => !!a && a !== 'x' && 'o' in a;
+/** The option a person put first (or picked). */
+export function topOf(a: Answer | undefined): number | undefined {
+  if (!a || a === 'x') return undefined;
+  return 'o' in a ? a.o[0] : a.p;
+}
 
 export interface Person {
   name?: string;
@@ -59,6 +84,13 @@ export interface AxisRead {
 }
 
 const LEAST_WEIGHT = 0.5;
+/** Cowch's ranked-variant coefficients: first, second, third, last. */
+export const RANK_COEFF = [1.0, 0.33, -0.33, -1.0];
+const RANK_NORM = 2.66; // sum of |RANK_COEFF|
+
+function rankSum(vals: number[]): number {
+  return vals.reduce((sum, v, pos) => sum + (RANK_COEFF[pos] ?? 0) * v, 0) / RANK_NORM;
+}
 
 function axisStats(m: Moment, k: AxisKey) {
   const ws = m.opts.map((o) => o.w[k] ?? 0);
@@ -72,6 +104,13 @@ export function pushOf(m: Moment, a: Answer, k: AxisKey): { d: number; r: number
   if (!a || a === 'x') return { d: 0, r: 0 };
   const { ws, mean, half } = axisStats(m, k);
   if (half === 0) return { d: 0, r: 0 };
+  if ('o' in a) {
+    // d: this ranking's push. r: the push of the ideal ranking for this axis,
+    // so a ranking that orders the axis perfectly reads as exactly ±1.
+    const d = rankSum(a.o.map((i) => ws[i] - mean));
+    const r = rankSum(ws.map((w) => w - mean).sort((x, y) => y - x));
+    return { d, r };
+  }
   let d = ws[a.p] - mean;
   let r = half;
   if (a.l !== undefined && a.l !== a.p) {
@@ -191,25 +230,59 @@ export function guessMoments(p: Person, n = 5): number[] {
    a person is  name~stated~answers  where stated is six chars (0-4, or '-'
    for a skipped axis; empty = not asked yet) and answers are two chars per
    moment: pick (0-3, 'x' exit, '.' not reached) then least (0-3 or '-').
-   Guesses are  <moment index base36><pick>  pairs. */
+   Guesses are  <moment index base36><pick>  pairs.
+
+   RANKED (2026-10-10): answers start with 'r' and take ONE char per moment —
+   the ranking's index among the 24 orderings of four (0-9 a-n), 'x' exit,
+   '.' not reached, and A-T for a legacy pick carried over (p*5 + l+1).
+   Ranked guesses also start with 'r': <moment index base36><ordering char>. */
 
 export interface State {
   me?: Person;
   them?: Person;
   /** I was sent a guess-me link and haven't finished guessing yet / at all. */
   ask?: boolean;
-  /** my guesses of them: moment index -> pick */
-  gt?: Record<number, number>;
+  /** my guesses of them: moment index -> ranking (or a legacy pick) */
+  gt?: Record<number, Guess>;
   /** their guesses of me */
-  gm?: Record<number, number>;
+  gm?: Record<number, Guess>;
   /** how many moments I'm aiming for (10, 20, 30) */
   t?: number;
 }
 
+/** A guess at someone's moment: their ranking as you think it went (a number = legacy pick). */
+export type Guess = number[] | number;
+
+const PERM_CHARS = '0123456789abcdefghijklmn';
+const PERMS: number[][] = (() => {
+  const out: number[][] = [];
+  const go = (pre: number[], rest: number[]) => {
+    if (!rest.length) return void out.push(pre);
+    rest.forEach((x, i) => go([...pre, x], [...rest.slice(0, i), ...rest.slice(i + 1)]));
+  };
+  go([], [0, 1, 2, 3]);
+  return out;
+})();
+const permChar = (o: number[]) => PERM_CHARS[PERMS.findIndex((q) => q.every((v, i) => v === o[i]))] ?? '.';
+const charPerm = (c: string) => (PERM_CHARS.includes(c) ? PERMS[PERM_CHARS.indexOf(c)].slice() : undefined);
+const LEGACY = 'ABCDEFGHIJKLMNOPQRST';
+
 export function encodePerson(p: Person): string {
   const stated = p.stated ? p.stated.map((s) => (s === null || s === undefined ? '-' : String(s))).join('') : '';
+  if (p.answers.some(isRanked)) {
+    const ans = p.answers
+      .map((a) =>
+        a === null || a === undefined ? '.'
+        : a === 'x' ? 'x'
+        : 'o' in a ? permChar(a.o)
+        : LEGACY[a.p * 5 + (a.l === undefined ? 0 : a.l + 1)],
+      )
+      .join('')
+      .replace(/\.+$/, '');
+    return [(p.name ?? '').replace(/~/g, ''), stated, 'r' + ans].join('~');
+  }
   let ans = p.answers
-    .map((a) => (a === null || a === undefined ? '..' : a === 'x' ? 'x-' : `${a.p}${a.l ?? '-'}`))
+    .map((a) => (a === null || a === undefined ? '..' : a === 'x' ? 'x-' : `${(a as Picked).p}${(a as Picked).l ?? '-'}`))
     .join('');
   ans = ans.replace(/(\.\.)+$/, '');
   return [(p.name ?? '').replace(/~/g, ''), stated, ans].join('~');
@@ -223,6 +296,20 @@ export function decodePerson(s: string): Person | undefined {
   if (name) p.name = name.slice(0, 40);
   if (st.length === AXIS_KEYS.length) {
     p.stated = st.split('').map((c) => (/[0-4]/.test(c) ? Number(c) : null));
+  }
+  if (ans.startsWith('r')) {
+    for (const c of ans.slice(1, 1 + MAX_MOMENTS)) {
+      const o = charPerm(c);
+      const L = LEGACY.indexOf(c);
+      if (c === 'x') p.answers.push('x');
+      else if (o) p.answers.push({ o });
+      else if (L >= 0) {
+        const a: Picked = { p: Math.floor(L / 5) };
+        if (L % 5 && L % 5 - 1 !== a.p) a.l = (L % 5) - 1;
+        p.answers.push(a);
+      } else p.answers.push(null);
+    }
+    return p;
   }
   for (let i = 0; i < ans.length && i / 2 < MAX_MOMENTS; i += 2) {
     const c = ans[i];
@@ -238,13 +325,28 @@ export function decodePerson(s: string): Person | undefined {
   return p;
 }
 
-function encodeGuesses(g: Record<number, number>): string {
-  return Object.entries(g)
-    .map(([i, p]) => Number(i).toString(36) + p)
-    .join('');
+function encodeGuesses(g: Record<number, Guess>): string {
+  const ranked = Object.values(g).some(Array.isArray);
+  return (
+    (ranked ? 'r' : '') +
+    Object.entries(g)
+      .map(([i, v]) => Number(i).toString(36) + (Array.isArray(v) ? permChar(v) : ranked ? LEGACY[v * 5] : v))
+      .join('')
+  );
 }
-function decodeGuesses(s: string): Record<number, number> {
-  const out: Record<number, number> = {};
+function decodeGuesses(s: string): Record<number, Guess> {
+  const out: Record<number, Guess> = {};
+  if (s.startsWith('r')) {
+    for (let i = 1; i + 1 < s.length; i += 2) {
+      const idx = parseInt(s[i], 36);
+      if (!(idx < MAX_MOMENTS)) continue;
+      const o = charPerm(s[i + 1]);
+      const L = LEGACY.indexOf(s[i + 1]);
+      if (o) out[idx] = o;
+      else if (L >= 0) out[idx] = Math.floor(L / 5);
+    }
+    return out;
+  }
   for (let i = 0; i + 1 < s.length; i += 2) {
     const idx = parseInt(s[i], 36);
     const p = Number(s[i + 1]);

@@ -6,6 +6,29 @@ falsify it.
 
 ---
 
+## 2026-10-10 — /like ranks every option, and the cards start unranked
+
+**Decided.** Each moment is now a full ranking, most to least likely (Tom:
+"This is a much better scoring mechanism"). Scoring is the Cowch ranked
+variant's, ported verbatim: +1, +0.33, −0.33, −1 over 2.66. The coefficients
+sum to zero, so a ranking is centred by construction and the random-tapper
+property still holds (tested). The cards arrive UNRANKED in a fresh shuffle:
+tap in order to place 1..4 (the fourth places itself), hold-and-drag to adjust,
+tap a numbered card to take it out; ✅ appears only when all are placed. That
+designs out the Cowch flaw where a lazy "that's my order" saved the shuffle as
+an answer. The friend's Guess-me round ranks the same way; the reveal compares
+first places and notes when the whole order matched.
+
+**Link.** Answers carry an `r` prefix and one character per moment (the
+ordering's index among 24, `x` exit, `.` unreached) — shorter than before.
+Pick-one links made earlier today still decode and score.
+
+**Falsified if** people on phones fail to discover hold-to-drag (watch for
+rankings that are only ever tap order), or the ranked bands read no sharper
+than pick-one at ten moments.
+
+---
+
 ## 2026-10-10 — /like prototype: centred scoring, the link is the save
 
 **Decided.** "What are you like, anyway?" gets a phone-first prototype at
