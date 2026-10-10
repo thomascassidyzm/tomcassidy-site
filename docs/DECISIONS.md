@@ -6,6 +6,31 @@ falsify it.
 
 ---
 
+## 2026-10-10 — /like prototype: centred scoring, the link is the save
+
+**Decided.** "What are you like, anyway?" gets a phone-first prototype at
+`/like` (preview only, not merged). The Cowch bank is copied verbatim into
+`src/lib/like/bank.json`; the engine (`engine.ts`) holds bank, scoring, URL
+codec and pair/guess arithmetic with no words; every sentence lives in
+`skin.ts` and the look in `skin.css`, so Cowch can take the engine later.
+One change to the Cowch scoring: each pick is centred against the mean of its
+own moment's options before it counts. Uncentred, a random tapper landed at
+about 66–68 of 100 on four axes (purpose study /d/bb57af4a); centred, the
+median random tapper sits within 6 of 50 on every axis (pinned by
+`engine.test.ts`). All state lives in the URL fragment — no server, no
+account, no storage.
+
+**Why it wins.** Better: the "you lean towards…" sentences stop flattering
+everyone, and a shared link can't be lost to an in-app browser's storage.
+Simpler: no backend, no account, no localStorage. Cheaper: one static page.
+
+**What would falsify it.** Real runs where the centred reading disagrees
+with what people recognise in themselves more often than the raw one did; or
+links growing past what messaging apps will carry (a 30-moment pair link is
+roughly 200 characters today).
+
+---
+
 ## 2026-09-20 — Settled: the guide is live and billed in production
 
 **Fact, not a decision.** Four prior estate audits (2026-08-18, 2026-08-31,

@@ -1,0 +1,44 @@
+---
+/**
+ * /like — "What are you like, anyway?" PROTOTYPE (preview only, 2026-10-10).
+ *
+ * A single static page; everything happens on the device and every answer is
+ * written into the URL fragment, so the link is the save and nothing is sent
+ * to a server. Engine: src/lib/like/engine.ts. Words: src/lib/like/skin.ts.
+ * Look: src/lib/like/skin.css. Player: src/lib/like/app.ts.
+ *
+ * Deliberately outside BaseLayout: no site header eating a phone's first
+ * screen, and paper (light) regardless of the site's dark default.
+ */
+import '@/styles/tokens.css';
+import '@/lib/like/skin.css';
+
+export const prerender = true;
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Ten everyday moments. See which way you lean — and send it to someone who thinks they know you." />
+    <meta name="theme-color" content="#f3eee4" />
+    <title>What are you like, anyway?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..600;1,9..144,360..560&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..520&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="like">
+    <main id="like-app" class="like-app">
+      <noscript><p>This needs JavaScript — it all runs on your phone.</p></noscript>
+    </main>
+    <script>
+      import { boot } from '@/lib/like/app';
+      boot();
+    </script>
+  </body>
+</html>
