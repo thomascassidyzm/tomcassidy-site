@@ -94,6 +94,15 @@ describe('ranked scoring (Cowch coefficients)', () => {
   });
 });
 
+describe('older links that carry a skip', () => {
+  it('still open and score, the skipped moment counting as no data', () => {
+    const withSkip = decodeState('#me=' + encodeURIComponent('Tom~~rax.b')).me!;
+    const without: Person = { name: 'Tom', answers: [withSkip.answers[0], null, null, withSkip.answers[3]] };
+    expect(withSkip.answers[1]).toBe('x');
+    expect(readAll(withSkip.answers)).toEqual(readAll(without.answers));
+  });
+});
+
 describe('the link is the save', () => {
   it('round-trips rankings at one char per moment, with exits and gaps', () => {
     const me: Person = { name: 'Tom', stated: [0, 1, 2, 3, 4, null], answers: [{ o: [2, 0, 3, 1] }, 'x', null, { o: [3, 2, 1, 0] }] };

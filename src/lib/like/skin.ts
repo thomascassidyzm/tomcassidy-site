@@ -58,7 +58,6 @@ export const COPY = {
   rankAria: 'The options, in your order',
   rankDone: 'Next',
   youPutFirst: 'You put first',
-  exitDefault: 'Something else — or it depends',
   back: 'Back',
 
   resultLabel: 'Your portrait, so far',

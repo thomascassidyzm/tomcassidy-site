@@ -131,7 +131,7 @@ button:disabled { cursor: default; }
   font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink);
 }
 .skip { font-weight: 500; font-size: 1rem; }
-.exit, .skip {
+.skip {
   min-height: 48px;
   border-radius: 14px;
   border: 1.5px dashed var(--hairline);
@@ -141,7 +141,6 @@ button:disabled { cursor: default; }
   animation: drop 0.46s var(--spring) both;
   animation-delay: 230ms;
 }
-.exit.picked { border-color: var(--ink); color: var(--text-primary); }
 
 /* ---------- stated ---------- */
 .stated { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }

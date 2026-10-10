@@ -39,7 +39,6 @@ export interface Moment {
   id: string;
   s: string;
   opts: Option[];
-  x?: string;
 }
 
 export const MOMENTS: Moment[] = (bankDoc as { questions: Moment[] }).questions;

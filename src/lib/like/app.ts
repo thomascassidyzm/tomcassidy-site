@@ -235,7 +235,6 @@ function momentCard() {
       <p class="scenario">${esc(m.s)}</p>
       <p class="hint rank-hint">${COPY.rankHint}</p>
       ${rankBlock(qi)}
-      <button class="exit${a === 'x' ? ' picked' : ''}" data-act="exit">${esc(m.x ?? COPY.exitDefault)}</button>
     </article>
   </section>`;
 }
@@ -762,12 +761,6 @@ function onClick(e: Event) {
         return advance(btn);
       }
       me!.answers[qi] = { o: ui.rank.slice() };
-      for (let i = 0; i < qi; i++) if (me!.answers[i] === undefined) me!.answers[i] = null;
-      return advance(btn);
-    }
-    case 'exit': {
-      const qi = ui.qi!;
-      me!.answers[qi] = 'x';
       for (let i = 0; i < qi; i++) if (me!.answers[i] === undefined) me!.answers[i] = null;
       return advance(btn);
     }
