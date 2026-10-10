@@ -12,7 +12,7 @@
  *  - LINE WEIGHT is the blur: fewer moments, heavier lines. Sharpen, and the
  *    lines get finer.
  */
-import { AXIS_KEYS, sideOf, type AxisKey, type AxisRead, type Side } from './engine';
+import { AXIS_KEYS, leanOf, paintedAxes, sideOf, type AxisKey, type AxisRead, type Side } from './engine';
 
 export type Hue = 'red' | 'blue' | 'yellow' | 'white';
 export const HUES: Record<Hue, string> = {
@@ -41,21 +41,19 @@ export interface Painting {
   line: number;
 }
 
-const leanOf = (a: AxisRead) => (a.ev === 0 ? 0 : Math.min(1, Math.abs(a.est - 50) / 45));
-
 export function paint(reads: Record<AxisKey, AxisRead>): Painting {
   const items = AXIS_KEYS.map((k, i) => ({ k, i, lean: leanOf(reads[k]), side: reads[k].ev ? sideOf(reads[k].est) : (0 as Side) }))
     .map((it) => ({ ...it, weight: 0.35 + it.lean }))
     .sort((a, b) => b.lean - a.lean || a.i - b.i);
   const total = items.reduce((s, it) => s + it.weight, 0);
 
-  let c = 0;
-  const hueOf = (side: Side): Hue => (side !== 0 && c < ORDER.length ? ORDER[c++] : 'white');
+  const painted = paintedAxes(reads);
+  const hueOf = (k: AxisKey): Hue => (painted.includes(k) ? ORDER[painted.indexOf(k)] : 'white');
 
   const fields: Field[] = [];
   let x = 0, y = 0, w = 100, h = 100, left = total;
   items.forEach((it, n) => {
-    const hue = hueOf(it.side);
+    const hue = hueOf(it.k);
     const last = n === items.length - 1;
     const share = last ? 1 : it.weight / left;
     left -= it.weight;

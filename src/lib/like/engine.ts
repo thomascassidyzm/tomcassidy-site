@@ -150,6 +150,26 @@ export function sideOf(pos: number, dead = 10): Side {
   return pos >= 50 + dead ? 1 : pos <= 50 - dead ? -1 : 0;
 }
 
+/** How far an axis leans, 0..1 (0 where there is no evidence). */
+export const leanOf = (a: AxisRead) => (a.ev === 0 ? 0 : Math.min(1, Math.abs(a.est - 50) / 45));
+
+/** How many axes the painting colours. */
+export const PAINTED_AXES = 3;
+
+/**
+ * THE threshold shared by the painting and the lean text: an axis is painted
+ * (coloured) when it leans past the dead zone AND is among the PAINTED_AXES
+ * clearest leans. Anything else is white in the painting and reads as "near
+ * the middle" in words. Ordered clearest first.
+ */
+export function paintedAxes(reads: Record<AxisKey, AxisRead>): AxisKey[] {
+  return AXIS_KEYS.map((k, i) => ({ k, i, lean: leanOf(reads[k]) }))
+    .sort((a, b) => b.lean - a.lean || a.i - b.i)
+    .filter((it) => reads[it.k].ev > 0 && sideOf(reads[it.k].est) !== 0)
+    .slice(0, PAINTED_AXES)
+    .map((it) => it.k);
+}
+
 export interface Gap {
   k: AxisKey;
   stated: number;

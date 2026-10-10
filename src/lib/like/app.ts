@@ -18,6 +18,7 @@ import {
   readAll,
   returnState,
   sideOf,
+  paintedAxes,
   topOf,
   isRanked,
   type AxisKey,
@@ -644,11 +645,12 @@ function result() {
       : `<p class="body">${COPY.noGaps}</p>`;
   } else gapHtml = `<p class="body">${COPY.noStated}</p>`;
 
+  const paintedSet = paintedAxes(r);
   const leans = AXIS_KEYS.filter((k) => r[k].ev > 0)
     .map((k) => {
       const side = sideOf(r[k].est);
       const strong = Math.abs(r[k].est - 50) > r[k].unc + 12;
-      return `<li><span class="axis">${AXES[k].label}</span> ${esc(leanLine(k, side, strong))}</li>`;
+      return `<li><span class="axis">${AXES[k].label}</span> ${esc(leanLine(k, side, strong, paintedSet.includes(k)))}</li>`;
     })
     .join('');
 
@@ -704,7 +706,7 @@ function result() {
 
   return `<section class="screen result">
     <p class="label">${COPY.resultLabel}</p>
-    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : 'What you said, and how you ranked'}</h1>
+    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : (me.stated && me.stated.some((x) => x !== null) ? 'What you said, and how you ranked' : 'How you ranked')}</h1>
     ${painting(me)}
     ${portrait(me, them)}
     <p class="hint">${COPY.momentsSoFar(n)}</p>

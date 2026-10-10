@@ -132,8 +132,9 @@ export function paintFieldLine(hue: string, area: number, k: AxisKey, side: Side
 }
 
 /** "You lean towards…" — one line per axis, self-scaled. */
-export function leanLine(k: AxisKey, side: Side, strong: boolean): string {
+export function leanLine(k: AxisKey, side: Side, strong: boolean, painted = true): string {
   if (side === 0) return `Your picks sat around the middle, between ${AXES[k].lo} and ${AXES[k].hi}.`;
+  if (!painted) return `Near the middle, slightly towards ${end(k, side)}.`;
   return `You lean ${strong ? 'clearly ' : ''}towards ${end(k, side)}.`;
 }
 

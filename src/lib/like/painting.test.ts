@@ -29,3 +29,30 @@ describe('after Mondrian', () => {
     expect(sharp.line).toBeLessThan(blurry.line);
   });
 });
+
+describe('painting and lean text share one threshold', () => {
+  it('an axis the painting leaves white is never worded as a plain lean', async () => {
+    const { paintedAxes, readAll, sideOf, AXIS_KEYS, MOMENTS } = await import('./engine');
+    const { paint } = await import('./painting');
+    const { leanLine, AXES } = await import('./skin');
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+    let sawSlight = false;
+    for (let t = 0; t < 60; t++) {
+      const answers = MOMENTS.slice(0, 6 + (t % 20)).map((m) => ({ p: Math.floor(rnd() * m.opts.length) }));
+      const reads = readAll(answers);
+      const painted = paintedAxes(reads);
+      const p = paint(reads);
+      for (const f of p.fields) expect(f.hue !== 'white').toBe(painted.includes(f.k));
+      for (const k of AXIS_KEYS.filter((k) => reads[k].ev > 0)) {
+        const line = leanLine(k, sideOf(reads[k].est), false, painted.includes(k));
+        if (!painted.includes(k)) {
+          expect(line).not.toMatch(/^You lean/);
+          if (sideOf(reads[k].est) !== 0) { sawSlight = true; expect(line).toMatch(/^Near the middle, slightly towards/); }
+        }
+        void AXES;
+      }
+    }
+    expect(sawSlight).toBe(true);
+  });
+});
