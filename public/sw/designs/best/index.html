@@ -65,9 +65,42 @@
   #legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; margin-right: 5px; vertical-align: middle; }
   #legend i.k0 { border-top-style: dotted; } #legend i.k1 { border-top-style: dashed; }
   #legend b { color: var(--ink2); font-weight: 700; }
+  /* THE GUIDE for Jonathan (#783): a slim panel above the sheet, never over it. It opens on a first visit and folds to one line; the
+     sheet is fitted to the room left below it. guide=0 hides it, guide=fold / guide=open force it. Hidden on phones. */
+  #guide { position: fixed; left: 0; right: 0; top: 0; z-index: 3; font: 13px/1.4 var(--ui); color: var(--uic); background: var(--bg); border-bottom: 1px solid var(--ctl); padding: 6px 14px 7px; box-sizing: border-box; }
+  #guide[hidden] { display: none; }
+  #guide .gh { display: flex; align-items: center; gap: 10px; min-height: 24px; }
+  #guide .gh b { color: var(--hot); font-weight: 650; letter-spacing: .01em; } #guide .gh span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #guide button { font: 600 12px/1 var(--ui); color: var(--uic); background: var(--ctl); border: 0; border-radius: 999px; height: 26px; padding: 0 11px; cursor: pointer; touch-action: manipulation; }
+  #guide button.on { background: var(--ctlOn); color: var(--hot); } #guide button[disabled] { opacity: .35; cursor: default; }
+  #guide .gb { display: none; padding-top: 4px; } #guide.open .gb { display: block; } #guide.open .gh span { display: none; }
+  #guide p { margin: 0 0 6px; max-width: 70em; }
+  #guide .row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; margin: 5px 0; } #guide .row > i { font-style: normal; font-weight: 650; min-width: 5.6em; color: var(--hot); }
+  #guide .row small { font-size: 12px; opacity: .85; }
+  #guide dl { display: grid; grid-template-columns: max-content 1fr max-content 1fr; gap: 2px 10px; margin: 6px 0 0; font-size: 12.5px; } #guide dt { font-weight: 650; color: var(--hot); } #guide dd { margin: 0; }
+  @media (max-width: 900px) { #guide dl { grid-template-columns: max-content 1fr; } }
+  @media (max-width: 600px), (max-height: 480px) { #guide { display: none; } }
 </style>
 </head>
 <body class="dark">
+<div id="guide" hidden>
+  <!-- DRAFT FOR TOM TO EDIT (#783): every word in this panel is Watson's draft in Tom's plain voice; Tom edits his own prose. -->
+  <div class="gh"><b>SmartWisdom on screen</b><span>Your template, with notes on your own dotted guides. Tap the maps and colours to try them.</span><button id="gFold" aria-expanded="true">fold</button></div>
+  <div class="gb">
+    <p>Jonathan, this is your SmartWisdom template, drawn on screen. Every note sits on one of your dotted guides, or on a copy of one turned round the centre. Nothing is drawn freehand. The step ends are drawn as you printed them.</p>
+    <p>Please try each map and tell us where it reads like your own hand and where it does not. Look hard at the corners. The top right follows your U U U over D U. The top left and bottom right have no code printed, so tell us which way they should go.</p>
+    <div class="row" id="gSets"><i>Maps</i></div>
+    <div class="row" id="gLook"><i>Colours</i></div>
+    <dl>
+      <dt>guides</dt><dd>shows your printed guides in orange, and the copies we made from them dashed</dd>
+      <dt>lines</dt><dd>the whole guide network on its own, with no words; press it again to come back</dd>
+      <dt>steps as printed</dt><dd>a switch with three positions: steps as printed, everything exactly as printed, or every junction snapped to its ring</dd>
+      <dt>colour</dt><dd>how well each note is known, from not started to mastered, on maps that have it</dd>
+      <dt>zoom</dt><dd>closer in; a double tap on the sheet zooms there</dd>
+      <dt>&#8635;</dt><dd>watch the notes arrive again, one at a time</dd>
+    </dl>
+  </div>
+</div>
 <div id="view"><div id="sheet">
   <svg id="tpl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 432.8739"></svg>
   <svg id="ink" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 612 432.8739"></svg>
@@ -189,6 +222,24 @@ function unitsOf(label) {
 let NET = null, TPL = null, ROUTES = null; window.__seatDbg = k => { RoutesText.place.dbg = []; RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); const d = RoutesText.place.dbg; RoutesText.place.dbg = null; M = null; return d; };   // why a note found no line (for the designer)
 const HELP = { measure, unitsOf, hasHan };
 const ink = document.getElementById("ink"), sheet = document.getElementById("sheet"), view = document.getElementById("view");
+// THE GUIDE PANEL (#783). Every map and colour is listed and live; the panel folds to one line and the sheet takes the room.
+const SETNAME = { kemp: "Your intro", "intro-zh": "Your intro, in Chinese", "story-zh": "Your story, in Chinese", "history-zh": "A global history, Chinese slide", note25: "Sleep, a one-minute note", darwin: "Darwin", physics120: "GCSE physics", "physics-zh": "GCSE physics, in Chinese" };
+const guide = document.getElementById("guide"), GKEY = "sw-guide-folded";
+let gOpen = qs.guide === "open" ? true : qs.guide === "fold" ? false : (() => { try { return localStorage.getItem(GKEY) !== "1"; } catch (e) { return true; } })();
+guide.hidden = qs.guide === "0" || !!qs.routes || qs.template === "smartbook";
+function placeView() { const h = guide.hidden || getComputedStyle(guide).display === "none" ? 0 : guide.offsetHeight; view.style.top = h + "px"; }
+function setGuide(open) { gOpen = open; guide.className = open ? "open" : ""; const b = document.getElementById("gFold"); b.textContent = open ? "fold" : "open the guide"; b.setAttribute("aria-expanded", open); try { localStorage.setItem(GKEY, open ? "0" : "1"); } catch (e) {} placeView(); }
+const chip = (txt, f, id) => { const b = document.createElement("button"); b.textContent = txt; if (id) b.id = id; b.addEventListener("click", f); return b; };
+SETS.forEach(k => document.getElementById("gSets").appendChild(chip(SETNAME[k] || k, () => { if (S.set === k) return; S.set = k; S.freeze = null; pushUrl(); render(true); if (/-zh$/.test(k) && document.fonts && document.fonts.load) document.fonts.load('10px "NotemapKai"', "中文").then(() => render(false)).catch(() => {}); }, "gs-" + k)));
+const gLook = document.getElementById("gLook");
+gLook.appendChild(chip("Dark", () => { S.theme = "dark"; pushUrl(); render(false); }, "gt-dark"));
+PAPERS.forEach(pp => gLook.appendChild(chip("Light, " + pp + " paper", () => { S.theme = "light"; S.paper = pp; pushUrl(); render(false); }, "gp-" + pp)));
+gLook.appendChild(chip("Colour by how well it is known", () => { S.comp = !S.comp; pushUrl(); render(false); }, "gc"));
+function syncGuide(hasComp) { SETS.forEach(k => { document.getElementById("gs-" + k).className = S.set === k ? "on" : ""; }); document.getElementById("gt-dark").className = S.theme === "dark" ? "on" : "";
+  PAPERS.forEach(pp => { document.getElementById("gp-" + pp).className = S.theme === "light" && S.paper === pp ? "on" : ""; }); const c = document.getElementById("gc"); c.disabled = !hasComp; c.className = hasComp && S.comp ? "on" : ""; c.title = hasComp ? "" : "this map has no marks for how well it is known"; }
+document.getElementById("gFold").addEventListener("click", () => { setGuide(!gOpen); render(false); });
+setGuide(gOpen);
+
 let M = null, scale = 1;
 function fitSheet() { const vw = view.clientWidth, vh = view.clientHeight, s = Math.min(vw / 612, vh / 432.8739) * S.zoom, w = 612 * s, h = 432.8739 * s;
   sheet.style.cssText = "width:" + w + "px;height:" + h + "px;margin-left:" + Math.max(0, (vw - w) / 2) + "px;margin-top:" + Math.max(0, (vh - h) / 2) + "px"; scale = s; }
@@ -216,7 +267,7 @@ function render(play) {
     const ids = Object.keys(p.srcs); lines.push(one(p.pts, ids.join("|"), ids.some(k => p.srcs[k])));
     // the word: glyph by glyph along the line, standing just above it
     const H = p.H, pen = (d === 1 ? .616 : d === 2 ? .504 : .48), gdt = clamp(step * .34 / p.text.length, 14, 70);
-    texts.push('<g class="wd' + (comp && p.node.lvl === 0 ? " dim" : "") + '" stroke-width="' + f2(pen / (H / 6)) + '">' + letter(p.text, p.base, H, p.B.id + p.seq, k => animate ? ' pathLength="1" class="g" style="' + at(t + dd + k * gdt) + '"' : "") + "</g>");
+    texts.push('<g class="wd' + (comp && p.node.lvl === 0 ? " dim" : "") + '" stroke-width="' + f2(pen / (H / 6)) + '">' + letter(p.text, p.wbase || p.base, H, p.B.id + p.seq, k => animate ? ' pathLength="1" class="g" style="' + at(t + dd + k * gdt) + '"' : "") + "</g>");
   });
   // the margin boxes, in the second ink, written down the box as the hand does
   const bx = G.boxes, boxText = (yy, txt, maxH) => { if (!txt) return ""; const h = yy[1] - yy[0] - 6; let H = maxH; const m = measure(txt, "", H); if (m > h) H *= h / m; const x = (bx.x[0] + bx.x[1]) / 2 - H / 2 + .4, w = measure(txt, "", H), y0 = (yy[0] + yy[1]) / 2 - w / 2;
@@ -233,16 +284,17 @@ function render(play) {
   document.getElementById("bTheme").textContent = S.theme;
   const bPap = document.getElementById("bPaper"); bPap.textContent = S.paper; bPap.hidden = S.theme !== "light";
   document.getElementById("bZoom").className = S.zoom > 1 ? "on" : ""; document.getElementById("bGuides").className = S.guides ? "on" : ""; document.getElementById("bSnap").textContent = SNAPLABEL[S.snap];
-  const bc = document.getElementById("bComp"); bc.disabled = !hasComp; bc.className = comp ? "on" : "";
-  const more = (ck.ok ? "" : "<b>off the guides: " + (ck.worst && ck.worst.pt != null ? ck.worst.pt + " pt on " + ck.worst.src : ck.missing.length ? "no guide for " + ck.missing[0] : "a step too long") + "</b>&nbsp;")
+  syncGuide(hasComp); const bc = document.getElementById("bComp"); bc.disabled = !hasComp; bc.className = comp ? "on" : "";
+  const strad = M.strad || (M.strad = RoutesText.straddles(M.placed));
+  const more = (strad.length ? "<b>" + strad.length + (strad.length === 1 ? " word" : " words") + " across a join: " + strad.slice(0, 3).join(", ") + "</b>&nbsp;" : "") + (ck.ok ? "" : "<b>off the guides: " + (ck.worst && ck.worst.pt != null ? ck.worst.pt + " pt on " + ck.worst.src : ck.missing.length ? "no guide for " + ck.missing[0] : "a step too long") + "</b>&nbsp;")
     + (M.lostNotes ? "<b>" + M.lostNotes + (M.lostNotes === 1 ? " note needs" : " notes need") + " another sheet</b>&nbsp;" : M.cut ? "<b>" + M.cut + (M.cut === 1 ? " note is" : " notes are") + " cut short</b>&nbsp;" : "");
   document.getElementById("legend").innerHTML = more + (comp ? LEVELS.map((l, i) => '<span><i class="k' + i + '" style="border-color:' + lc[i] + '"></i>' + l + "</span>").join("") : "")
     + "<span>" + ck.lines + " lines on the guides &middot; " + ck.printedLines + " printed, max " + ck.printedMaxPt.toFixed(2) + " pt (junctions on the rings) &middot; " + ck.continuedLines + " continued, max " + Math.max(ck.continuedMaxPt, ck.continuedFittedMaxPt).toFixed(2) + " pt</span>";
-  window.__notemap = { scale: +scale.toFixed(2), mode: "routes", set: S.set, snap: S.snap || "default", notes: M.notes, seated: M.seated, needAnotherSheet: M.lostNotes, cutShort: M.cut, wordsWritten: M.words, wordsLeft: M.lostUnits, capPx: RoutesText.FONT.slice(1).map(x => +(x * scale).toFixed(1)), routes: NET.R.counts, guideCheck: ck,
+  window.__notemap = { scale: +scale.toFixed(2), mode: "routes", set: S.set, snap: S.snap || "default", notes: M.notes, seated: M.seated, needAnotherSheet: M.lostNotes, cutShort: M.cut, wordsWritten: M.words, wordsLeft: M.lostUnits, capPx: RoutesText.FONT.slice(1).map(x => +(x * scale).toFixed(1)), routes: NET.R.counts, guideCheck: ck, straddling: strad,
     lost: M.lost.map(l => (l.partial ? "~" : "") + l.node.t) };
 }
 // every set seated on the routes, for the record (docs/DECISIONS.md): window.__notemapAll()
-window.__notemapAll = () => SETS.map(k => { const a = RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); return { set: k, notes: a.notes, seated: a.seated, needAnotherSheet: a.lostNotes, cutShort: a.cut, lines: a.placed.length }; }).concat((M = null, render(false), []));
+window.__notemapAll = () => SETS.map(k => { const a = RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); return { set: k, notes: a.notes, seated: a.seated, needAnotherSheet: a.lostNotes, cutShort: a.cut, lines: a.placed.length, straddling: RoutesText.straddles(a.placed) }; }).concat((M = null, render(false), []));
 
 const on = (id, f) => document.getElementById(id).addEventListener("click", f);
 on("bSet", () => { S.set = SETS[(SETS.indexOf(S.set) + 1) % SETS.length]; S.freeze = null; pushUrl(); render(true);
@@ -256,7 +308,7 @@ on("bSnap", () => { S.snap = SNAPS[(SNAPS.indexOf(S.snap) + 1) % SNAPS.length]; 
 on("bZoom", () => zoomTo(S.zoom > 1 ? 1 : 2.4, .5, .55));
 sheet.addEventListener("dblclick", e => { const r = sheet.getBoundingClientRect(); zoomTo(S.zoom > 1 ? 1 : 2.4, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
 on("bPlay", () => { S.still = false; S.freeze = null; pushUrl(); render(true); });
-let rz = 0; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => render(false), 120); });
+let rz = 0; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { placeView(); render(false); }, 120); });
 
 // mount the one shared template, read the routes, then draw. With no routes there is no text view: the page says so (it never falls back to another seating).
 const fail = e => { document.getElementById("legend").innerHTML = "<b>the notes are seated on the guide routes, and the routes could not be read (" + esc(String(e && e.message || e)) + "). Open the page over http.</b>"; };
