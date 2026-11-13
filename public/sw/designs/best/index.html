@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>notemap · notes on the guide routes</title>
+<style>
+  :root { --font: "Avenir Next Condensed", "SF Compact Rounded", ui-rounded, "Avenir Next", -apple-system, system-ui, "Segoe UI", "Helvetica Neue", "DejaVu Sans Condensed", sans-serif; --ui: -apple-system, system-ui, sans-serif; }
+  html, body { margin: 0; height: 100%; overflow: hidden; -webkit-text-size-adjust: 100%; }
+  body { background: var(--bg); color: var(--uic); -webkit-tap-highlight-color: transparent; }
+  /* the ink: one pen colour for the notes (the method), a second for the margin boxes; competence may colour the STROKE only */
+  body.light { --bg: #ffffff; --ink: #0b8fd6; --ink2: #e02a20; --hot: #053a66; --uic: #4a5560; --ctl: rgba(24,36,44,.07); --ctlOn: rgba(24,36,44,.2); --lat: rgba(20,60,120,.28); }
+  /* light mode only: the paper under the same ink and the same template. white is the default; cream and grey are opaque grounds, nothing is faded or filtered */
+  body.light.paper-cream { --bg: #faf7ef; } body.light.paper-grey { --bg: #f3f4f6; }
+  body.dark  { --bg: #0d151b; --ink: #4fd0f0; --ink2: #ff9a86; --hot: #ffffff; --uic: #b4c2cc; --ctl: rgba(226,236,244,.1); --ctlOn: rgba(226,236,244,.24); --lat: rgba(150,210,255,.3); }
+  #view { position: fixed; left: 0; top: 0; right: 0; bottom: 34px; overflow: auto; -webkit-overflow-scrolling: touch; }
+  #sheet { position: relative; }
+  #sheet svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* the template is mounted as it is; on a dark ground only the colour of its lines is mapped */
+  body.dark #tpl { filter: invert(1); opacity: .86; }
+  #meas { position: absolute; left: -9999px; top: -9999px; width: 10px; height: 10px; visibility: hidden; }
+  #ink text, #meas text { font-family: var(--font); font-kerning: normal; fill: var(--ink); }
+  /* Chinese: one handwritten-style face, LXGW WenKai GB (SIL OFL 1.1, fonts/OFL.txt), subset to the characters the Chinese sets use and served from here; no outside font service */
+  @font-face { font-family: "NotemapKai"; src: url("fonts/LXGWWenKaiGB-Regular.subset.woff2") format("woff2"); font-display: block; }
+  #ink text.zh { font-family: "NotemapKai", "Kaiti SC", "STKaiti", "KaiTi", serif; text-anchor: middle; fill: var(--ink); stroke: var(--ink); stroke-width: .035em; stroke-linejoin: round; }
+  #ink .box text.zh { fill: var(--ink2); stroke: var(--ink2); }
+  @keyframes ink-in { from { opacity: 0; } }
+  .go text.zh { animation: ink-in 150ms linear var(--t) backwards; }
+  .t1 { font-weight: 700; letter-spacing: .04em; } .t2 { font-weight: 600; letter-spacing: .03em; } .t3 { font-weight: 500; letter-spacing: .03em; }
+  .wd { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; } .wd.box { stroke: var(--ink2); }
+  .dim { opacity: .72; } .again { opacity: .5; }
+  /* a note's line is a little thin of ink, always, so the template's dotted guide reads through it and any departure from the guide shows (Tom 2026-11-13) */
+  .ln { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; opacity: .62; }
+  /* phones: the page is made for iPad or desktop; say so in one line and keep the whole sheet on the screen */
+  #phone { display: none; position: fixed; left: 0; right: 0; top: max(1px, env(safe-area-inset-top)); height: 14px; text-align: center; font: 600 9.5px/14px var(--ui); letter-spacing: .06em; color: var(--uic); pointer-events: none; white-space: nowrap; overflow: hidden; }
+  @media (max-width: 600px), (max-height: 480px) { #phone { display: block; } #view { top: 15px; } #legend { display: none; } #bar { justify-content: flex-end; } }
+  @media (max-width: 600px) and (orientation: portrait) { #phone::after { content: " \00b7  turn the phone sideways"; } }
+  .l1 { stroke-width: .94; } .l2 { stroke-width: .79; } .l3 { stroke-width: .68; }
+  .lv0 { stroke-dasharray: .05 1.9; } .lv1 { stroke-dasharray: 2.8 1.7; }
+  .hatch { fill: none; stroke: var(--ink); stroke-width: .55; stroke-linecap: round; stroke-linejoin: round; }
+  /* lines only (text=off): every stroke is a piece of a template guide, drawn a little thin of ink so the dashed guide reads through it; guides=1 lays the guides' centre lines on top */
+  .gl { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; opacity: .6; } .gl.star { stroke-width: .55; }
+  .gd { fill: none; stroke: #ff6a00; stroke-width: .16; }
+  /* template=simple: the SmartBook 250DG page is dark by nature (#333), so dark shows it as it is and light maps it; the network is one colour per ring band */
+  body.simple.dark { --bg: #333333; } body.simple.dark #tpl { filter: none; opacity: 1; }
+  body.simple.light #tpl { filter: invert(1) hue-rotate(180deg) brightness(1.25); mix-blend-mode: multiply; }
+  body.simple .sg { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+  body.simple .sg.b0 { stroke-width: 2.2; } body.simple .sg.b1 { stroke-width: 3.76; } body.simple .sg.b2 { stroke-width: 3.16; } body.simple .sg.b3 { stroke-width: 2.72; }
+  body.simple .gd { stroke-width: .5; } body.simple.thin .sg { stroke-width: .7; opacity: 1; } body.simple.thin .jn { stroke-width: .3; } body.simple .jn { stroke: var(--bg); stroke-width: .8; }
+  /* guides=1: the continued routes (generated from the printed guides), dashed, under the ink */
+  .gc { fill: none; stroke: #ff6a00; stroke-width: .22; stroke-dasharray: .9 1.1; opacity: .8; }
+  @keyframes draw { from { stroke-dasharray: var(--l) var(--l); stroke-dashoffset: var(--l); } to { stroke-dasharray: var(--l) var(--l); stroke-dashoffset: 0; } }
+  @keyframes wet  { from { stroke: var(--hot); } }
+  @keyframes write { from { stroke-dasharray: 1 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1 1; stroke-dashoffset: 0; } }
+  .go .ln.a, .go .hatch { animation: draw var(--d) cubic-bezier(.4,.1,.3,1) var(--t) backwards, wet 1300ms ease-out var(--t) backwards; }
+  .go .g { animation: write 150ms linear var(--t) backwards; }
+  .frozen * { animation-play-state: paused !important; }
+  #bar { position: fixed; left: 0; right: 0; bottom: max(2px, env(safe-area-inset-bottom)); height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; pointer-events: none; font-family: var(--ui); }
+  #ctl { display: flex; gap: 4px; opacity: .72; pointer-events: auto; flex: none; margin-left: 10px; }
+  #ctl button { font: 600 10.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--uic); background: var(--ctl); border: 0; border-radius: 999px; min-width: 44px; height: 26px; padding: 0 11px; cursor: pointer; touch-action: manipulation; position: relative; }
+  #ctl button::after { content: ""; position: absolute; inset: -9px -2px; }
+  #ctl button.on { background: var(--ctlOn); } #ctl button[disabled] { opacity: .35; }
+  #legend { display: flex; gap: 11px; align-items: center; font: 600 9.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--uic); white-space: nowrap; overflow: hidden; min-width: 0; flex: 1; }
+  #legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; margin-right: 5px; vertical-align: middle; }
+  #legend i.k0 { border-top-style: dotted; } #legend i.k1 { border-top-style: dashed; }
+  #legend b { color: var(--ink2); font-weight: 700; }
+</style>
+</head>
+<body class="dark">
+<div id="view"><div id="sheet">
+  <svg id="tpl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 432.8739"></svg>
+  <svg id="ink" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 612 432.8739"></svg>
+</div></div>
+<svg id="meas" xmlns="http://www.w3.org/2000/svg"><text id="mt"></text></svg>
+<div id="phone">Designed for iPad or desktop</div>
+<div id="bar"><div id="legend"></div>
+<nav id="ctl" aria-label="view">
+  <button id="bSet" aria-label="next map"></button>
+  <button id="bTheme" aria-label="switch theme"></button>
+  <button id="bPaper" aria-label="switch paper" hidden></button>
+  <button id="bComp" aria-label="competence colour">colour</button>
+  <button id="bText" aria-label="lines only: the guide routes themselves">lines</button>
+  <button id="bGuides" aria-label="show the guides under the notes">guides</button>
+  <button id="bSnap" aria-label="guides as printed, or junctions snapped to the rings">as printed</button>
+  <button id="bZoom" aria-label="zoom in or back to the whole sheet">zoom</button>
+  <button id="bPlay" aria-label="replay arrival">&#8635;</button>
+</nav></div>
+<script src="../content.js"></script>
+<script src="../content-zh.js"></script>
+<script src="../template/template.js"></script>
+<script src="routes-text.js"></script>
+<script src="simple-view.js"></script>
+<script src="routes-view.js"></script>
+<script>
+(function () {
+"use strict";
+const SETS = ["note25", "physics120", "darwin", "kemp"].concat(window.NOTEMAP_CONTENT.zh || []);   // the Chinese sets (content-zh.js) follow the English ones
+const qs = {};
+location.search.replace(/^\?/, "").split("&").forEach(kv => { if (!kv) return; const i = kv.indexOf("="); const k = decodeURIComponent(i < 0 ? kv : kv.slice(0, i)).replace(/^\?/, ""); qs[k] = i < 0 ? "" : decodeURIComponent(kv.slice(i + 1)); });
+if (qs.template === "smartbook") { window.SimpleView.run(qs); return; }   // Jonathan's SmartBook 250DG page has its own lines-only view
+const EDGES = qs.template === "simple" ? "simple" : "business";             // template=simple|business: the centre is one and the same; only the edge codes are swapped
+if (qs.routes) { document.getElementById("bSnap").hidden = false; window.RoutesView.run(qs, EDGES); return; }                 // routes=printed|proposal|lengths|ud: the guides as arc-length routes, lines only
+const SNAPS = ["", "printed", "rings"], SNAPLABEL = { "": "steps as printed", printed: "as printed", rings: "snapped to rings" };   // snap=: the default leaves the switchbacks' step ends as printed and puts ring crossings on the rings; printed = exactly the PDF; rings = everything on the rings
+const PAPERS = ["white", "cream", "grey"], UDALIAS = { side: "by-side", half: "by-half" };
+const S = { set: SETS.indexOf(qs.set) >= 0 ? qs.set : "note25", paper: PAPERS.indexOf(qs.paper) >= 0 ? qs.paper : "white", theme: qs.theme === "light" ? "light" : "dark", still: qs.still === "1", comp: qs.comp !== "0", guides: qs.guides === "1", snap: qs.snap === "printed" || qs.snap === "rings" ? qs.snap : qs.steps === "ring" ? "rings" : "",
+  zoom: Math.max(1, Math.min(6, parseFloat(qs.zoom) || 1)), fx: qs.fx != null ? parseFloat(qs.fx) : .5, fy: qs.fy != null ? parseFloat(qs.fy) : .55, freeze: qs.freeze != null && qs.freeze !== "" ? parseFloat(qs.freeze) : null };
+if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) S.still = true;
+function pushUrl() { const p = ["set=" + S.set, "theme=" + S.theme]; if (EDGES === "simple") p.unshift("template=simple"); if (S.paper !== "white") p.push("paper=" + S.paper); if (!S.comp) p.push("comp=0"); if (S.still) p.push("still=1"); if (S.guides) p.push("guides=1"); if (S.snap) p.push("snap=" + S.snap); if (qs.ud) p.push("ud=" + qs.ud); if (S.zoom > 1) p.push("zoom=" + S.zoom, "fx=" + (+S.fx).toFixed(3), "fy=" + (+S.fy).toFixed(3)); try { history.replaceState(null, "", location.pathname + "?" + p.join("&")); } catch (e) {} }
+
+const LEVELCOL = { light: ["#8b96a0", "#d0432d", "#c08a00", "#2a9450", "#0b8fd6"], dark: ["#7c8a96", "#f07a66", "#f2bd4e", "#6fd28d", "#4fd0f0"] };
+const LEVELS = ["not started", "met", "shaky", "secure", "mastered"];
+const RAD = Math.PI / 180, clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const f2 = x => (Math.round(x * 100) / 100).toString(), P = p => f2(p[0]) + " " + f2(p[1]);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000; };
+/* ───────────── the hand: capitals drawn as pen strokes, every one the same height ─────────────
+   Glyphs live on a grid 6 units tall (0 = top, 6 = the line). Each is [width, path]. They are set one by one along the
+   arch, each turned to the curve under it, so the lettering follows the stroke and looks the same on every device. */
+const GLYPH = {
+  A: [4, "M0 6L2 0L4 6M.8 3.9L3.2 3.9"], B: [4, "M0 6L0 0L2.4 0Q3.8 0 3.8 1.5Q3.8 3 2.4 3L0 3M2.4 3Q4 3 4 4.5Q4 6 2.4 6L0 6"], C: [4, "M4 1.2Q3.4 0 2.2 0Q0 0 0 3Q0 6 2.2 6Q3.4 6 4 4.8"],
+  D: [4, "M0 6L0 0L1.8 0Q4 0 4 3Q4 6 1.8 6L0 6"], E: [3.8, "M3.8 0L0 0L0 6L3.8 6M0 3L2.8 3"], F: [3.8, "M3.8 0L0 0L0 6M0 3L2.8 3"], G: [4, "M4 1.2Q3.4 0 2.2 0Q0 0 0 3Q0 6 2.2 6Q4 6 4 3.6L2.3 3.6"],
+  H: [4, "M0 0L0 6M4 0L4 6M0 3L4 3"], I: [1.2, "M.6 0L.6 6"], J: [3.4, "M3.2 0L3.2 4.4Q3.2 6 1.6 6Q.2 6 0 4.6"], K: [4, "M0 0L0 6M3.8 0L0 3.4M1.3 2.3L4 6"], L: [3.6, "M0 0L0 6L3.6 6"],
+  M: [5, "M0 6L0 0L2.5 4L5 0L5 6"], N: [4, "M0 6L0 0L4 6L4 0"], O: [4, "M2 0Q0 0 0 3Q0 6 2 6Q4 6 4 3Q4 0 2 0"], P: [4, "M0 6L0 0L2.4 0Q4 0 4 1.7Q4 3.4 2.4 3.4L0 3.4"],
+  Q: [4, "M2 0Q0 0 0 3Q0 6 2 6Q4 6 4 3Q4 0 2 0M2.4 4.2L4.2 6.4"], R: [4, "M0 6L0 0L2.4 0Q4 0 4 1.7Q4 3.4 2.4 3.4L0 3.4M2.2 3.4L4 6"],
+  S: [3.9, "M3.8 1Q3.2 0 2 0Q.2 0 .2 1.5Q.2 2.7 2 3Q3.9 3.3 3.9 4.6Q3.9 6 2 6Q.6 6 0 4.9"], T: [4, "M0 0L4 0M2 0L2 6"], U: [4, "M0 0L0 4Q0 6 2 6Q4 6 4 4L4 0"], V: [4, "M0 0L2 6L4 0"],
+  W: [5.2, "M0 0L1.3 6L2.6 1.5L3.9 6L5.2 0"], X: [4, "M0 0L4 6M4 0L0 6"], Y: [4, "M0 0L2 3L4 0M2 3L2 6"], Z: [4, "M0 0L4 0L0 6L4 6"],
+  0: [3.8, "M2 0Q.2 0 .2 3Q.2 6 2 6Q3.8 6 3.8 3Q3.8 0 2 0"], 1: [2.4, "M.6 1.2L1.8 0L1.8 6"], 2: [3.9, "M.2 1.3Q.6 0 2 0Q3.8 0 3.8 1.5Q3.8 2.6 2.4 3.6L.1 6L3.9 6"],
+  3: [3.9, "M.3 .9Q.9 0 2 0Q3.7 0 3.7 1.5Q3.7 2.9 2 2.9Q3.9 2.9 3.9 4.5Q3.9 6 2 6Q.7 6 .1 5"], 4: [4, "M3 6L3 0L0 4.2L4 4.2"], 5: [3.9, "M3.6 0L.6 0L.3 2.7Q1.1 2.2 2.1 2.2Q3.9 2.2 3.9 4.1Q3.9 6 2 6Q.7 6 .1 5"],
+  6: [3.9, "M3.5 .6Q2.9 0 2.1 0Q.1 0 .1 3.4Q.1 6 2 6Q3.9 6 3.9 4.2Q3.9 2.6 2 2.6Q.6 2.6 .1 3.8"], 7: [3.9, "M0 0L3.9 0L1.4 6"],
+  8: [3.9, "M2 2.8Q.4 2.8 .4 1.4Q.4 0 2 0Q3.6 0 3.6 1.4Q3.6 2.8 2 2.8Q.1 2.8 .1 4.4Q.1 6 2 6Q3.9 6 3.9 4.4Q3.9 2.8 2 2.8"], 9: [3.9, "M3.9 2.2Q3.4 3.4 2 3.4Q.1 3.4 .1 1.8Q.1 0 2 0Q3.9 0 3.9 2.6Q3.9 6 1.9 6Q1.1 6 .5 5.4"],
+  "-": [2.6, "M.3 3.3L2.3 3.3"], "'": [.9, "M.5 0L.3 1.4"], "’": [.9, "M.5 0L.3 1.4"], "(": [1.6, "M1.4 -.3Q0 3 1.4 6.3"], ")": [1.6, "M.2 -.3Q1.6 3 .2 6.3"], "=": [3.6, "M.3 2.3L3.3 2.3M.3 4L3.3 4"],
+  "+": [3.6, "M.3 3.2L3.3 3.2M1.8 1.7L1.8 4.7"], "×": [3.6, "M.5 1.8L3.1 4.6M3.1 1.8L.5 4.6"], "÷": [3.6, "M.3 3.2L3.3 3.2M1.8 1.5L1.8 1.7M1.8 4.7L1.8 4.9"], ">": [3.6, "M.4 1.6L3.2 3.2L.4 4.8"], "<": [3.6, "M3.2 1.6L.4 3.2L3.2 4.8"],
+  ".": [1, "M.5 5.8L.5 6"], ",": [1, "M.6 5.6L.2 6.8"], ":": [1, "M.5 2.4L.5 2.6M.5 5.8L.5 6"], "/": [2.6, "M0 6L2.6 0"], "?": [3.7, "M.3 1.2Q.8 0 2 0Q3.6 0 3.6 1.4Q3.6 2.6 2 3.2L2 4.2M2 5.8L2 6"], "&": [4, "M4 6L.9 1.6Q.5 .9 1 .4Q1.6 -.2 2.2 .4Q2.8 1.1 2 1.9L.5 3.4Q-.3 4.4 .5 5.4Q1.5 6.5 2.8 5.5L4 3.8"],
+  "½": [4.2, "M.3 .6L.9 0L.9 2.6M0 6L3 0M2.2 3.9Q2.5 3.3 3.2 3.3Q4 3.3 4 4Q4 4.6 2.2 6L4.1 6"], "²": [2.1, "M.1 .5Q.4 0 1 0Q1.9 0 1.9 .7Q1.9 1.3 .1 2.6L2 2.6"],
+  m: [4.6, "M0 6L0 2.6M0 3.4Q.8 2.4 1.6 2.6Q2.3 2.8 2.3 3.6L2.3 6M2.3 3.6Q3 2.4 3.8 2.6Q4.6 2.8 4.6 3.6L4.6 6"], v: [3.2, "M0 2.5L1.6 6L3.2 2.5"], g: [3.2, "M3 2.5L3 6.9Q3 8 1.6 8Q.7 8 .3 7.4M3 3.4Q2.4 2.5 1.5 2.5Q0 2.5 0 4.2Q0 5.9 1.5 5.9Q2.4 5.9 3 5"],
+  h: [3.2, "M0 0L0 6M0 3.6Q.9 2.5 1.8 2.5Q3 2.5 3 3.7L3 6"], k: [3, "M0 0L0 6M2.8 2.5L0 4.6M1.1 3.8L3 6"], e: [3.2, "M.1 4.2L3.1 4.2Q3.1 2.5 1.6 2.5Q0 2.5 0 4.3Q0 6 1.7 6Q2.6 6 3 5.3"],
+  a: [3.1, "M2.9 2.5L2.9 6M2.9 3.4Q2.3 2.5 1.5 2.5Q0 2.5 0 4.3Q0 6 1.5 6Q2.3 6 2.9 5.1"], p: [3.2, "M0 2.5L0 8M0 3.4Q.6 2.5 1.5 2.5Q3 2.5 3 4.3Q3 6 1.5 6Q.6 6 0 5.1"],
+  d: [3.1, "M2.9 0L2.9 6M2.9 3.4Q2.3 2.5 1.5 2.5Q0 2.5 0 4.3Q0 6 1.5 6Q2.3 6 2.9 5.1"], f: [2.4, "M2.4 .3Q2 0 1.6 0Q.9 0 .9 1L.9 6M0 2.6L2 2.6"], "λ": [3.1, "M0 0Q.8 0 1.2 1.2L3 6M1.5 2.6L0 6"],
+};
+const CX = 1.17, GAP = 1.43, SPACE = 2.5;                                   // CX .72 x 1.3 / .8: the capitals are cut twice (by 1.3, then by a further 20%, Tom 2026-11-13) and keep their width; GAP 1.18 x 1.1 x 1.1, the gap between letters a tenth wider twice over (Tom 2026-11-13, 02:26Z); the word space is unchanged
+const glyphOf = ch => GLYPH[ch] || GLYPH[ch.toUpperCase()] || null;
+/* Chinese (2026-11-13, #690). A character with no pen glyph that is not a space is set in the bundled face, UPRIGHT: it is
+   stepped along the arch like the capitals but never turned to it, so a line that runs down the sheet stacks its characters as
+   vertical Chinese does. Its ink is as tall as the capitals (the face's ideographs are .855 of the em tall, so the em is H / .855),
+   it advances its own em plus a gap matched to the capitals' gap less the face's own side bearings, and a word's length is
+   characters x advance, summed here at run time exactly as for the capitals. Widths below are in the glyph grid's units. */
+const ZH_EM = 1 / .855, ZH_W = ZH_EM * 6 / CX, ZH_GAP = .14 * 6 / CX, ZH_MID = .336;   // em per capital height; a character's width and the gap after it; the ink's middle above the face's baseline, in em
+const isHan = ch => /[\u2E80-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/.test(ch), hasHan = t => /[\u2E80-\u9FFF]/.test(t);
+const faceCh = ch => ch !== " " && ch !== "\u00a0" && (isHan(ch) || !glyphOf(ch));   // set in the face, not drawn by the pen
+const chW = ch => faceCh(ch) ? [ZH_W, ZH_GAP] : (ch === " " || ch === "\u00a0" || !glyphOf(ch)) ? [SPACE, 0] : [glyphOf(ch)[0], GAP];
+function measure(txt, cls, H) { let w = 0, last = 0; for (const ch of txt) { const c = chW(ch); w += c[0] + c[1]; last = c[1]; } return (w - last) * CX * H / 6; }
+const pathPts = d => { const n = d.match(/-?\d*\.?\d+/g).map(Number), p = []; for (let i = 0; i < n.length; i += 2) p.push([n[i], n[i + 1]]); return p; };
+// set a word along a baseline: each letter placed at its own point on the curve and turned to the tangent there
+function letter(txt, pts, H, key, each) {
+  const acc = [0]; for (let i = 1; i < pts.length; i++) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const total = acc[acc.length - 1], k = H / 6, w = measure(txt, "", H), out = []; let x = Math.max(0, (total - w) / 2), n = 0;
+  const at = s => { s = clamp(s, 0, total); let i = 1; while (i < acc.length - 1 && acc[i] < s) i++; const seg = acc[i] - acc[i - 1] || 1, t = (s - acc[i - 1]) / seg, dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]; return { p: [pts[i - 1][0] + dx * t, pts[i - 1][1] + dy * t], a: Math.atan2(dy, dx) }; };
+  // upright characters stacked on a line that climbs the sheet would read bottom to top: where the stretch a word sits on rises more than it runs (steeper than 45 degrees), the word is laid from its far end, so it reads downwards as vertical Chinese does
+  const pa = at(x).p, pb = at(x + w).p, rev = hasHan(txt) && pa[1] - pb[1] > Math.abs(pb[0] - pa[0]);
+  for (const ch of txt) { if (faceCh(ch)) { const em = ZH_EM * H, gw = ZH_W * CX * k, q = at(rev ? total - x - gw / 2 : x + gw / 2), cx = q.p[0] + Math.sin(q.a) * H / 2, cy = q.p[1] - Math.cos(q.a) * H / 2;
+      out.push('<text class="zh' + (each(n).indexOf("style=") >= 0 ? " gz" : "") + '" lang="zh-Hans" font-size="' + f2(em) + '" x="' + f2(cx) + '" y="' + f2(cy + ZH_MID * em) + '"' + each(n).replace(/ pathLength="1" class="g"/, "") + ">" + esc(ch) + "</text>"); x += (ZH_W + ZH_GAP) * CX * k; n++; continue; }
+    const g = glyphOf(ch); if (ch === " " || !g) { x += SPACE * CX * k; continue; }
+    const gw = g[0] * CX * k, q = at(x + gw / 2), a = q.a + (hash(key + n) - .5) * .06, c = Math.cos(a), s = Math.sin(a), ox = q.p[0] - c * gw / 2, oy = q.p[1] - s * gw / 2;
+    out.push('<path d="' + g[1] + '" transform="matrix(' + f2(c * k * CX) + " " + f2(s * k * CX) + " " + f2(-s * k) + " " + f2(c * k) + " " + f2(ox + s * k * 6) + " " + f2(oy - c * k * 6) + ')"' + each(n) + "/>"); x += (g[0] + GAP) * CX * k; n++; }
+  return out.join("");
+}
+
+/* ───────────── lettering: capitals, one unit per arch ─────────────
+   A word is capitalised unless it is a formula token (p = mv, pV, fλ keep their case). A label is cut into UNITS, one per arch:
+   one word each; a word of one or two characters (OF, BY, =, ×, >) joins the word after it; two neighbours that together
+   are nine characters or fewer share an arch (RED GIANT, F = ma); a unit over thirteen characters is cut with a hyphen. */
+const SMALL = { a: 1, an: 1, as: 1, at: 1, by: 1, in: 1, is: 1, it: 1, of: 1, on: 1, or: 1, to: 1, vs: 1, up: 1, no: 1, we: 1, do: 1, be: 1, so: 1, if: 1 };
+const capWord = w => /^[a-z][a-z'’.\-]*$/.test(w) && ((w.length >= 3 && /[aeiouy]/.test(w)) || SMALL[w]) ? w.toUpperCase() : (/^[A-Z][a-z'’\-]+$/.test(w) ? w.toUpperCase() : w);
+function unitsOf(label) {
+  if (hasHan(label)) return label.split(" ").filter(Boolean).map(u => u.split("\u00a0").map(capWord).join(" "));   // Chinese: one arch per space-separated unit, exactly as the set writes it
+  const w = label.split(/\s+/).filter(Boolean).map(capWord), a = [];
+  for (let i = 0; i < w.length; i++) { let u = w[i]; while (i < w.length - 1 && w[i].length <= 2) { i++; u += " " + w[i]; } a.push(u); }
+  if (a.length > 1 && a[a.length - 1].length <= 2) { const l = a.pop(); a[a.length - 1] += " " + l; }
+  const b = []; a.forEach(u => { if (b.length && (b[b.length - 1] + " " + u).length <= 9) b[b.length - 1] += " " + u; else b.push(u); });
+  const c = []; b.forEach(u => { if (u.length > 13 && u.indexOf(" ") < 0) { const h = Math.ceil(u.length / 2); c.push(u.slice(0, h) + "-", u.slice(h)); } else c.push(u); });
+  return c;
+}
+
+/* ───────────── placing = seating each note on a guide route (routes-text.js) ─────────────
+   The free lattice text view is RETIRED (#698; Tom: "It's just drawn its own lines again"). Nothing on this page computes a
+   curve: a note's line is a piece of a route from template/routes.json, cut to the words' length, and after drawing the page
+   measures every line against the route it was cut from. There is no other text view to fall back to. */
+let NET = null, TPL = null, ROUTES = null; window.__seatDbg = k => { RoutesText.place.dbg = []; RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); const d = RoutesText.place.dbg; RoutesText.place.dbg = null; M = null; return d; };   // why a note found no line (for the designer)
+const HELP = { measure, unitsOf, hasHan };
+const ink = document.getElementById("ink"), sheet = document.getElementById("sheet"), view = document.getElementById("view");
+let M = null, scale = 1;
+function fitSheet() { const vw = view.clientWidth, vh = view.clientHeight, s = Math.min(vw / 612, vh / 432.8739) * S.zoom, w = 612 * s, h = 432.8739 * s;
+  sheet.style.cssText = "width:" + w + "px;height:" + h + "px;margin-left:" + Math.max(0, (vw - w) / 2) + "px;margin-top:" + Math.max(0, (vh - h) / 2) + "px"; scale = s; }
+function zoomTo(z, fx, fy) { S.zoom = z; S.fx = fx; S.fy = fy; pushUrl(); fitSheet(); render(false); if (z > 1) { view.scrollLeft = fx * sheet.offsetWidth - view.clientWidth / 2; view.scrollTop = fy * sheet.offsetHeight - view.clientHeight / 2; } }
+const dOf = pts => "M" + pts.map(P).join("L"), lenOf = pts => { let l = 0; for (let i = 1; i < pts.length; i++) l += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return l; };
+
+function render(play) {
+  if (!NET) return;
+  const set = window.NOTEMAP_CONTENT.sets[S.set]; document.body.className = S.theme + (S.theme === "light" && S.paper !== "white" ? " paper-" + S.paper : ""); fitSheet();
+  if (!M || M.set !== set) { M = RoutesText.seat(set, NET, HELP); M.set = set; }
+  const hasComp = set.nodes.some(n => n.lvl != null), comp = hasComp && S.comp, lc = LEVELCOL[S.theme], G = TPL.geometry, C = G.centre;
+  const animate = (play && !S.still) || S.freeze != null;
+  const N = M.placed.length, T0 = 700, step = clamp(26000 / (N || 1), 150, 900), dd = clamp(step * .62, 120, 520), fz = S.freeze != null ? S.freeze * 1000 : 0;
+  const at = ms => "--t:" + Math.round(ms - fz) + "ms";
+  const lines = [], texts = [], hatch = [], armsDone = {};
+  M.placed.forEach((p, i) => {
+    const d = Math.min(p.node.depth, 3), t = T0 + i * step, col = comp && p.node.lvl != null ? lc[p.node.lvl] : null;
+    // "the hand fills in a star point and the line leaves from its tip": hatched with pen strokes, once per star point
+    if (p.arm && !armsDone[p.arm.tipDeg]) { armsDone[p.arm.tipDeg] = true; const a = p.arm.tipDeg, pol = (r, deg) => [C[0] + r * Math.cos(deg * RAD), C[1] + r * Math.sin(deg * RAD)], l = pol(12.3, a - 22.5), r = pol(12.3, a + 22.5), tip = pol(40.3, a), base = [(l[0] + r[0]) / 2, (l[1] + r[1]) / 2], z = [];
+      for (let k = 0; k <= 12; k++) { const f = .06 + .8 * k / 12, wd = (1 - f) * .42 * (k % 2 ? 1 : -1) * (1 + (hash(a + "h" + k) - .5) * .3), mx = base[0] + (tip[0] - base[0]) * f, my = base[1] + (tip[1] - base[1]) * f; z.push([mx + (r[0] - l[0]) * wd, my + (r[1] - l[1]) * wd]); }
+      hatch.push('<path class="hatch" d="M' + P(l) + "L" + P(tip) + "L" + P(r) + '" style="' + (col ? "stroke:" + col + ";" : "") + (animate ? "--l:70;--d:300ms;" + at(t - 520) : "") + '"/><path class="hatch" d="M' + z.map(P).join("L") + '" style="' + (col ? "stroke:" + col + ";" : "") + (animate ? "--l:90;--d:420ms;" + at(t - 420) : "") + '"/>'); }
+    // the line: the piece of route under the word, after any step or run of route that leads to it. Every one carries the route it was cut from.
+    const lv = col && p.node.lvl < 2 ? " lv" + p.node.lvl : "", one = (pts, src, fitted) => '<path class="ln a l' + d + lv + '" data-src="' + src + '"' + (fitted ? " data-fit" : "") + ' d="' + dOf(pts) + '" style="' + (col ? "stroke:" + col + ";" : "") + (animate ? "--l:" + Math.ceil(lenOf(pts) + 6) + ";--d:" + Math.round(dd) + "ms;" + at(t) : "") + '"/>';
+    p.conn.forEach(c => lines.push(one(c.pts, c.src, c.fitted)));
+    const ids = Object.keys(p.srcs); lines.push(one(p.pts, ids.join("|"), ids.some(k => p.srcs[k])));
+    // the word: glyph by glyph along the line, standing just above it
+    const H = p.H, pen = (d === 1 ? .616 : d === 2 ? .504 : .48), gdt = clamp(step * .34 / p.text.length, 14, 70);
+    texts.push('<g class="wd' + (comp && p.node.lvl === 0 ? " dim" : "") + '" stroke-width="' + f2(pen / (H / 6)) + '">' + letter(p.text, p.base, H, p.B.id + p.seq, k => animate ? ' pathLength="1" class="g" style="' + at(t + dd + k * gdt) + '"' : "") + "</g>");
+  });
+  // the margin boxes, in the second ink, written down the box as the hand does
+  const bx = G.boxes, boxText = (yy, txt, maxH) => { if (!txt) return ""; const h = yy[1] - yy[0] - 6; let H = maxH; const m = measure(txt, "", H); if (m > h) H *= h / m; const x = (bx.x[0] + bx.x[1]) / 2 - H / 2 + .4, w = measure(txt, "", H), y0 = (yy[0] + yy[1]) / 2 - w / 2;
+    return '<g class="wd box" stroke-width="' + f2(.52 / (H / 6)) + '">' + letter(txt, [[x, y0], [x, y0 + w + .01]], H, "box" + txt, () => "") + "</g>"; };
+  // guides=1: the template's own guide paths as a hairline, and the continued routes (generated from them) dashed, UNDER the ink, so a line can be seen lying on its guide
+  let under = "";
+  if (S.guides) { NET.routes.forEach(r => { if (r.source !== "printed") under += '<path class="gc" d="' + dOf(r.P) + '"/>'; }); }
+  ink.setAttribute("class", (animate ? "go " : "") + (S.freeze != null ? "frozen" : ""));
+  ink.innerHTML = under + boxText(bx.subject, set.centre.toUpperCase(), 4.32) + boxText(bx.topic, set.title.toUpperCase(), 3.68) + boxText(bx.date, (set.date || "").toUpperCase(), 2.56) + hatch.join("") + lines.join("") + texts.join("");
+  if (S.guides) { const tpl = document.getElementById("tpl"); tpl.querySelectorAll('[id^="guide-"]').forEach(g => { const c = g.cloneNode(true); c.removeAttribute("id"); c.removeAttribute("class"); c.setAttribute("style", "fill:none;stroke:#ff3d00;stroke-width:" + (.2 / Math.abs(g.getCTM().a / ink.getCTM().a || 1)) + ";stroke-dasharray:none;opacity:1"); c.setAttribute("stroke-dasharray", "none"); ink.appendChild(c); }); }
+  // THE CHECK, on what is actually drawn: every line against the route it was cut from. Off its route = a failure, said in the bar.
+  const ck = M.check && M.check.key === scale.toFixed(4) + S.set + S.snap ? M.check : (M.check = Object.assign(RoutesText.check(ink, document.getElementById("tpl"), NET), { key: scale.toFixed(4) + S.set + S.snap }));
+  document.getElementById("bSet").textContent = S.set === "note25" ? "note · 25" : S.set === "physics120" ? "map · 131" : S.set;
+  document.getElementById("bTheme").textContent = S.theme;
+  const bPap = document.getElementById("bPaper"); bPap.textContent = S.paper; bPap.hidden = S.theme !== "light";
+  document.getElementById("bZoom").className = S.zoom > 1 ? "on" : ""; document.getElementById("bGuides").className = S.guides ? "on" : ""; document.getElementById("bSnap").textContent = SNAPLABEL[S.snap];
+  const bc = document.getElementById("bComp"); bc.disabled = !hasComp; bc.className = comp ? "on" : "";
+  const more = (ck.ok ? "" : "<b>off the guides: " + (ck.worst && ck.worst.pt != null ? ck.worst.pt + " pt on " + ck.worst.src : ck.missing.length ? "no guide for " + ck.missing[0] : "a step too long") + "</b>&nbsp;")
+    + (M.lostNotes ? "<b>" + M.lostNotes + (M.lostNotes === 1 ? " note needs" : " notes need") + " another sheet</b>&nbsp;" : M.cut ? "<b>" + M.cut + (M.cut === 1 ? " note is" : " notes are") + " cut short</b>&nbsp;" : "");
+  document.getElementById("legend").innerHTML = more + (comp ? LEVELS.map((l, i) => '<span><i class="k' + i + '" style="border-color:' + lc[i] + '"></i>' + l + "</span>").join("") : "")
+    + "<span>" + ck.lines + " lines on the guides &middot; " + ck.printedLines + " printed, max " + ck.printedMaxPt.toFixed(2) + " pt (junctions on the rings) &middot; " + ck.continuedLines + " continued, max " + Math.max(ck.continuedMaxPt, ck.continuedFittedMaxPt).toFixed(2) + " pt</span>";
+  window.__notemap = { scale: +scale.toFixed(2), mode: "routes", set: S.set, snap: S.snap || "default", notes: M.notes, seated: M.seated, needAnotherSheet: M.lostNotes, cutShort: M.cut, wordsWritten: M.words, wordsLeft: M.lostUnits, capPx: RoutesText.FONT.slice(1).map(x => +(x * scale).toFixed(1)), routes: NET.R.counts, guideCheck: ck,
+    lost: M.lost.map(l => (l.partial ? "~" : "") + l.node.t) };
+}
+// every set seated on the routes, for the record (docs/DECISIONS.md): window.__notemapAll()
+window.__notemapAll = () => SETS.map(k => { const a = RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); return { set: k, notes: a.notes, seated: a.seated, needAnotherSheet: a.lostNotes, cutShort: a.cut, lines: a.placed.length }; }).concat((M = null, render(false), []));
+
+const on = (id, f) => document.getElementById(id).addEventListener("click", f);
+on("bSet", () => { S.set = SETS[(SETS.indexOf(S.set) + 1) % SETS.length]; S.freeze = null; pushUrl(); render(true);
+  if (/-zh$/.test(S.set) && document.fonts && document.fonts.load && !document.fonts.check('10px "NotemapKai"', "中文")) document.fonts.load('10px "NotemapKai"', "中文").then(() => render(false)).catch(() => {}); });
+on("bTheme", () => { S.theme = S.theme === "dark" ? "light" : "dark"; pushUrl(); render(false); });
+on("bPaper", () => { S.paper = PAPERS[(PAPERS.indexOf(S.paper) + 1) % PAPERS.length]; pushUrl(); render(false); });
+on("bComp", () => { S.comp = !S.comp; pushUrl(); render(false); });
+on("bText", () => { location.search = "?" + (EDGES === "simple" ? "template=simple&" : "") + "routes=ud&theme=" + S.theme + (S.snap ? "&snap=" + S.snap : "") + (S.paper !== "white" ? "&paper=" + S.paper : ""); });   // lines only: the routes themselves (routes-view.js)
+on("bGuides", () => { S.guides = !S.guides; pushUrl(); render(false); });
+on("bSnap", () => { S.snap = SNAPS[(SNAPS.indexOf(S.snap) + 1) % SNAPS.length]; NET = RoutesText.buildNet(ROUTES, UDALIAS[qs.ud] || qs.ud, S.snap); M = null; pushUrl(); render(false); });   // As printed / Snapped to rings: the network and every seat are rebuilt on that geometry
+on("bZoom", () => zoomTo(S.zoom > 1 ? 1 : 2.4, .5, .55));
+sheet.addEventListener("dblclick", e => { const r = sheet.getBoundingClientRect(); zoomTo(S.zoom > 1 ? 1 : 2.4, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
+on("bPlay", () => { S.still = false; S.freeze = null; pushUrl(); render(true); });
+let rz = 0; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => render(false), 120); });
+
+// mount the one shared template, read the routes, then draw. With no routes there is no text view: the page says so (it never falls back to another seating).
+const fail = e => { document.getElementById("legend").innerHTML = "<b>the notes are seated on the guide routes, and the routes could not be read (" + esc(String(e && e.message || e)) + "). Open the page over http.</b>"; };
+Promise.all([SmartWisdomTemplate.load(), fetch(new URL("../template/routes.json", location.href).href).then(r => { if (!r.ok) throw new Error("routes.json " + r.status); return r.json(); })]).then(([T, R]) => {
+  TPL = T; T.mount(document.getElementById("tpl"), { edges: EDGES }); ROUTES = R; NET = RoutesText.buildNet(R, UDALIAS[qs.ud] || qs.ud, S.snap);
+  const go = () => { render(true); if (S.zoom > 1) { view.scrollLeft = S.fx * sheet.offsetWidth - view.clientWidth / 2; view.scrollTop = S.fy * sheet.offsetHeight - view.clientHeight / 2; } };
+  // a Chinese set waits for the bundled face (2.5 s at most), so the first drawing is already in it
+  const face = document.fonts && document.fonts.load && /-zh$/.test(S.set) ? Promise.race([document.fonts.load('10px "NotemapKai"', "中文"), new Promise(r => setTimeout(r, 2500))]).catch(() => {}) : Promise.resolve();
+  face.then(() => { if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go(); });
+}).catch(fail);
+})();
+</script>
+</body>
+</html>
