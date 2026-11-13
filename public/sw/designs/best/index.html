@@ -211,7 +211,7 @@ function unitsOf(label) {
   for (let i = 0; i < w.length; i++) { let u = w[i]; while (i < w.length - 1 && w[i].length <= 2) { i++; u += " " + w[i]; } a.push(u); }
   if (a.length > 1 && a[a.length - 1].length <= 2) { const l = a.pop(); a[a.length - 1] += " " + l; }
   const b = []; a.forEach(u => { if (b.length && (b[b.length - 1] + " " + u).length <= 9) b[b.length - 1] += " " + u; else b.push(u); });
-  const c = []; b.forEach(u => { if (u.length > 13 && u.indexOf(" ") < 0) { const h = Math.ceil(u.length / 2); c.push(u.slice(0, h) + "-", u.slice(h)); } else c.push(u); });
+  const c = b;   // a long word is never pre-split: beyond ring 3 its arch grows to fit it (#788, Tom: "arches can be longer")
   return c;
 }
 

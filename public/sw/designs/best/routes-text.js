@@ -26,6 +26,11 @@
   function similar(Q, f) { const A = Q[0], B = Q[Q.length - 1], ux = B[0] - A[0], uy = B[1] - A[1], vx = f[2] - f[0], vy = f[3] - f[1], n = ux * ux + uy * uy || 1, re = (vx * ux + vy * uy) / n, im = (vy * ux - vx * uy) / n;
     const o = Q.map(q => { const x = q[0] - A[0], y = q[1] - A[1]; return [f[0] + x * re - y * im, f[1] + x * im + y * re]; }); o[o.length - 1] = [f[2], f[3]]; return o; }
 
+  // THE MODEL ARCH laid on chord A->B (as tools/template-routes.py unit_on): the mean profile of the printed arcs, scaled by the chord; U humps
+  // towards the top of the page, D is the hump turned 180 degrees
+  function archOn(R, A, B, code) { const pr = R.ud.model.profile, c = dist(A, B) || 1, d = [(B[0] - A[0]) / c, (B[1] - A[1]) / c]; let nx = -d[1], ny = d[0]; if (ny > 0) { nx = -nx; ny = -ny; }
+    const n = pr.x.length; return pr.x.map((_, i) => { const x = code === "U" ? pr.x[i] : 1 - pr.x[n - 1 - i], y = code === "U" ? pr.y[i] : -pr.y[n - 1 - i]; return [A[0] + x * c * d[0] + y * c * nx, A[1] + x * c * d[1] + y * c * ny]; }); }
+  const f3 = v => +v.toFixed(3);
   // the network as DRAWN: each route one polyline (stretches moved by their stored fit, its level row joined on), marks and stretches re-addressed along it
   // snap: "" (the default) = the switchbacks' step ends AS PRINTED, ring crossings on the rings (the 1:30 guide's two elbows, printed 1.06 and 2.12 pt out);
   //       "printed" = nothing moved, every printed guide exactly as the PDF; "rings" = step ends and crossings all on the rings (#696)
@@ -37,18 +42,24 @@
     // vk: a row variant other than the rule's ("DU", the lower arm: a bowl first, then humps, as the top-right code prints U U U over D U). #783
     const mk = (r, vk) => {
       const P = [], idx = [], st = [], add = (src, pts, stretches, sid) => { const cs = cumOf(pts); stretches.forEach(s => { const f = fitFor(s); let Q = sliceOn(pts, cs, s.s0, s.s1); if (f) Q = similar(Q, f); const i0 = P.length ? P.length - 1 : 0; (P.length ? Q.slice(1) : Q).forEach(q => P.push(q)); if (!idx.length) idx.push(i0);
-          idx.push(P.length - 1); st.push({ band: s.band, kind: s.kind, src: sid || src.id, fitted: !!f, run: s.run && s.kind === "tail" ? (s.run.s0 - s.s0) / (s.s1 - s.s0) : 0 }); }); };
+          idx.push(P.length - 1); st.push({ band: s.band, kind: s.kind, src: sid || src.id, cont: src.source !== "printed", udc: s.ud ? s.ud[rule] : null, fitted: !!f, run: s.run && s.kind === "tail" ? (s.run.s0 - s.s0) / (s.s1 - s.s0) : 0 }); }); };
       add(r, r.pts, r.stretches); const own = st.length, c = rowOf[r.id]; if (c) add(c, vk ? c.variants[vk] : c.variants ? c.variants[c.ud[rule] || "U"] : c.pts, c.stretches, vk ? c.id + "#" + vk : null);
       const cum = cumOf(P), marks = idx.map((i, n) => { const m = n < r.marks.length ? r.marks[n] : null; return { s: cum[i], pt: P[i], ring: m ? (m.ring || (m.snap ? ringOf(m.snap) : 0)) : 0, n }; });   // a junction belongs to its ring wherever it is drawn: a step end printed off its ring is still that ring's junction
       st.forEach((x, n) => { x.s0 = cum[idx[n]]; x.s1 = cum[idx[n + 1]]; x.run0 = x.run ? x.s0 + x.run * (x.s1 - x.s0) : x.s0;
         if (n) { const a = atOn(P, cum, x.s0 - 1.5), m = P[idx[n]], b = atOn(P, cum, x.s0 + 1.5), t = Math.abs(Math.atan2(b[1] - m[1], b[0] - m[0]) - Math.atan2(m[1] - a[1], m[0] - a[0])) * 180 / Math.PI; x.turn = t > 180 ? 360 - t : t; } else x.turn = 0; });
       const m2 = marks.filter(m => m.ring === 2)[0];
       st.forEach(x => { x.kinks = x.kind === "line" ? kinksOf(P, cum, x.s0, x.s1) : []; });
+      // FREE ARCHES (#788, Tom 19:11Z: "arches can be longer - they can scale to fit shorter and longer words in the free spaces - i.e. outside of
+      // the concentric circles"): a continued stretch beyond ring 3 is not cut to its stored length any more. It gives a DIRECTION (its chord) and a
+      // CODE (hump or bowl, as drawn: the rule's corner code, the lower arm's bowl first), and each word gets its own model arch along it, as long as the word.
+      st.forEach((x, n) => { x.free = x.cont && x.kind === "line" && x.band === "beyond-ring3"; if (!x.free) return; const A = P[idx[n]], Bq = P[idx[n + 1]], c = dist(A, Bq) || 1, d = [(Bq[0] - A[0]) / c, (Bq[1] - A[1]) / c];
+        let nx = -d[1], ny = d[0]; if (ny > 0) { nx = -nx; ny = -ny; } let bow = 0; for (let i = idx[n]; i <= idx[n + 1]; i++) { const v = (P[i][0] - A[0]) * nx + (P[i][1] - A[1]) * ny; if (Math.abs(v) > Math.abs(bow)) bow = v; }
+        x.dir = d; x.code = Math.abs(bow) > .02 * c ? (bow > 0 ? "U" : "D") : (x.udc || "U"); });
       routes.push({ id: vk ? r.id + "~" + vk : r.id, n: routes.length, source: r.source, kind: r.kind || "printed", P, cum, len: cum[cum.length - 1], marks, st, own, tip: !vk && marks[0].ring === 1, tipDeg: r.tip_deg, a2: m2 ? Math.atan2(m2.pt[1] - C[1], m2.pt[0] - C[0]) * 180 / Math.PI : null, lower: !!vk }); };
     R.routes.forEach(r => { if (r.kind === "corner") return; mk(r); const c = rowOf[r.id]; if (r.source !== "printed" && c && c.variants && c.variants.DU && (c.ud[rule] || "U") === "U") mk(r, "DU"); });
     const starter = routes.filter(r => r.source === "printed" && r.tip && !r.st.some(x => x.kind === "step") && r.len > 80).sort((a, b) => Math.abs(a.tipDeg + 45) - Math.abs(b.tipDeg + 45))[0];
     const arms = routes.filter(r => r.tip && r.a2 != null); arms.forEach(r => { r.rel = (((r.a2 - starter.a2) % 360) + 360.5) % 360 - .5; }); arms.sort((a, b) => a.rel - b.rel);   // chapters go clockwise from the 1:30 guide
-    return { R, rule, snap: snap || "", C, rings, routes, arms, stepMax: R.step_range.printed_max };
+    return { R, rule, snap: snap || "", C, rings, routes, arms, stepMax: R.step_range.printed_max, lpc: R.ud.model.len_per_chord };
   }
 
   // seat a set: notes one at a time in spoken order. h = { measure, unitsOf, hasHan } (the page's own lettering measure)
@@ -63,10 +74,18 @@
     const placed = [], lost = []; let seq = 0, frontier = -1, reach = -1;   // how far round, clockwise from the 1:30 guide, the sheet is written: inside the rings, and anywhere
     const stAt = (B, s) => { for (let k = 0; k < B.st.length; k++) if (s >= B.st[k].s0 - .01 && s < B.st[k].s1 - .01) return k; return -1; };
     // one unit onto route B from distance s: where the line starts and stops, the connectors before it, and whether the ground is free
-    function tryAt(B, s, pre, text, Hc, J) {
-      const w = h.measure(text, "", Hc), lead = LEAD * Hc / CAP3, need = w + 2 * lead, conn = pre.slice(); let e = null;
+    // a free arch for one word: from P0 along stretch k's direction, with its code, its length the word's and a margin each end (#788)
+    // rot (degrees): the arm is turned from the stretch's direction, as a fork leaves the end of an arch; fork: the first arch of a turned arm takes
+    // the printed fork code, the arm turned upwards humped and the arm turned downwards a bowl (the 12 and 6 o'clock glyphs). Later arches keep the turn.
+    const freeArch = (B, k, P0, need, rot, fork) => { const x = B.st[Math.min(k, B.st.length - 1)], c = need / N.lpc, r = (rot || 0) * Math.PI / 180, d = [x.dir[0] * Math.cos(r) - x.dir[1] * Math.sin(r), x.dir[0] * Math.sin(r) + x.dir[1] * Math.cos(r)], E = [P0[0] + d[0] * c, P0[1] + d[1] * c];
+      const code = fork && rot ? (d[1] > x.dir[1] ? "D" : "U") : x.code;
+      return { pts: archOn(N.R, P0, E, code), k: k + 1, rot: rot || 0, src: "arch@" + [f3(P0[0]), f3(P0[1]), f3(E[0]), f3(E[1]), code].join(",") }; };
+    function tryAt(B, s, pre, text, Hc, J, fk, rot, fork) {
+      const w = h.measure(text, "", Hc), lead = LEAD * Hc / CAP3, need = w + 2 * lead, conn = pre.slice(); let e = null, arch = null;
       let wm = null;   // where the word's middle sits, along the route
-      for (let guard = 0; guard < 14 && e == null; guard++) { const k = stAt(B, s); if (k < 0) return null; const x = B.st[k];
+      if (fk != null) arch = freeArch(B, fk, J.p, need, rot, fork);
+      else for (let guard = 0; guard < 14 && e == null; guard++) { const k = stAt(B, s); if (k < 0) return null; const x = B.st[k];
+        if (x.free && !opt.fixed) { arch = freeArch(B, k, atOn(B.P, B.cum, s), need); break; }
         if (x.kind === "step") { conn.push({ r: B, a: s, b: x.s1, pts: sliceOn(B.P, B.cum, s, x.s1), src: x.src, fitted: x.fitted }); s = x.s1; continue; }
         if (x.kind === "tail" && x.run0 > s + .01) { conn.push({ r: B, a: s, b: x.run0, pts: sliceOn(B.P, B.cum, s, x.run0), src: x.src, fitted: x.fitted }); s = x.run0; continue; }   // the hook of a tail carries no word
         const kb = x.kinks.filter(q => q > s + .5)[0], room = kb != null ? kb : x.s1, avail = room - s, inner = x.band !== "beyond-ring3", ml = inner ? MINLEAD : MINOUT;   // beyond ring 3 a whole word may close its margin to 0.9 pt rather than break (#783)
@@ -74,49 +93,50 @@
         if (inner) { if (w + 2 * MINLEAD <= avail) { e = x.s1; wm = (s + room) / 2; } } else if (need <= avail) { e = s + need; if (room - e < 7) e = room; } else if (w + 2 * ml <= avail) e = room;
         if (e != null) break;
         if (Math.abs(s - x.s0) > .01 && B.st[k + 1]) { conn.push({ r: B, a: s, b: x.s1, pts: sliceOn(B.P, B.cum, s, x.s1), src: x.src, fitted: x.fitted }); s = x.s1; continue; }   // the word moves to the next arch
-        if (place.dbg) place.dbg.push(text + ' on ' + B.id + '@' + s.toFixed(0) + ': arch too short (' + avail.toFixed(1) + ' for ' + w.toFixed(1) + ')'); return null; }   // too long for a whole arch: never across a junction (#783, Tom: "the starts of some words 'break' over the join"). The note breaks the word with a hyphen instead
-      if (e == null || e > B.len + .01) return null;
-      const pts = sliceOn(B.P, B.cum, s, e), A = pts[0], Z = pts[pts.length - 1], rev = Z[0] < A[0] - .01 || (Math.abs(Z[0] - A[0]) <= .01 && Z[1] > A[1]), rd = rev ? pts.slice().reverse() : pts;
-      const base = rd.map((p, i) => { const a = rd[Math.max(0, i - 1)], b = rd[Math.min(rd.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = hyp(dx, dy) || 1; return [p[0] + dy / l * LIFT, p[1] - dx / l * LIFT]; }), bc = cumOf(base), tot = bc[bc.length - 1], ws = (wm == null ? (s + e) / 2 : wm) - w / 2, x0 = Math.max(0, Math.min(tot - w, ((rev ? e - ws - w : ws - s) * tot / ((e - s) || 1)))), wbase = sliceOn(base, bc, x0, Math.min(tot, x0 + w));
+        if (place.dbg) place.dbg.push(text + ' on ' + B.id + '@' + (s == null ? 'free' : s.toFixed(0)) + ': arch too short (' + avail.toFixed(1) + ' for ' + w.toFixed(1) + ')'); return null; }   // too long for a whole arch: never across a junction (#783, Tom: "the starts of some words 'break' over the join"). The note breaks the word with a hyphen instead
+      if (!arch && (e == null || e > B.len + .01)) return null;
+      const pts = arch ? arch.pts : sliceOn(B.P, B.cum, s, e), A = pts[0], Z = pts[pts.length - 1], rev = Z[0] < A[0] - .01 || (Math.abs(Z[0] - A[0]) <= .01 && Z[1] > A[1]), rd = rev ? pts.slice().reverse() : pts;
+      const base = rd.map((p, i) => { const a = rd[Math.max(0, i - 1)], b = rd[Math.min(rd.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = hyp(dx, dy) || 1; return [p[0] + dy / l * LIFT, p[1] - dx / l * LIFT]; }), bc = cumOf(base), tot = bc[bc.length - 1], ws = (wm == null ? (s + e) / 2 : wm) - w / 2, x0 = arch ? Math.max(0, (tot - w) / 2) : Math.max(0, Math.min(tot - w, ((rev ? e - ws - w : ws - s) * tot / ((e - s) || 1)))), wbase = sliceOn(base, bc, x0, Math.min(tot, x0 + w));
       const han = h.hasHan(text), top = LIFT + (han ? Hc * 1.18 + .5 : Hc + .3), tc = band(base, bc, x0, x0 + w, .5 - LIFT, top), tcWide = band(base, bc, x0 - .6, x0 + w + .6, .9 - LIFT, top + .5);
       const start = conn.length ? conn[0].pts[0] : A, nearStart = c => { if (c < 0) return true; const cx = (c % GW + .5) * CELL, cy = (Math.floor(c / GW) + .5) * CELL; return hyp(cx - J.p[0], cy - J.p[1]) < 3 || hyp(cx - start[0], cy - start[1]) < 3 || hyp(cx - A[0], cy - A[1]) < 2.2; };
       const sc = lineCells(pts); conn.forEach(c => { if (!c.step) lineCells(c.pts, sc); }); const stepC = []; conn.forEach(c => { if (c.step) lineCells(c.pts, stepC); });
-      const srcs = {}; for (let k = stAt(B, s); k >= 0 && k < B.st.length && B.st[k].s0 < e - .01; k++) srcs[B.st[k].src] = B.st[k].fitted || srcs[B.st[k].src] || false;
+      const srcs = {}; if (arch) srcs[arch.src] = false; else for (let k = stAt(B, s); k >= 0 && k < B.st.length && B.st[k].s0 < e - .01; k++) srcs[B.st[k].src] = B.st[k].fitted || srcs[B.st[k].src] || false;
       const ownP = B.source === "printed" ? B.n + 1 : 0;
-      const no = why => { if (place.dbg) place.dbg.push(text + ' on ' + B.id + '@' + s.toFixed(0) + ': ' + why); return null; };
+      const no = why => { if (place.dbg) place.dbg.push(text + ' on ' + B.id + '@' + (s == null ? 'free' : s.toFixed(0)) + ': ' + why); return null; };
       for (const c of tcWide) { if (c < 0) return no('word off sheet'); const fx = (c % GW + .5) * CELL, fy = (Math.floor(c / GW) + .5) * CELL; if (fx < FRAME[0] || fx > FRAME[2] || fy < FRAME[1] || fy > FRAME[3]) return no('word outside the frame'); if (occT[c]) return no('word on word'); }
       for (const c of tc) { if (occS[c] && !nearStart(c)) return no('word on line'); if (occP[c] && occP[c] !== ownP) return no('word on printed guide'); }
       for (const c of sc) { if (c < 0) return no('line off sheet'); if (occT[c]) return no('line on word'); if (occS[c] && !nearStart(c)) return no('line on line'); }
       const sEnds = []; conn.forEach(c => { if (c.step) sEnds.push(c.pts[0], c.pts[1]); }); const nearEnd = c => { const cx = (c % GW + .5) * CELL, cy = (Math.floor(c / GW) + .5) * CELL; return sEnds.some(q => hyp(cx - q[0], cy - q[1]) < 3.2); };
       for (const c of stepC) { if (c < 0 || occT[c]) return no('step on word'); if (occS[c] && !nearEnd(c)) return no('step across a line'); }
-      return { B, s0: s, s1: e, pts, base, wbase, conn, text, H: Hc, tc, sc: sc.concat(stepC), srcs, rev };
+      return { B, s0: s, s1: e, pts, base, wbase, conn, text, H: Hc, tc, sc: sc.concat(stepC), srcs, rev, fk: arch ? arch.k : null, rot: arch ? arch.rot : 0 };
     }
     const undo = pl => { pl.tc.forEach(c => { occT[c]--; }); pl.sc.forEach(c => { if (c >= 0) occS[c]--; }); placed.splice(placed.indexOf(pl), 1); };   // the grids count, so a note that cannot be finished is lifted off whole
     function commit(pl, node, extra) { pl.tc.forEach(c => { occT[c]++; }); pl.sc.forEach(c => { if (c >= 0) occS[c]++; }); Object.assign(pl, { node, seq: seq++ }, extra || {}); placed.push(pl);
       const ch = node.chap; if (ch) [pl.pts[0], pl.pts[pl.pts.length - 1]].forEach(p => { let d = Math.atan2(p[1] - C[1], p[0] - C[0]) * 180 / Math.PI - ch.a2; d = ((d + 540) % 360) - 180; if (hyp(p[0] - C[0], p[1] - C[1]) < R3 + 1) frontier = Math.max(frontier, ch.rel + d); reach = Math.max(reach, ch.rel + d); });
-      return { A: pl.B, s: pl.s1, p: pl.pts[pl.pts.length - 1], pl }; }
+      return { A: pl.B, s: pl.fk != null ? null : pl.s1, fk: pl.fk, rot: pl.rot, p: pl.pts[pl.pts.length - 1], pl }; }
     // where a line may leave junction J: straight on along its own route, or by a step to a neighbouring route. Brothers and sisters
     // step on from one another along the ring (J.comb = the places already stepped to), so a junction with many children grows a
     // comb along the ring, each tooth one printed-length step from the last, as a switchback steps along its ring.
-    function ways(J) { const out = [{ B: J.A, s: J.s, pre: [], key: -1 }], p = J.p, m = J.A.marks.filter(q => Math.abs(q.s - J.s) < .05 && q.ring)[0], side = Math.abs(p[0] - C[0]) > 12 ? Math.sign(p[0] - C[0]) : 0, a0 = Math.atan2(p[1] - C[1], p[0] - C[0]), comb = J.comb || (J.comb = [p]), odd = (J.kids || 0) % 2 === (opt.flip ? 0 : 1);   // brothers and sisters alternate: the first leaves humped, the next takes the lower arm (a bowl first)
+    function ways(J) { const out = [{ B: J.A, s: J.s, fk: J.fk, rot: J.rot, pre: [], key: -1 }], p = J.p, m = J.fk != null ? null : J.A.marks.filter(q => Math.abs(q.s - J.s) < .05 && q.ring)[0], side = Math.abs(p[0] - C[0]) > 12 ? Math.sign(p[0] - C[0]) : 0, a0 = Math.atan2(p[1] - C[1], p[0] - C[0]), comb = J.comb || (J.comb = [p]), odd = (J.kids || 0) % 2 === (opt.flip ? 0 : 1);   // brothers and sisters alternate: the first leaves humped, the next takes the lower arm (a bowl first)
       const from = q => { let b = comb[0], bd = 1e9; comb.forEach(c => { const d = dist(c, q); if (d < bd) { bd = d; b = c; } }); return [b, bd]; };
       const push = (B, s, q, c, d) => { let da = Math.atan2(q[1] - C[1], q[0] - C[0]) - a0; da = ((da + 3 * Math.PI) % (2 * Math.PI)) - Math.PI; out.push({ B, s, pre: d < 1 ? [] : [{ step: true, pts: [c, q], src: "step" }], key: (B.lower ? (odd ? -.3 : .3) : 0) + (side && Math.sign(q[0] - C[0]) === -side && Math.abs(q[0] - C[0]) > 12 ? 1000 : 0) + dist(p, q) - ((da > 0) !== !!opt.ccw ? .5 : 0) }); };
       if (m && m.ring > 1) N.routes.forEach(B => { if (B === J.A) return; B.marks.forEach(q => { if (q.ring !== m.ring || B.len - q.s < 10) return; const f = from(q.pt); if (f[1] <= N.stepMax && (f[1] >= 1 || f[0] === p)) push(B, q.s, q.pt, f[0], f[1]); }); });
       else if (!m && hyp(p[0] - C[0], p[1] - C[1]) > R3 - 1) N.routes.forEach(B => { if (B === J.A) return; let best = 1e9, bi = -1, bc = null; comb.forEach(c => { for (let i = 0; i < B.P.length; i += 3) { const q = B.P[i], d = hyp(q[0] - c[0], q[1] - c[1]); if (d < best && hyp(q[0] - C[0], q[1] - C[1]) > R3 + 1) { best = d; bi = i; bc = c; } } });
         if (bi >= 0 && best >= 4.5 && best <= N.stepMax && B.len - B.cum[bi] > 10) push(B, B.cum[bi], B.P[bi], bc, best); });
+      if (J.fk != null) (opt.wide ? [15, -15, 30, -30, 45, -45, 60, -60] : [20, -20, 40, -40]).forEach(t => { const r = (J.rot || 0) + t; if (Math.abs(r) <= 60) out.push({ B: J.A, s: null, fk: J.fk, rot: r, fork: true, pre: [], key: (opt.fan || 5) + Math.abs(t) / 4 }); });   // a fork at the end of a free arch (#788)
       return out.sort((a, b) => a.key - b.key); }
     // a long word first tries the ways whose first arch is long enough for it whole, so it does not burn a short one (#788)
-    const fitOrder = (W, u, Hc) => { const w = h.measure(u, "", Hc) + 2 * MINOUT; return W.map((c, i) => { const k = stAt(c.B, c.s), x = k >= 0 ? c.B.st[k] : null; return { c, i, f: x && x.kind === "line" && x.s1 - c.s >= w ? 0 : 1 }; }).sort((a, b) => a.f - b.f || a.i - b.i).map(o => o.c); };
-    const splittable = u => (h.hasHan(u) ? u.length > 3 : u.replace(/[^A-Za-z]/g, "").length > 5), cut = u => { if (h.hasHan(u)) return Math.ceil(u.length / 2); const d = u.indexOf("-"); if (d > 1 && d < u.length - 2) return d + 1; let b = Math.ceil(u.length / 2), bs = 1e9; const C = c => /[B-DF-HJ-NP-TV-Z]/i.test(c);
+    const fitOrder = (W, u, Hc) => { const w = h.measure(u, "", Hc) + 2 * MINOUT; return W.map((c, i) => { const k = c.fk != null ? -1 : stAt(c.B, c.s), x = k >= 0 ? c.B.st[k] : null; return { c, i, f: c.fk != null || x && (x.free || x.kind === "line" && x.s1 - c.s >= w) ? 0 : 1 }; }).sort((a, b) => a.f - b.f || a.i - b.i).map(o => o.c); };
+    const splittable = u => h.hasHan(u) ? u.length > 3 : !!opt.hyphen && u.replace(/[^A-Za-z]/g, "").length > 5, cut = u => { if (h.hasHan(u)) return Math.ceil(u.length / 2); const d = u.indexOf("-"); if (d > 1 && d < u.length - 2) return d + 1; let b = Math.ceil(u.length / 2), bs = 1e9; const C = c => /[B-DF-HJ-NP-TV-Z]/i.test(c);
       for (let i = 3; i <= u.length - 3; i++) { const sc = Math.abs(i - u.length / 2) + (C(u[i - 1]) && C(u[i]) && u[i - 1] !== u[i] ? 0 : !C(u[i - 1]) && C(u[i]) && u[i + 1] && !C(u[i + 1]) ? .5 : 2.5); if (sc < bs) { bs = sc; b = i; } } return b; },   // a word is broken near its middle between two consonants (SMART-WISDOM) or before a consonant-vowel (CONCLU-SIONS), or at its own hyphen
       halves = (u, left) => { const n = cut(u), a = u.slice(0, n).replace(/-$/, "") + (h.hasHan(u) ? "" : "-"), b = u.slice(n); return left ? [b, a] : [a, b]; };
     // a broken word reads left to right whichever way its line leaves: where the line heads left (the left of the sheet), its END is written first, nearer the centre (#783)
-    const heading = J => { const a = atOn(J.A.P, J.A.cum, J.s), b = atOn(J.A.P, J.A.cum, J.s + 3); return b[0] < a[0] - .2; };
+    const heading = J => { if (J.fk != null) { const q = J.pl.pts, a = q[q.length - 2], b = q[q.length - 1]; return b[0] < a[0] - .2; } const a = atOn(J.A.P, J.A.cum, J.s), b = atOn(J.A.P, J.A.cum, J.s + 3); return b[0] < a[0] - .2; };
     // a note's units, one after the other, each from where the last one stopped
     function chain(J, units, node, Hc) { const q = units.slice(), mine = [], J0 = J; let n = 0, pend = null;
-      while (q.length) { const u = q.shift(); let got = null; const W = opt.fit ? fitOrder(ways(J), u, Hc) : ways(J); for (const c of W) { got = tryAt(c.B, c.s, c.pre, u, Hc, J); if (got) break; }
+      while (q.length) { const u = q.shift(); let got = null; const W = opt.fit ? fitOrder(ways(J), u, Hc) : ways(J); for (const c of W) { got = tryAt(c.B, c.s, c.pre, u, Hc, J, c.fk, c.rot, c.fork); if (got) break; }
         // no free ground, or no arch long enough, right at the junction: the line runs on up to three arches along the same route and the word sits further out
-        if (!got) for (const c of W) { let s2 = c.s, pre = c.pre; for (let hop = 0; hop < 3 && !got; hop++) { const k = stAt(c.B, s2); if (k < 0 || k + 1 >= c.B.st.length || c.B.st[k].kind !== "line") break; const e2 = c.B.st[k].s1; pre = pre.concat([{ r: c.B, a: s2, b: e2, pts: sliceOn(c.B.P, c.B.cum, s2, e2), src: c.B.st[k].src, fitted: c.B.st[k].fitted }]); s2 = e2; got = tryAt(c.B, s2, pre, u, Hc, J); } if (got) break; }
+        if (!got) for (const c of W) { if (c.fk != null) continue; let s2 = c.s, pre = c.pre; for (let hop = 0; hop < 3 && !got; hop++) { const k = stAt(c.B, s2); if (k < 0 || k + 1 >= c.B.st.length || c.B.st[k].kind !== "line") break; const e2 = c.B.st[k].s1; pre = pre.concat([{ r: c.B, a: s2, b: e2, pts: sliceOn(c.B.P, c.B.cum, s2, e2), src: c.B.st[k].src, fitted: c.B.st[k].fitted }]); s2 = e2; got = tryAt(c.B, s2, pre, u, Hc, J); } if (got) break; }
         // still none: two steps, across a neighbouring route that has a free line but no free ground for the word, to the route beyond it
         if (!got) for (const c of W) { if (!c.pre.length || !c.pre[0].step) continue; const q1 = c.pre[0].pts[1]; for (const c2 of ways({ A: c.B, s: c.s, p: q1 })) { if (!c2.pre.length || c2.B === J.A) continue; got = tryAt(c2.B, c2.s, c.pre.concat(c2.pre), u, Hc, J); if (got) break; } if (got) break; }
         if (got && pend && pend.first === u) { const p0 = pend; pend = null; if (got.rev !== p0.left && !p0.tried) { q.shift(); const hv = halves(p0.word, got.rev); q.unshift(hv[0], hv[1]); pend = { word: p0.word, left: got.rev, first: hv[0], tried: true }; continue; } }   // the first half landed on a line running the other way: swap the halves so the word still reads left to right
@@ -136,10 +156,11 @@
   }
   function seat1(set, N, h, opt) { set.byId = set.byId || (() => { const m = {}; set.nodes.forEach(n => (m[n.id] = n)); return m; })(); set.nodes.forEach(n => { delete n.lost; delete n.end; delete n.chap; delete n.kids; }); N.arms.forEach(a => { a.used = false; }); return place(set, N, h, opt); }
   // THE WAYS OF SEATING A SET (#788): the placer is greedy, note by note, so which notes fit depends on a few choices made early. Each set is
-  // seated each of these ways and the way that seats the most notes is drawn (ties go to the earlier, so a set that was already best
-  // seated the first way is drawn exactly as before). spread: chapters aim for their share of the round (x spread); fit: a long word
-  // tries first the ways whose arch holds it whole; ccw: at a junction, anticlockwise steps before clockwise. Text size never changes.
-  const OPTS = [{}, { ccw: 1 }, { fit: 1, ccw: 1 }, { spread: .8, fit: 1 }, { spread: .9 }];
+  // seated each of these ways and the way that seats the most notes is drawn (ties go to the earlier). spread: chapters aim for their share of
+  // the round (x spread); fit: a long word tries first the ways whose arch holds it whole; fan: where the forks at the end of a free arch rank
+  // against steps to a neighbouring route (1 before them, 30 after, default between); wide: forks turned by 15 to 60 degrees, not 20 and 40.
+  // Text size never changes and no Latin word is broken.
+  const OPTS = [{}, { spread: .9 }, { fan: 1 }, { fan: 30 }, { wide: 1, spread: .8, fit: 1 }, { wide: 1, fan: 1, spread: .85, fit: 1 }];
   function seat(set, N, h) { if (seat.only) return seat1(set, N, h, seat.only); let best = null, bo = null; for (const o of OPTS) { const a = seat1(set, N, h, o); if (!best || a.seated > best.seated) { best = a; bo = o; } if (best.seated === best.notes) break; } return bo === OPTS[OPTS.length - 1] ? best : seat1(set, N, h, bo); }
 
   // THE CHECK: every drawn line against the route it was cut from. Printed: against the template's own mounted guide element.
@@ -152,6 +173,7 @@
     const o = { ok: true, lines: 0, printedLines: 0, continuedLines: 0, steps: 0, printedMaxPt: 0, printedAsPrintedMaxPt: 0, continuedMaxPt: 0, continuedFittedMaxPt: 0, stepMaxPt: 0, limitPt: +lim.toFixed(3), missing: [], worst: null };
     ink.querySelectorAll("path[data-src]").forEach(el => { const ids = el.getAttribute("data-src").split("|"), fitted = el.hasAttribute("data-fit");
       if (ids[0] === "step") { o.steps++; const L = el.getTotalLength(); o.stepMaxPt = Math.max(o.stepMaxPt, L); if (L > N.stepMax + .05) { o.ok = false; o.worst = { step: +L.toFixed(2) }; } return; }
+      if (ids[0].indexOf("arch@") === 0) { const a = ids[0].slice(5).split(","), g = polyScreen(archOn(R, [+a[0], +a[1]], [+a[2], +a[3]], a[4])); o.lines++; o.continuedLines++; o.freeArches = (o.freeArches || 0) + 1; let mx = 0; toScreen(el, Math.max(12, Math.ceil(el.getTotalLength() * 1.5))).forEach(p => { const d = dTo(p, g) / sc; if (d > mx) mx = d; }); if (mx > o.continuedMaxPt) o.continuedMaxPt = mx; if (mx > .06) { o.ok = false; o.worst = { pt: +mx.toFixed(3), src: ids[0], allow: .06 }; } return; }
       const gs = ids.map(guideOf); if (gs.some(g => !g)) { o.missing.push(ids.join("|")); o.ok = false; return; } o.lines++; const printed = by[ids[0].split("#")[0]].source === "printed"; if (printed) o.printedLines++; else o.continuedLines++;
       let mx = 0; toScreen(el, Math.max(12, Math.ceil(el.getTotalLength() * 1.5))).forEach(p => { const d = Math.min.apply(null, gs.map(g => dTo(p, g))) / sc; if (d > mx) mx = d; });
       const key = printed ? (fitted ? "printedMaxPt" : "printedAsPrintedMaxPt") : (fitted ? "continuedFittedMaxPt" : "continuedMaxPt"), allow = fitted ? lim : .06;
@@ -161,5 +183,5 @@
   // THE WORD CHECK (#783): no word sits across a join. Measured on what is drawn: the lifted line under each word's letters may not
   // turn more than KINK degrees anywhere. Each one that does is named; tools/design-shot.cjs fails on any.
   function straddles(placed) { const o = []; placed.forEach(p => { const W = p.wbase || p.base, c = cumOf(W), L = c[c.length - 1]; if (kinksOf(W, c, 0, L).length) o.push(p.text); }); return o; }
-  root.RoutesText = { buildNet, seat, seat1, OPTS, check, straddles, FONT, LEAD, CAP3, place };
+  root.RoutesText = { archOn, buildNet, seat, seat1, OPTS, check, straddles, FONT, LEAD, CAP3, place };
 })(window);
