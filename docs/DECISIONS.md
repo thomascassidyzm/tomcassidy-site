@@ -6,6 +6,32 @@ falsify it.
 
 ---
 
+## 2026-11-13 — The SmartWisdom notemap as a static, unlisted copy at /sw/
+
+Tom asked for the Kemp notemap on tomcassidy.co/sw/ so it opens on his iPad and
+for Jonathan Kemp with no tailnet, cookie or token. `public/sw/` is a plain
+static copy of notemap `public/designs/best` (text seated on the template
+routes, #698·AH lineage), opening on `set=kemp&theme=light`. Every asset is
+served from this site; nothing calls another host. It is unlisted: noindex on
+both pages, `Disallow: /sw/` in `robots.txt`, no nav link, not in the
+`/writing` index (that is built from the essays collection only), and the site
+has no sitemap. The pocket-coach service worker (`/sw.js`) is scoped to
+`/reasonable-eating` and cannot touch `/sw/`.
+
+Better × simpler × cheaper: static files beat an Astro route (no code, no
+function), and the copy is made by notemap's own export tool rather than by hand.
+The design has no audio: notemap `designs/best` plays the drawing, not sound.
+
+**Refresh** (from a notemap checkout carrying `--to`, branch
+`cs/768-share-export-to-dir` until merged):
+`tools/share-export.sh --to <this repo>/public/sw "/sw/designs/best/index.html?set=kemp&theme=light"`,
+then commit and push `public/sw/`.
+
+**What would falsify it.** `/sw/` showing in a search engine, or a design newer
+than the copy reaching Jonathan only by the tailnet link.
+
+---
+
 ## 2026-09-20 — Settled: the guide is live and billed in production
 
 **Fact, not a decision.** Four prior estate audits (2026-08-18, 2026-08-31,
