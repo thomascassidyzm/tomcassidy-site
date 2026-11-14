@@ -52,7 +52,8 @@
       // FREE ARCHES (#788, Tom 19:11Z: "arches can be longer - they can scale to fit shorter and longer words in the free spaces - i.e. outside of
       // the concentric circles"): a continued stretch beyond ring 3 is not cut to its stored length any more. It gives a DIRECTION (its chord) and a
       // CODE (hump or bowl, as drawn: the rule's corner code, the lower arm's bowl first), and each word gets its own model arch along it, as long as the word.
-      st.forEach((x, n) => { x.free = x.cont && x.kind === "line" && x.band === "beyond-ring3"; if (!x.free) return; const A = P[idx[n]], Bq = P[idx[n + 1]], c = dist(A, Bq) || 1, d = [(Bq[0] - A[0]) / c, (Bq[1] - A[1]) / c];
+      // every stretch gets a direction and a code, so beyond ring 3 a sibling may fork off a printed stretch too (#910, the pfork ways)
+      st.forEach((x, n) => { x.free = x.cont && x.kind === "line" && x.band === "beyond-ring3"; const A = P[idx[n]], Bq = P[idx[n + 1]], c = dist(A, Bq) || 1, d = [(Bq[0] - A[0]) / c, (Bq[1] - A[1]) / c];
         let nx = -d[1], ny = d[0]; if (ny > 0) { nx = -nx; ny = -ny; } let bow = 0; for (let i = idx[n]; i <= idx[n + 1]; i++) { const v = (P[i][0] - A[0]) * nx + (P[i][1] - A[1]) * ny; if (Math.abs(v) > Math.abs(bow)) bow = v; }
         x.dir = d; x.code = Math.abs(bow) > .02 * c ? (bow > 0 ? "U" : "D") : (x.udc || "U"); });
       routes.push({ id: vk ? r.id + "~" + vk : r.id, n: routes.length, source: r.source, kind: r.kind || "printed", P, cum, len: cum[cum.length - 1], marks, st, own, tip: !vk && marks[0].ring === 1, tipDeg: r.tip_deg, a2: m2 ? Math.atan2(m2.pt[1] - C[1], m2.pt[0] - C[0]) * 180 / Math.PI : null, lower: !!vk }); };
@@ -131,7 +132,7 @@
       // alternate, as before: the second prefers the lower arm. A step to a neighbouring route is now only the fallback.
       const pref = odd ? "D" : "U", fanKey = (t, code) => (opt.fan != null ? opt.fan : .2) + Math.abs(t) / 100 + (code === pref ? 0 : .5);
       const turnCode = (d0, r) => { r = r * Math.PI / 180; const y = d0[0] * Math.sin(r) + d0[1] * Math.cos(r); return y > d0[1] ? "D" : "U"; };
-      const kf = J.fk != null ? J.fk : (() => { const k = stAt(J.A, J.s); return k >= 0 && J.A.st[k].free && !opt.fixed && hyp(p[0] - C[0], p[1] - C[1]) > R3 - 1 ? k : null; })();
+      const kf = J.fk != null ? J.fk : (() => { const k = stAt(J.A, J.s); const x = k >= 0 ? J.A.st[k] : null; return x && (x.free || opt.pfork && x.kind === "line" && x.band === "beyond-ring3") && !opt.fixed && hyp(p[0] - C[0], p[1] - C[1]) > R3 - 1 ? k : null; })();   // beyond ring 3 a sibling forks off any stretch, printed or continued (Tom 19:11Z: free arches outside the rings)
       if (kf != null) { const d0 = J.A.st[Math.min(kf, J.A.st.length - 1)].dir; (opt.wide ? [15, -15, 30, -30, 45, -45, 60, -60] : [20, -20, 40, -40]).forEach(t => { const r = (J.rot || 0) + t; if (Math.abs(r) <= 60) out.push({ B: J.A, s: null, fk: kf, rot: r, fork: true, pre: [], key: fanKey(t, turnCode(d0, r)) }); }); }   // a fork at the end of a free arch (#788), now first after straight on
       else if (m && m.ring === 2) { const q0 = J.A.marks.filter(q => q.ring === 3 && q.s > J.s + 1)[0];
         if (q0) { const c0 = dist(p, q0.pt), d0 = [(q0.pt[0] - p[0]) / c0, (q0.pt[1] - p[1]) / c0];
@@ -168,16 +169,16 @@
     const notes = set.nodes.length, lostNotes = set.nodes.filter(n => n.lost).length;
     // siblings (#910): a note whose parent has two or more seated children; offNode = those whose line does not start at the parent's end (a step along the ring)
     const firstOf = {}, kids = {}; placed.forEach(pl => { if (!firstOf[pl.node.id]) firstOf[pl.node.id] = pl; }); set.nodes.forEach(n => { if (n.parent && !n.lost && firstOf[n.id]) (kids[n.parent] = kids[n.parent] || []).push(n); });
-    let siblings = 0, offNode = 0; Object.keys(kids).forEach(k => { if (kids[k].length < 2) return; kids[k].forEach(n => { siblings++; if (firstOf[n.id].conn.some(c => c.step)) offNode++; }); });
-    return { placed, lost, notes, siblings, offNode, seated: notes - lostNotes, lostNotes, cut: lost.filter(l => l.partial).length, words: placed.length, lostUnits: lost.reduce((a, l) => a + l.units, 0) };
+    let siblings = 0, offNode = 0; const offNames = []; Object.keys(kids).forEach(k => { if (kids[k].length < 2) return; kids[k].forEach(n => { siblings++; if (firstOf[n.id].conn.some(c => c.step)) { offNode++; offNames.push(n.t); } }); });
+    return { placed, lost, notes, siblings, offNode, offNames, seated: notes - lostNotes, lostNotes, cut: lost.filter(l => l.partial).length, words: placed.length, lostUnits: lost.reduce((a, l) => a + l.units, 0) };
   }
   function seat1(set, N, h, opt) { set.byId = set.byId || (() => { const m = {}; set.nodes.forEach(n => (m[n.id] = n)); return m; })(); set.nodes.forEach(n => { delete n.lost; delete n.end; delete n.chap; delete n.kids; }); N.arms.forEach(a => { a.used = false; }); return place(set, N, h, opt); }
   // THE WAYS OF SEATING A SET (#788): the placer is greedy, note by note, so which notes fit depends on a few choices made early. Each set is
   // seated each of these ways and the way that seats the most notes is drawn (ties go to the one with fewer siblings off their parent's node (#910), then the earlier). spread: chapters aim for their share of
   // the round (x spread); fit: a long word tries first the ways whose arch holds it whole; fan: where a sibling's fan from the shared node ranks
-  // (always before any step along the ring since #910); flip: the second sibling prefers the upper arm, not the lower; wide: forks turned by 15 to 60 degrees, not 20 and 40.
+  // (always before any step along the ring since #910); flip: the second sibling prefers the upper arm, not the lower; wide: forks turned by 15 to 60 degrees, not 20 and 40; pfork: siblings may also fork off a printed stretch beyond ring 3.
   // Text size never changes and no Latin word is broken.
-  const OPTS = [{}, { spread: .9 }, { flip: 1 }, { wide: 1, spread: .8, fit: 1 }, { wide: 1, fan: 1, spread: .85, fit: 1 }, { wide: 1, spread: .9, fit: 1 }, { fit: 1 }, { wide: 1, spread: .6, fit: 1 }, { wide: 1, flip: 1, fit: 1 }];   // #910: three more ways, as fanned siblings take more room than a comb
+  const OPTS = [{}, { spread: .9 }, { flip: 1 }, { wide: 1, spread: .8, fit: 1 }, { wide: 1, fan: 1, spread: .85, fit: 1 }, { wide: 1, spread: .9, fit: 1 }, { fit: 1 }, { wide: 1, spread: .6, fit: 1 }, { wide: 1, flip: 1, fit: 1 }, { wide: 1, spread: .8, fit: 1, pfork: 1 }, { fit: 1, pfork: 1 }];   // #910: three more ways, as fanned siblings take more room than a comb
   function seat(set, N, h) { if (seat.only) return seat1(set, N, h, seat.only); let best = null, bo = null; for (const o of OPTS) { const a = seat1(set, N, h, o); if (!best || a.seated > best.seated || a.seated === best.seated && a.offNode < best.offNode) { best = a; bo = o; } if (best.seated === best.notes) break; } return bo === OPTS[OPTS.length - 1] ? best : seat1(set, N, h, bo); }
 
   // THE CHECK: every drawn line against the route it was cut from. Printed: against the template's own mounted guide element.
