@@ -80,10 +80,11 @@
     const freeArch = (B, k, P0, need, rot, fork) => { const x = B.st[Math.min(k, B.st.length - 1)], c = need / N.lpc, r = (rot || 0) * Math.PI / 180, d = [x.dir[0] * Math.cos(r) - x.dir[1] * Math.sin(r), x.dir[0] * Math.sin(r) + x.dir[1] * Math.cos(r)], E = [P0[0] + d[0] * c, P0[1] + d[1] * c];
       const code = fork && rot ? (d[1] > x.dir[1] ? "D" : "U") : x.code;
       return { pts: archOn(N.R, P0, E, code), k: k + 1, rot: rot || 0, src: "arch@" + [f3(P0[0]), f3(P0[1]), f3(E[0]), f3(E[1]), code].join(",") }; };
-    function tryAt(B, s, pre, text, Hc, J, fk, rot, fork) {
+    function tryAt(B, s, pre, text, Hc, J, fk, rot, fork, ch) {
       const w = h.measure(text, "", Hc), lead = LEAD * Hc / CAP3, need = w + 2 * lead, conn = pre.slice(); let e = null, arch = null;
       let wm = null;   // where the word's middle sits, along the route
-      if (fk != null) arch = freeArch(B, fk, J.p, need, rot, fork);
+      if (ch) { const L = dist(ch.p, ch.q) * N.lpc; if (w + 2 * MINLEAD > L) return null; arch = { pts: archOn(N.R, ch.p, ch.q, ch.code), chord: true, src: "arch@" + [f3(ch.p[0]), f3(ch.p[1]), f3(ch.q[0]), f3(ch.q[1]), ch.code].join(",") }; e = s; }   // a sibling fanned from the shared node to the next ring (#910)
+      else if (fk != null) arch = freeArch(B, fk, J.p, need, rot, fork);
       else for (let guard = 0; guard < 14 && e == null; guard++) { const k = stAt(B, s); if (k < 0) return null; const x = B.st[k];
         if (x.free && !opt.fixed) { arch = freeArch(B, k, atOn(B.P, B.cum, s), need); break; }
         if (x.kind === "step") { conn.push({ r: B, a: s, b: x.s1, pts: sliceOn(B.P, B.cum, s, x.s1), src: x.src, fitted: x.fitted }); s = x.s1; continue; }
@@ -108,7 +109,7 @@
       for (const c of sc) { if (c < 0) return no('line off sheet'); if (occT[c]) return no('line on word'); if (occS[c] && !nearStart(c)) return no('line on line'); }
       const sEnds = []; conn.forEach(c => { if (c.step) sEnds.push(c.pts[0], c.pts[1]); }); const nearEnd = c => { const cx = (c % GW + .5) * CELL, cy = (Math.floor(c / GW) + .5) * CELL; return sEnds.some(q => hyp(cx - q[0], cy - q[1]) < 3.2); };
       for (const c of stepC) { if (c < 0 || occT[c]) return no('step on word'); if (occS[c] && !nearEnd(c)) return no('step across a line'); }
-      return { B, s0: s, s1: e, pts, base, wbase, conn, text, H: Hc, tc, sc: sc.concat(stepC), srcs, rev, fk: arch ? arch.k : null, rot: arch ? arch.rot : 0 };
+      return { B, s0: s, s1: e, pts, base, wbase, conn, text, H: Hc, tc, sc: sc.concat(stepC), srcs, rev, fk: arch && !arch.chord ? arch.k : null, rot: arch && !arch.chord ? arch.rot : 0, fan: !!(ch || fork) };
     }
     const undo = pl => { pl.tc.forEach(c => { occT[c]--; }); pl.sc.forEach(c => { if (c >= 0) occS[c]--; }); placed.splice(placed.indexOf(pl), 1); };   // the grids count, so a note that cannot be finished is lifted off whole
     function commit(pl, node, extra) { pl.tc.forEach(c => { occT[c]++; }); pl.sc.forEach(c => { if (c >= 0) occS[c]++; }); Object.assign(pl, { node, seq: seq++ }, extra || {}); placed.push(pl);
@@ -123,10 +124,23 @@
       if (m && m.ring > 1) N.routes.forEach(B => { if (B === J.A) return; B.marks.forEach(q => { if (q.ring !== m.ring || B.len - q.s < 10) return; const f = from(q.pt); if (f[1] <= N.stepMax && (f[1] >= 1 || f[0] === p)) push(B, q.s, q.pt, f[0], f[1]); }); });
       else if (!m && hyp(p[0] - C[0], p[1] - C[1]) > R3 - 1) N.routes.forEach(B => { if (B === J.A) return; let best = 1e9, bi = -1, bc = null; comb.forEach(c => { for (let i = 0; i < B.P.length; i += 3) { const q = B.P[i], d = hyp(q[0] - c[0], q[1] - c[1]); if (d < best && hyp(q[0] - C[0], q[1] - C[1]) > R3 + 1) { best = d; bi = i; bc = c; } } });
         if (bi >= 0 && best >= 4.5 && best <= N.stepMax && B.len - B.cum[bi] > 10) push(B, B.cum[bi], B.P[bi], bc, best); });
-      if (J.fk != null) (opt.wide ? [15, -15, 30, -30, 45, -45, 60, -60] : [20, -20, 40, -40]).forEach(t => { const r = (J.rot || 0) + t; if (Math.abs(r) <= 60) out.push({ B: J.A, s: null, fk: J.fk, rot: r, fork: true, pre: [], key: (opt.fan || 5) + Math.abs(t) / 4 }); });   // a fork at the end of a free arch (#788)
+      // FAN-OUT (#910, Tom 2026-11-14: "the branches are coming from nowhere, in parallel rather than being at their own different angles coming
+      // from the same node"): brothers and sisters leave ONE node, the end of their parent, each at its own angle, before any step along the ring.
+      // Beyond ring 3 a sibling is the free arch turned 20 or 40 degrees (#788's fork); at a ring 2 junction it is the model arch from the node to
+      // another route's ring 3 junction, 10 to 50 degrees off straight on. Upwards a hump, downwards a bowl (the printed fork code); siblings
+      // alternate, as before: the second prefers the lower arm. A step to a neighbouring route is now only the fallback.
+      const pref = odd ? "D" : "U", fanKey = (t, code) => (opt.fan != null ? opt.fan : .2) + Math.abs(t) / 100 + (code === pref ? 0 : .5);
+      const turnCode = (d0, r) => { r = r * Math.PI / 180; const y = d0[0] * Math.sin(r) + d0[1] * Math.cos(r); return y > d0[1] ? "D" : "U"; };
+      const kf = J.fk != null ? J.fk : (() => { const k = stAt(J.A, J.s); return k >= 0 && J.A.st[k].free && !opt.fixed && hyp(p[0] - C[0], p[1] - C[1]) > R3 - 1 ? k : null; })();
+      if (kf != null) { const d0 = J.A.st[Math.min(kf, J.A.st.length - 1)].dir; (opt.wide ? [15, -15, 30, -30, 45, -45, 60, -60] : [20, -20, 40, -40]).forEach(t => { const r = (J.rot || 0) + t; if (Math.abs(r) <= 60) out.push({ B: J.A, s: null, fk: kf, rot: r, fork: true, pre: [], key: fanKey(t, turnCode(d0, r)) }); }); }   // a fork at the end of a free arch (#788), now first after straight on
+      else if (m && m.ring === 2) { const q0 = J.A.marks.filter(q => q.ring === 3 && q.s > J.s + 1)[0];
+        if (q0) { const c0 = dist(p, q0.pt), d0 = [(q0.pt[0] - p[0]) / c0, (q0.pt[1] - p[1]) / c0];
+          N.routes.forEach(B => { if (B === J.A) return; B.marks.forEach(q => { if (q.ring !== 3 || B.len - q.s < 10) return; const c = dist(p, q.pt); if (c < .7 * c0 || c > 1.4 * c0) return; const d = [(q.pt[0] - p[0]) / c, (q.pt[1] - p[1]) / c];
+            const t = Math.atan2(d0[0] * d[1] - d0[1] * d[0], d0[0] * d[0] + d0[1] * d[1]) * 180 / Math.PI; if (Math.abs(t) < 10 || Math.abs(t) > 50) return; const code = d[1] > d0[1] ? "D" : "U";
+            out.push({ B, s: q.s, ch: { p, q: q.pt, code }, pre: [], key: fanKey(t, code) }); }); }); } }
       return out.sort((a, b) => a.key - b.key); }
     // a long word first tries the ways whose first arch is long enough for it whole, so it does not burn a short one (#788)
-    const fitOrder = (W, u, Hc) => { const w = h.measure(u, "", Hc) + 2 * MINOUT; return W.map((c, i) => { const k = c.fk != null ? -1 : stAt(c.B, c.s), x = k >= 0 ? c.B.st[k] : null; return { c, i, f: c.fk != null || x && (x.free || x.kind === "line" && x.s1 - c.s >= w) ? 0 : 1 }; }).sort((a, b) => a.f - b.f || a.i - b.i).map(o => o.c); };
+    const fitOrder = (W, u, Hc) => { const w = h.measure(u, "", Hc) + 2 * MINOUT; return W.map((c, i) => { const k = c.fk != null ? -1 : stAt(c.B, c.s), x = k >= 0 ? c.B.st[k] : null; return { c, i, f: c.fk != null || c.ch || x && (x.free || x.kind === "line" && x.s1 - c.s >= w) ? 0 : 1 }; }).sort((a, b) => a.f - b.f || a.i - b.i).map(o => o.c); };
     const splittable = u => h.hasHan(u) ? u.length > 3 : !!opt.hyphen && u.replace(/[^A-Za-z]/g, "").length > 5, cut = u => { if (h.hasHan(u)) return Math.ceil(u.length / 2); const d = u.indexOf("-"); if (d > 1 && d < u.length - 2) return d + 1; let b = Math.ceil(u.length / 2), bs = 1e9; const C = c => /[B-DF-HJ-NP-TV-Z]/i.test(c);
       for (let i = 3; i <= u.length - 3; i++) { const sc = Math.abs(i - u.length / 2) + (C(u[i - 1]) && C(u[i]) && u[i - 1] !== u[i] ? 0 : !C(u[i - 1]) && C(u[i]) && u[i + 1] && !C(u[i + 1]) ? .5 : 2.5); if (sc < bs) { bs = sc; b = i; } } return b; },   // a word is broken near its middle between two consonants (SMART-WISDOM) or before a consonant-vowel (CONCLU-SIONS), or at its own hyphen
       halves = (u, left) => { const n = cut(u), a = u.slice(0, n).replace(/-$/, "") + (h.hasHan(u) ? "" : "-"), b = u.slice(n); return left ? [b, a] : [a, b]; };
@@ -134,9 +148,9 @@
     const heading = J => { if (J.fk != null) { const q = J.pl.pts, a = q[q.length - 2], b = q[q.length - 1]; return b[0] < a[0] - .2; } const a = atOn(J.A.P, J.A.cum, J.s), b = atOn(J.A.P, J.A.cum, J.s + 3); return b[0] < a[0] - .2; };
     // a note's units, one after the other, each from where the last one stopped
     function chain(J, units, node, Hc) { const q = units.slice(), mine = [], J0 = J; let n = 0, pend = null;
-      while (q.length) { const u = q.shift(); let got = null; const W = opt.fit ? fitOrder(ways(J), u, Hc) : ways(J); for (const c of W) { got = tryAt(c.B, c.s, c.pre, u, Hc, J, c.fk, c.rot, c.fork); if (got) break; }
+      while (q.length) { const u = q.shift(); let got = null; const W = opt.fit ? fitOrder(ways(J), u, Hc) : ways(J); for (const c of W) { got = tryAt(c.B, c.s, c.pre, u, Hc, J, c.fk, c.rot, c.fork, c.ch); if (got) break; }
         // no free ground, or no arch long enough, right at the junction: the line runs on up to three arches along the same route and the word sits further out
-        if (!got) for (const c of W) { if (c.fk != null) continue; let s2 = c.s, pre = c.pre; for (let hop = 0; hop < 3 && !got; hop++) { const k = stAt(c.B, s2); if (k < 0 || k + 1 >= c.B.st.length || c.B.st[k].kind !== "line") break; const e2 = c.B.st[k].s1; pre = pre.concat([{ r: c.B, a: s2, b: e2, pts: sliceOn(c.B.P, c.B.cum, s2, e2), src: c.B.st[k].src, fitted: c.B.st[k].fitted }]); s2 = e2; got = tryAt(c.B, s2, pre, u, Hc, J); } if (got) break; }
+        if (!got) for (const c of W) { if (c.fk != null || c.ch) continue; let s2 = c.s, pre = c.pre; for (let hop = 0; hop < 3 && !got; hop++) { const k = stAt(c.B, s2); if (k < 0 || k + 1 >= c.B.st.length || c.B.st[k].kind !== "line") break; const e2 = c.B.st[k].s1; pre = pre.concat([{ r: c.B, a: s2, b: e2, pts: sliceOn(c.B.P, c.B.cum, s2, e2), src: c.B.st[k].src, fitted: c.B.st[k].fitted }]); s2 = e2; got = tryAt(c.B, s2, pre, u, Hc, J); } if (got) break; }
         // still none: two steps, across a neighbouring route that has a free line but no free ground for the word, to the route beyond it
         if (!got) for (const c of W) { if (!c.pre.length || !c.pre[0].step) continue; const q1 = c.pre[0].pts[1]; for (const c2 of ways({ A: c.B, s: c.s, p: q1 })) { if (!c2.pre.length || c2.B === J.A) continue; got = tryAt(c2.B, c2.s, c.pre.concat(c2.pre), u, Hc, J); if (got) break; } if (got) break; }
         if (got && pend && pend.first === u) { const p0 = pend; pend = null; if (got.rev !== p0.left && !p0.tried) { q.shift(); const hv = halves(p0.word, got.rev); q.unshift(hv[0], hv[1]); pend = { word: p0.word, left: got.rev, first: hv[0], tried: true }; continue; } }   // the first half landed on a line running the other way: swap the halves so the word still reads left to right
@@ -152,16 +166,19 @@
         let J = commit(got, node, { arm }); if (q.length > 1) { const J2 = chain(J, q.slice(1), node, Hc); if (!J2) { undo(J.pl); node.chap = null; return; } J = J2; } arm.used = true; node.end = J; return; }
       node.chap = par.chap; const J = chain(par.end, u, node, Hc); if (J) node.end = J; });
     const notes = set.nodes.length, lostNotes = set.nodes.filter(n => n.lost).length;
-    return { placed, lost, notes, seated: notes - lostNotes, lostNotes, cut: lost.filter(l => l.partial).length, words: placed.length, lostUnits: lost.reduce((a, l) => a + l.units, 0) };
+    // siblings (#910): a note whose parent has two or more seated children; offNode = those whose line does not start at the parent's end (a step along the ring)
+    const firstOf = {}, kids = {}; placed.forEach(pl => { if (!firstOf[pl.node.id]) firstOf[pl.node.id] = pl; }); set.nodes.forEach(n => { if (n.parent && !n.lost && firstOf[n.id]) (kids[n.parent] = kids[n.parent] || []).push(n); });
+    let siblings = 0, offNode = 0; Object.keys(kids).forEach(k => { if (kids[k].length < 2) return; kids[k].forEach(n => { siblings++; if (firstOf[n.id].conn.some(c => c.step)) offNode++; }); });
+    return { placed, lost, notes, siblings, offNode, seated: notes - lostNotes, lostNotes, cut: lost.filter(l => l.partial).length, words: placed.length, lostUnits: lost.reduce((a, l) => a + l.units, 0) };
   }
   function seat1(set, N, h, opt) { set.byId = set.byId || (() => { const m = {}; set.nodes.forEach(n => (m[n.id] = n)); return m; })(); set.nodes.forEach(n => { delete n.lost; delete n.end; delete n.chap; delete n.kids; }); N.arms.forEach(a => { a.used = false; }); return place(set, N, h, opt); }
   // THE WAYS OF SEATING A SET (#788): the placer is greedy, note by note, so which notes fit depends on a few choices made early. Each set is
-  // seated each of these ways and the way that seats the most notes is drawn (ties go to the earlier). spread: chapters aim for their share of
-  // the round (x spread); fit: a long word tries first the ways whose arch holds it whole; fan: where the forks at the end of a free arch rank
-  // against steps to a neighbouring route (1 before them, 30 after, default between); wide: forks turned by 15 to 60 degrees, not 20 and 40.
+  // seated each of these ways and the way that seats the most notes is drawn (ties go to the one with fewer siblings off their parent's node (#910), then the earlier). spread: chapters aim for their share of
+  // the round (x spread); fit: a long word tries first the ways whose arch holds it whole; fan: where a sibling's fan from the shared node ranks
+  // (always before any step along the ring since #910); flip: the second sibling prefers the upper arm, not the lower; wide: forks turned by 15 to 60 degrees, not 20 and 40.
   // Text size never changes and no Latin word is broken.
-  const OPTS = [{}, { spread: .9 }, { fan: 1 }, { fan: 30 }, { wide: 1, spread: .8, fit: 1 }, { wide: 1, fan: 1, spread: .85, fit: 1 }];
-  function seat(set, N, h) { if (seat.only) return seat1(set, N, h, seat.only); let best = null, bo = null; for (const o of OPTS) { const a = seat1(set, N, h, o); if (!best || a.seated > best.seated) { best = a; bo = o; } if (best.seated === best.notes) break; } return bo === OPTS[OPTS.length - 1] ? best : seat1(set, N, h, bo); }
+  const OPTS = [{}, { spread: .9 }, { flip: 1 }, { wide: 1, spread: .8, fit: 1 }, { wide: 1, fan: 1, spread: .85, fit: 1 }, { wide: 1, spread: .9, fit: 1 }, { fit: 1 }, { wide: 1, spread: .6, fit: 1 }, { wide: 1, flip: 1, fit: 1 }];   // #910: three more ways, as fanned siblings take more room than a comb
+  function seat(set, N, h) { if (seat.only) return seat1(set, N, h, seat.only); let best = null, bo = null; for (const o of OPTS) { const a = seat1(set, N, h, o); if (!best || a.seated > best.seated || a.seated === best.seated && a.offNode < best.offNode) { best = a; bo = o; } if (best.seated === best.notes) break; } return bo === OPTS[OPTS.length - 1] ? best : seat1(set, N, h, bo); }
 
   // THE CHECK: every drawn line against the route it was cut from. Printed: against the template's own mounted guide element.
   // Continued: against the stored route (routes.json pts, or the row's variant under the rule). A line that leaves its route FAILS.

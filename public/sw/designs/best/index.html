@@ -294,7 +294,7 @@ function render(play) {
     lost: M.lost.map(l => (l.partial ? "~" : "") + l.node.t) };
 }
 // every set seated on the routes, for the record (docs/DECISIONS.md): window.__notemapAll()
-window.__notemapAll = () => SETS.map(k => { const a = RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); return { set: k, notes: a.notes, seated: a.seated, needAnotherSheet: a.lostNotes, cutShort: a.cut, lines: a.placed.length, straddling: RoutesText.straddles(a.placed) }; }).concat((M = null, render(false), []));
+window.__notemapAll = () => SETS.map(k => { const a = RoutesText.seat(window.NOTEMAP_CONTENT.sets[k], NET, HELP); return { set: k, notes: a.notes, seated: a.seated, needAnotherSheet: a.lostNotes, cutShort: a.cut, lines: a.placed.length, siblings: a.siblings, siblingsOffNode: a.offNode, straddling: RoutesText.straddles(a.placed) }; }).concat((M = null, render(false), []));
 
 const on = (id, f) => document.getElementById(id).addEventListener("click", f);
 on("bSet", () => { S.set = SETS[(SETS.indexOf(S.set) + 1) % SETS.length]; S.freeze = null; pushUrl(); render(true);
