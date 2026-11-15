@@ -6,6 +6,23 @@ falsify it.
 
 ---
 
+## 2026-11-15 — /like theory: OCEAN is a content relation, never a measurement
+
+**Decided.** The draft theory docs in `docs/like-theory/` relate every option of
+the 30 moments to IPIP-NEO items with the words "shares ground with" only, and
+treat each relation as a prediction to test (collection-design.md), not a claim
+the quiz measures OCEAN. No room placement is shown until our own anonymous
+players build the room, per depth, as a band.
+
+**Why.** Better: honest, and it gives Tom concrete OCEAN language without
+over-claiming. Simpler: one reading of the words, no psychometric machinery.
+Cheaper: no build; the measured check comes free with the room collection.
+
+**Falsified if** a collected correlation for C, E or N comes in under about .3
+at ~350 people, or a lean tracks another IPIP domain better than its own.
+
+---
+
 ## 2026-11-15 — The wheel of life is two static files at /wol/
 
 `public/wol/index.html` (a visitor's own wheel, opens empty, scores in their
