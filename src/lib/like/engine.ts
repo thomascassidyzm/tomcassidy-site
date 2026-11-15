@@ -45,9 +45,13 @@ export const MOMENTS: Moment[] = (bankDoc as { questions: Moment[] }).questions;
 export const BLOCK = 10;
 export const MAX_MOMENTS = MOMENTS.length; // 30
 
-/** A full ranking: option indices, most likely first. */
+/** A ranking: option indices, most likely first. When `n` is set, only the
+ *  first `n` are ordered and the rest are TIED ("the others are all the same",
+ *  Tom 2026-11-15); `o` still lists every option, the tied tail in index order.
+ *  No `n` = a full ranking, exactly as links made before ties. */
 export interface Ranked {
   o: number[];
+  n?: number;
 }
 /** A pick-one answer, from links made before ranking. */
 export interface Picked {
@@ -58,6 +62,19 @@ export interface Picked {
 export type Answer = null | 'x' | Ranked | Picked;
 
 export const isRanked = (a: Answer | undefined): a is Ranked => !!a && a !== 'x' && 'o' in a;
+
+/** Build a ranking from the options placed so far; anything not placed is tied
+ *  at the bottom. A tail of one is no tie, so that reads as a full ranking. */
+export function rankedOf(placed: number[], nOpts: number): Ranked {
+  const rest = Array.from({ length: nOpts }, (_, i) => i).filter((i) => !placed.includes(i));
+  if (rest.length <= 1) return { o: [...placed, ...rest] };
+  return { o: [...placed, ...rest], n: placed.length };
+}
+/** How many leading options are genuinely ordered. */
+export const orderedCount = (a: Ranked) => (a.n === undefined ? a.o.length : a.n);
+/** Same answer: same ordered lead, same tie point. */
+export const sameRanking = (a: Ranked, b: Ranked) =>
+  orderedCount(a) === orderedCount(b) && a.o.length === b.o.length && a.o.every((v, i) => v === b.o[i]);
 /** The option a person put first (or picked). */
 export function topOf(a: Answer | undefined): number | undefined {
   if (!a || a === 'x') return undefined;
@@ -87,8 +104,27 @@ const LEAST_WEIGHT = 0.5;
 export const RANK_COEFF = [1.0, 0.33, -0.33, -1.0];
 const RANK_NORM = 2.66; // sum of |RANK_COEFF|
 
-function rankSum(vals: number[]): number {
-  return vals.reduce((sum, v, pos) => sum + (RANK_COEFF[pos] ?? 0) * v, 0) / RANK_NORM;
+/**
+ * The coefficient each position carries. Tied positions share the AVERAGE of
+ * the coefficients of the places they jointly occupy (standard tied-rank
+ * averaging), so a tie is scored as no preference among the tied, never as a
+ * disguised order. The averaged coefficients still sum to zero, so a tied
+ * answer is centred by construction too: a random tapper's first pick is
+ * uniform, its push is (c0 − c_tail)·(w_top − mean), expectation zero.
+ */
+export function rankCoeffs(len: number, ordered = len): number[] {
+  const c = Array.from({ length: len }, (_, pos) => RANK_COEFF[pos] ?? 0);
+  if (ordered < len - 1) {
+    const tail = c.slice(ordered);
+    const avg = tail.reduce((a, b) => a + b, 0) / tail.length;
+    for (let pos = ordered; pos < len; pos++) c[pos] = avg;
+  }
+  return c;
+}
+
+function rankSum(vals: number[], ordered = vals.length): number {
+  const c = rankCoeffs(vals.length, ordered);
+  return vals.reduce((sum, v, pos) => sum + c[pos] * v, 0) / RANK_NORM;
 }
 
 function axisStats(m: Moment, k: AxisKey) {
@@ -105,8 +141,9 @@ export function pushOf(m: Moment, a: Answer, k: AxisKey): { d: number; r: number
   if (half === 0) return { d: 0, r: 0 };
   if ('o' in a) {
     // d: this ranking's push. r: the push of the ideal ranking for this axis,
-    // so a ranking that orders the axis perfectly reads as exactly ±1.
-    const d = rankSum(a.o.map((i) => ws[i] - mean));
+    // so a ranking that orders the axis perfectly reads as exactly ±1. A tied
+    // answer keeps the same r: it says less, so it pushes less.
+    const d = rankSum(a.o.map((i) => ws[i] - mean), orderedCount(a));
     const r = rankSum(ws.map((w) => w - mean).sort((x, y) => y - x));
     return { d, r };
   }
@@ -254,7 +291,12 @@ export function guessMoments(p: Person, n = 5): number[] {
    RANKED (2026-10-10): answers start with 'r' and take ONE char per moment —
    the ranking's index among the 24 orderings of four (0-9 a-n), 'x' exit,
    '.' not reached, and A-T for a legacy pick carried over (p*5 + l+1).
-   Ranked guesses also start with 'r': <moment index base36><ordering char>. */
+   Ranked guesses also start with 'r': <moment index base36><ordering char>.
+
+   TIED (2026-11-15): sixteen more one-char answers, from chars no older link
+   ever wrote — 'opqr' = first pick 0-3 then the other three tied; 'stuvwyzU
+   VWXYZ' and on = first and second picked (12 ordered pairs), last two tied.
+   Old links never contain these, so every old link decodes as before. */
 
 export interface State {
   me?: Person;
@@ -269,8 +311,12 @@ export interface State {
   t?: number;
 }
 
-/** A guess at someone's moment: their ranking as you think it went (a number = legacy pick). */
-export type Guess = number[] | number;
+/** A guess at someone's moment: their ranking as you think it went (a number =
+ *  legacy pick; a Ranked = a guess that ended "the others are all the same"). */
+export type Guess = number[] | number | Ranked;
+/** A guess read as an answer, so it scores and paints the same way. */
+export const guessAnswer = (g: Guess): Ranked | Picked =>
+  Array.isArray(g) ? { o: g } : typeof g === 'number' ? { p: g } : g;
 
 const PERM_CHARS = '0123456789abcdefghijklmn';
 const PERMS: number[][] = (() => {
@@ -285,6 +331,26 @@ const PERMS: number[][] = (() => {
 const permChar = (o: number[]) => PERM_CHARS[PERMS.findIndex((q) => q.every((v, i) => v === o[i]))] ?? '.';
 const charPerm = (c: string) => (PERM_CHARS.includes(c) ? PERMS[PERM_CHARS.indexOf(c)].slice() : undefined);
 const LEGACY = 'ABCDEFGHIJKLMNOPQRST';
+const TIE_CHARS = 'opqrstuvwyzUVWXY';
+/** [ordered lead] for each tie char, in TIE_CHARS order. */
+const TIE_LEADS: number[][] = (() => {
+  const out: number[][] = [0, 1, 2, 3].map((a) => [a]);
+  for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) if (a !== b) out.push([a, b]);
+  return out;
+})();
+const rankChar = (a: Ranked) => {
+  const n = orderedCount(a);
+  if (n >= a.o.length - 1) return permChar(a.o);
+  const lead = a.o.slice(0, n);
+  const j = TIE_LEADS.findIndex((l) => l.length === lead.length && l.every((v, i) => v === lead[i]));
+  return j >= 0 ? TIE_CHARS[j] : '.';
+};
+const charRank = (c: string): Ranked | undefined => {
+  const o = charPerm(c);
+  if (o) return { o };
+  const j = TIE_CHARS.indexOf(c);
+  return j >= 0 ? rankedOf(TIE_LEADS[j], 4) : undefined;
+};
 
 export function encodePerson(p: Person): string {
   const stated = p.stated ? p.stated.map((s) => (s === null || s === undefined ? '-' : String(s))).join('') : '';
@@ -293,7 +359,7 @@ export function encodePerson(p: Person): string {
       .map((a) =>
         a === null || a === undefined ? '.'
         : a === 'x' ? 'x'
-        : 'o' in a ? permChar(a.o)
+        : 'o' in a ? rankChar(a)
         : LEGACY[a.p * 5 + (a.l === undefined ? 0 : a.l + 1)],
       )
       .join('')
@@ -318,10 +384,10 @@ export function decodePerson(s: string): Person | undefined {
   }
   if (ans.startsWith('r')) {
     for (const c of ans.slice(1, 1 + MAX_MOMENTS)) {
-      const o = charPerm(c);
+      const o = charRank(c);
       const L = LEGACY.indexOf(c);
       if (c === 'x') p.answers.push('x');
-      else if (o) p.answers.push({ o });
+      else if (o) p.answers.push(o);
       else if (L >= 0) {
         const a: Picked = { p: Math.floor(L / 5) };
         if (L % 5 && L % 5 - 1 !== a.p) a.l = (L % 5) - 1;
@@ -345,11 +411,14 @@ export function decodePerson(s: string): Person | undefined {
 }
 
 function encodeGuesses(g: Record<number, Guess>): string {
-  const ranked = Object.values(g).some(Array.isArray);
+  const ranked = Object.values(g).some((v) => typeof v !== 'number');
   return (
     (ranked ? 'r' : '') +
     Object.entries(g)
-      .map(([i, v]) => Number(i).toString(36) + (Array.isArray(v) ? permChar(v) : ranked ? LEGACY[v * 5] : v))
+      .map(([i, v]) =>
+        Number(i).toString(36) +
+        (Array.isArray(v) ? permChar(v) : typeof v !== 'number' ? rankChar(v) : ranked ? LEGACY[v * 5] : v),
+      )
       .join('')
   );
 }
@@ -359,9 +428,9 @@ function decodeGuesses(s: string): Record<number, Guess> {
     for (let i = 1; i + 1 < s.length; i += 2) {
       const idx = parseInt(s[i], 36);
       if (!(idx < MAX_MOMENTS)) continue;
-      const o = charPerm(s[i + 1]);
+      const o = charRank(s[i + 1]);
       const L = LEGACY.indexOf(s[i + 1]);
-      if (o) out[idx] = o;
+      if (o) out[idx] = o.n === undefined ? o.o : o;
       else if (L >= 0) out[idx] = Math.floor(L / 5);
     }
     return out;

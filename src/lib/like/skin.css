@@ -275,7 +275,8 @@ button:disabled { cursor: default; }
 .ranked .badge { border: none; background: var(--ink); animation: pop 0.34s var(--spring); }
 .rtext { flex: 1; }
 .rank-done { margin-top: 2px; }
-.rank-done.show { animation: rise 0.36s var(--spring) both; }
+.rank-done.show, .rank-tie.show { animation: rise 0.36s var(--spring) both; }
+.rank-tie { margin-top: 2px; }
 @keyframes pop { from { transform: scale(0.4); } }
 
 /* ---------- the painting (after Mondrian) ---------- */

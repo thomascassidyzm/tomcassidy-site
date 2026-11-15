@@ -6,6 +6,32 @@ falsify it.
 
 ---
 
+## 2026-11-15 — /like: "The others are all the same" scores a real tie
+
+**Decided.** Once the first option is placed, and until the order is full, a
+moment (and a Guess-me card) offers "The others are all the same" (Tom's own
+words). It saves and advances like ✅ Next, with every unplaced option TIED.
+Forcing a full order invented preferences people don't hold; the tie is truer
+data. Tied positions share the average of the RANK_COEFF places they jointly
+occupy (standard tied-rank averaging: first-then-tie = +1, −⅓, −⅓, −⅓;
+two-then-tie = +1, +0.33, −0.665, −0.665). The averaged coefficients still sum
+to zero, so a tied answer is centred by construction and the random-tapper
+property holds (its push is (c₀ − c_tail)·(w_top − mean), expectation zero). The
+ideal-ranking normaliser `r` is unchanged, so a perfect full order still reads
+±1 and a tie, which says less, pushes less. Said-vs-picked evidence and topOf()
+need no special case: the first pick is still the single first pick.
+
+**Storage.** `Ranked` gains an optional `n` (how many leading options are
+ordered). Sixteen new one-char codes (`opqr` = first-then-tie, `stuvwyzUVWXY` =
+two-then-tie) use characters no older link ever wrote, so every old link — full
+rankings, legacy picks, old guesses — decodes as before.
+
+**Falsified if** tie-heavy players read flat on every axis while telling us they
+lean hard (the shared `r` would then be under-crediting the first pick), or if a
+link minted before today stops loading.
+
+---
+
 ## 2026-10-10 — /like ranks every option, and the cards start unranked
 
 **Decided.** Each moment is now a full ranking, most to least likely (Tom:

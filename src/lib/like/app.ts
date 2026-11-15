@@ -21,6 +21,10 @@ import {
   paintedAxes,
   topOf,
   isRanked,
+  rankedOf,
+  orderedCount,
+  sameRanking,
+  guessAnswer,
   type AxisKey,
   type Guess,
   type Person,
@@ -197,6 +201,10 @@ function rankSetup(key: string, qi: number, preset?: number[]) {
 
 const visible = () => [...ui.rank, ...ui.shown.filter((i) => !ui.rank.includes(i))];
 const rankFull = (qi: number) => ui.rank.length === MOMENTS[qi].opts.length;
+/* "The others are all the same" (Tom, 2026-11-15): once the first is placed and
+   until the order is full, the rest can be called a tie instead of forced into
+   an order nobody holds. It saves and advances, as ✅ does. */
+const canTie = (qi: number) => ui.rank.length > 0 && !rankFull(qi);
 
 function rankBlock(qi: number) {
   const m = MOMENTS[qi];
@@ -214,7 +222,8 @@ function rankBlock(qi: number) {
   return `<p class="rank-ends"><span>${COPY.rankTop}</span></p>
     <ol class="rank" aria-label="${COPY.rankAria}">${cards}</ol>
     <p class="rank-ends"><span>${COPY.rankBottom}</span></p>
-    <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>`;
+    <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>
+    <button class="pill quiet rank-tie${canTie(qi) ? ' show' : ''}" data-act="rankTie" ${canTie(qi) ? '' : 'hidden'}>${COPY.rankTie}</button>`;
 }
 
 function momentCard() {
@@ -223,7 +232,7 @@ function momentCard() {
   ui.qi = qi;
   const m = MOMENTS[qi];
   const a = me.answers[qi];
-  rankSetup('m' + qi, qi, isRanked(a) ? a.o : undefined);
+  rankSetup('m' + qi, qi, isRanked(a) ? a.o.slice(0, orderedCount(a)) : undefined);
   const blockStart = Math.floor(qi / BLOCK) * BLOCK;
   const done = answeredCount(me.answers.slice(blockStart, blockStart + BLOCK));
   const canBack = qi > blockStart;
@@ -292,6 +301,12 @@ function syncRank(qi: number, from?: Map<string, number>) {
   const full = rankFull(qi);
   done.hidden = !full;
   done.classList.toggle('show', full);
+  const tie = root().querySelector<HTMLButtonElement>('.rank-tie')!;
+  const tieOn = canTie(qi);
+  if (tie.hidden === tieOn) {
+    tie.hidden = !tieOn;
+    tie.classList.toggle('show', tieOn);
+  }
 }
 
 function rankTap(qi: number, v: number) {
@@ -443,9 +458,10 @@ function pickText(qi: number, p: number) {
   return esc(inline(MOMENTS[qi].opts[p].t));
 }
 
-const guessTop = (g: Guess) => (Array.isArray(g) ? g[0] : g);
+const guessTop = (g: Guess) => topOf(guessAnswer(g))!;
 function sameOrder(a: Person['answers'][number], g: Guess) {
-  return isRanked(a) && Array.isArray(g) && a.o.every((v, i) => v === g[i]);
+  const ga = guessAnswer(g);
+  return isRanked(a) && isRanked(ga) && sameRanking(a, ga);
 }
 
 function guessReveal() {
@@ -510,7 +526,7 @@ function guessPaintings(person: Person, guesses: Record<number, Guess>, leftCap:
   qis.forEach((qi) => {
     real[qi] = person.answers[qi];
     const g = guesses[qi];
-    guessed[qi] = Array.isArray(g) ? { o: g } : { p: g };
+    guessed[qi] = guessAnswer(g);
   });
   const svg = (a: Person['answers'], cap: string) =>
     `<figure>${toSvg(paint(readAll(a)), cap)}<figcaption>${esc(cap)}</figcaption></figure>`;
@@ -795,15 +811,17 @@ function onClick(e: Event) {
       break;
     case 'rank':
       return rankTap(currentQi()!, v);
-    case 'rankDone': {
+    case 'rankDone':
+    case 'rankTie': {
       const qi = currentQi()!;
-      if (!rankFull(qi)) return;
+      if (act === 'rankDone' ? !rankFull(qi) : !canTie(qi)) return;
+      const ans = rankedOf(ui.rank, MOMENTS[qi].opts.length);
       if (stage() === 'guess') {
-        st.gt = { ...(st.gt ?? {}), [qi]: ui.rank.slice() };
+        st.gt = { ...(st.gt ?? {}), [qi]: ans.n === undefined ? ans.o : ans };
         ui.rankFor = null;
         return advance(btn);
       }
-      me!.answers[qi] = { o: ui.rank.slice() };
+      me!.answers[qi] = ans;
       for (let i = 0; i < qi; i++) if (me!.answers[i] === undefined) me!.answers[i] = null;
       return advance(btn);
     }
