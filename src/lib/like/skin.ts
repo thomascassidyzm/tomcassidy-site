@@ -58,6 +58,8 @@ export const COPY = {
   rankAria: 'The options, in your order',
   rankDone: 'Next',
   rankTie: 'None of the rest are like me',
+  /** Guess-me: the subject is the person being guessed, by name when the link carries one. */
+  rankTieThem: (n?: string) => `None of the rest are like ${n ?? 'them'}`,
   youPutFirst: 'You put first',
   back: 'Back',
 
@@ -96,6 +98,9 @@ export const COPY = {
   theyPicked: (n: string) => `${n} put first`,
   wholeOrder: 'And the whole order, all the way down.',
   wholeOrderThem: 'The whole order, all the way down.',
+  /** Same order where the answer stopped early: the rest are not like the person, never "all the same". */
+  wholeOrderTied: (n: string) => `And the order, right down to the ones that aren’t like ${n}.`,
+  wholeOrderTiedThem: 'The order too, right down to the ones that aren’t like you.',
   nowYours: 'Now do yours',
 
   // the pair view

@@ -207,7 +207,7 @@ const rankFull = (qi: number) => ui.rank.length === MOMENTS[qi].opts.length;
    how many were tapped is kept in the save. It saves and advances, as ✅ does. */
 const canTie = (qi: number) => ui.rank.length > 0 && !rankFull(qi);
 
-function rankBlock(qi: number) {
+function rankBlock(qi: number, tieLabel: string = COPY.rankTie) {
   const m = MOMENTS[qi];
   const cards = visible()
     .map((i, pos) => {
@@ -224,7 +224,7 @@ function rankBlock(qi: number) {
     <ol class="rank" aria-label="${COPY.rankAria}">${cards}</ol>
     <p class="rank-ends"><span>${COPY.rankBottom}</span></p>
     <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>
-    <button class="pill quiet rank-tie${canTie(qi) ? ' show' : ''}" data-act="rankTie" ${canTie(qi) ? '' : 'hidden'}>${COPY.rankTie}</button>`;
+    <button class="pill quiet rank-tie${canTie(qi) ? ' show' : ''}" data-act="rankTie" ${canTie(qi) ? '' : 'hidden'}>${esc(tieLabel)}</button>`;
 }
 
 function momentCard() {
@@ -264,7 +264,7 @@ function guessCard() {
       <p class="label">${esc(COPY.guessPick(nameOf(them)))}</p>
       <p class="scenario">${esc(m.s)}</p>
       <p class="hint rank-hint">${COPY.rankHint}</p>
-      ${rankBlock(qi)}
+      ${rankBlock(qi, COPY.rankTieThem(them.name || undefined))}
     </article>
   </section>`;
 }
@@ -460,6 +460,8 @@ function pickText(qi: number, p: number) {
 }
 
 const guessTop = (g: Guess) => topOf(guessAnswer(g))!;
+/** The answer stopped early: its tail is "none of the rest", not an order. */
+const isTied = (a: Person['answers'][number]) => isRanked(a) && orderedCount(a) < a.o.length;
 function sameOrder(a: Person['answers'][number], g: Guess) {
   const ga = guessAnswer(g);
   return isRanked(a) && isRanked(ga) && sameRanking(a, ga);
@@ -482,7 +484,7 @@ function guessReveal() {
         <p class="gscene">${esc(MOMENTS[qi].s)}</p>
         ${
           right
-            ? `<p class="gline right"><span class="tag">${COPY.guessRight}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${COPY.wholeOrder}</p>` : ''}`
+            ? `<p class="gline right"><span class="tag">${COPY.guessRight}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${isTied(a) ? esc(COPY.wholeOrderTied(them.name || 'them')) : COPY.wholeOrder}</p>` : ''}`
             : `<p class="gline"><span class="tag">${COPY.guessSurprise}</span> ${esc(COPY.youThought(n))}: ${pickText(qi, gTop)}.</p>
                <p class="gline">${esc(COPY.theyPicked(n))}: ${pickText(qi, top)}.</p>`
         }
@@ -686,7 +688,7 @@ function result() {
           const gTop = guessTop(g);
           return `<li class="gitem"><p class="gscene">${esc(MOMENTS[qi].s)}</p>${
             top === gTop
-              ? `<p class="gline right"><span class="tag">${esc(COPY.othersRight(tn))}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${COPY.wholeOrderThem}</p>` : ''}`
+              ? `<p class="gline right"><span class="tag">${esc(COPY.othersRight(tn))}</span> ${pickText(qi, top)}</p>${sameOrder(a, g) ? `<p class="gline">${isTied(a) ? COPY.wholeOrderTiedThem : COPY.wholeOrderThem}</p>` : ''}`
               : `<p class="gline">${COPY.youWent}: ${pickText(qi, top)}.</p><p class="gline">${esc(COPY.othersLine(tn))}: ${pickText(qi, gTop)}.</p>`
           }</li>`;
         })
