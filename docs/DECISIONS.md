@@ -6,6 +6,16 @@ falsify it.
 
 ---
 
+## 2026-11-15 — /like wears Poster Club, in the site's colours
+
+**Decided.** Tom picked look B ("B is the most like me") and asked that it still match tomcassidy.co. The whole quiz now has Poster Club's structure: charcoal outlines, hard offset shadows, cards that squish, stamped number stickers, fields that pop in with axis stickers. Every fill comes from `tokens.css` by name: the four pigments mixed into the paper with `color-mix`, and rank colours following the slot order. Fraunces sets the title, the moment and the big result lines; Bricolage Grotesque sets the buttons, options, stickers and markers. Both are self-hosted in `src/lib/like/fonts` (OFL), and the Google Fonts link is gone from `/like`.
+
+**Taste calls.** (1) The Mondrian plate keeps red, blue and yellow rather than the site's pigments, because the key's copy names the fields by colour. (2) Newsreader and Plex Mono are dropped from the quiz, so a phone loads only two families.
+
+**Why.** Fonts loaded from Google fell back on the share-door preview (its security policy blocks them), which is what made earlier previews read as ordinary. Self-hosting makes the preview and the site render the same.
+
+**Falsified if** Tom reads it as "Poster Club bolted on" rather than his site, or the squish fights hold-and-drag on a real iPhone (the squish sits on `.rcard`, the drag on `.rslot`, so they never write the same transform).
+
 ## 2026-11-15 — /like: prediction page off behind a switch; the quiz in sections of ten
 
 **Decided.** (Tom, after playing the preview: "lose the prediction page for
