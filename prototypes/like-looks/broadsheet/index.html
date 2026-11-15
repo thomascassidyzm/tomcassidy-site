@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Look A · Broadsheet — What are you like, anyway?</title>
+<link rel="preload" href="fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fraunces-latin-full-italic.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: 'Fraunces'; src: url(fraunces-latin-full-normal.woff2) format('woff2'); font-weight: 100 900; font-style: normal; font-display: block; }
+@font-face { font-family: 'Fraunces'; src: url(fraunces-latin-full-italic.woff2) format('woff2'); font-weight: 100 900; font-style: italic; font-display: block; }
+@font-face { font-family: 'Instrument Sans'; src: url(instrument-sans-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Instrument Sans'; src: url(instrument-sans-latin-600-normal.woff2) format('woff2'); font-weight: 600; font-display: block; }
+:root {
+  --paper: #f3eee4; --ink: #17140f; --mute: #6f675a; --rule: #17140f; --hair: rgba(23,20,15,.18);
+  --accent: #d2401f;
+  --serif: 'Fraunces', Georgia, serif; --sans: 'Instrument Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: var(--paper); }
+body { margin: 0; color: var(--ink); font: 400 16px/1.45 var(--sans); background: var(--paper);
+  background-image: radial-gradient(rgba(23,20,15,.035) 1px, transparent 1px); background-size: 3px 3px; }
+.page { max-width: 460px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 18px) 22px 120px; }
+.mast { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--rule); padding-bottom: 8px;
+  font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+.mast em { font: italic 400 15px/1 var(--serif); letter-spacing: 0; text-transform: none; }
+.mast nav { display: flex; gap: 12px; }
+.mast nav button { all: unset; cursor: pointer; color: var(--mute); }
+.mast nav button.on { color: var(--accent); }
+[data-screen] { display: none; }
+[data-screen].on { display: block; animation: rise .55s cubic-bezier(.2,.7,.1,1); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.kicker { margin: 28px 0 6px; font: 600 11px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font: 300 44px/1.0 var(--serif); font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 1; letter-spacing: -.02em; }
+h1 i { font-weight: 400; }
+.dek { margin: 14px 0 0; font: italic 400 18px/1.35 var(--serif); color: var(--mute); font-variation-settings: 'opsz' 24; }
+.rule2 { border: 0; border-top: 1px solid var(--rule); margin: 22px 0 0; }
+/* guess */
+.scale { padding: 16px 0 14px; border-bottom: 1px solid var(--hair); }
+.scale h3 { margin: 0 0 10px; display: flex; justify-content: space-between; align-items: baseline;
+  font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+.scale h3 span { font: italic 400 13px/1 var(--serif); letter-spacing: 0; text-transform: none; color: var(--mute); }
+.track { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); height: 34px; }
+.track::before { content: ''; position: absolute; left: 10%; right: 10%; top: 50%; border-top: 1px solid var(--ink); }
+.track button { all: unset; cursor: pointer; position: relative; display: grid; place-items: center; }
+.track button::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink); transition: all .25s cubic-bezier(.3,1.6,.5,1); }
+.track button.on::after { width: 20px; height: 20px; background: var(--accent); border-color: var(--accent); }
+.ends { display: flex; justify-content: space-between; margin-top: 4px; font: italic 400 15px/1.2 var(--serif); }
+.ends span:last-child { text-align: right; }
+.cta { display: flex; gap: 18px; align-items: center; margin-top: 28px; }
+.btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; padding: 15px 22px; background: var(--ink); color: var(--paper);
+  font: 600 14px/1 var(--sans); letter-spacing: .04em; transition: transform .15s; }
+.btn:active { transform: translateY(1px); }
+.btn::after { content: '→'; font-family: var(--serif); font-size: 18px; }
+.btn:disabled { opacity: .25; }
+.link { all: unset; cursor: pointer; font: italic 400 15px/1.2 var(--serif); color: var(--mute); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+/* moment */
+.moment { margin: 18px 0 0; font: 400 27px/1.18 var(--serif); font-variation-settings: 'opsz' 72; letter-spacing: -.01em; }
+.moment::first-letter { float: left; font-size: 74px; line-height: .8; padding: 6px 8px 0 0; font-weight: 600; color: var(--accent); }
+.hint { margin: 14px 0 6px; font-size: 13px; color: var(--mute); }
+.ladder { display: flex; justify-content: space-between; margin-top: 14px; font: 600 10px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+.opts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.opts li { order: var(--n); }
+.opt { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 46px 1fr; gap: 8px; width: 100%; padding: 15px 0; border-bottom: 1px solid var(--hair);
+  font: 400 17px/1.35 var(--sans); transition: background .2s, color .2s; }
+.opt .n { font: italic 300 40px/0.8 var(--serif); font-variation-settings: 'opsz' 144; color: var(--accent); padding-top: 4px; }
+.opt:not(.picked):not(.tied) .n::before { content: '·'; color: var(--hair); font-style: normal; }
+.opt.picked { color: var(--ink); }
+.opt.picked .txt { font-family: var(--serif); font-size: 19px; font-variation-settings: 'opsz' 24; }
+.opt.tied { color: var(--mute); }
+.opt.tied .n { color: var(--mute); }
+.tie { all: unset; cursor: pointer; display: none; margin-top: 14px; font: italic 400 17px/1.2 var(--serif); border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
+.tie.show { display: inline-block; animation: rise .35s; }
+.tie::before { content: '= '; color: var(--accent); }
+/* result */
+.plate { margin: 22px 0 0; position: relative; }
+.plate svg { display: block; width: 100%; height: auto; background: #faf7f0; box-shadow: 0 1px 0 var(--hair), 0 18px 40px -24px rgba(23,20,15,.45); }
+.plate figcaption { display: flex; justify-content: space-between; margin-top: 10px; font: italic 400 14px/1.2 var(--serif); color: var(--mute); }
+.plate figcaption b { font: 600 10px/1.4 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--ink); }
+.plate .lbl { font: 600 3.1px var(--sans); letter-spacing: .3px; text-transform: uppercase; }
+.fld { opacity: 0; transition: opacity .9s; }
+body[data-at=result] .fld { opacity: 1; }
+h2 { margin: 34px 0 4px; font: 400 25px/1.1 var(--serif); font-variation-settings: 'opsz' 72; border-top: 2px solid var(--rule); padding-top: 12px; }
+.keys { list-style: none; margin: 8px 0 0; padding: 0; }
+.keys li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--hair); font: italic 400 16px/1.35 var(--serif); }
+.keys .sw { width: 14px; height: 14px; margin-top: 4px; border: 1px solid var(--ink); }
+.leans { margin: 6px 0 0; padding: 0; list-style: none; }
+.leans li { padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.leans .ax { font: 600 10px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+.leans .ln { margin-top: 5px; font: 400 19px/1.25 var(--serif); font-variation-settings: 'opsz' 36; }
+.leans .meter { position: relative; height: 1px; background: var(--ink); margin: 12px 8px 4px; }
+.leans .meter i { position: absolute; top: -5px; width: 11px; height: 11px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.leans .meter s { position: absolute; top: -4px; width: 9px; height: 9px; margin-left: -4px; border-radius: 50%; border: 1px solid var(--ink); background: var(--paper); text-decoration: none; }
+.leans .meter-k { display: flex; justify-content: space-between; font: italic 400 12px/1 var(--serif); color: var(--mute); }
+.pull { margin: 18px 0 0; padding: 16px 0 0; font: italic 300 23px/1.25 var(--serif); font-variation-settings: 'opsz' 72; border-top: 1px solid var(--hair); }
+.pull::before { content: '“'; color: var(--accent); font-size: 50px; line-height: 0; vertical-align: -18px; margin-right: 2px; }
+.gaps p { margin: 12px 0 0; font: 400 17px/1.4 var(--serif); }
+.gaps p b { display: block; font: 600 10px/1.6 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+.foot { margin-top: 30px; font-size: 12px; color: var(--mute); }
+.legend { display: flex; gap: 16px; margin-top: 8px; font: italic 400 13px/1 var(--serif); color: var(--mute); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 5px; }
+.legend s { display: inline-block; width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink); margin-right: 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast"><em>What are you like, anyway?</em>
+    <nav><button data-nav data-go="guess">I</button><button data-nav data-go="moment">II</button><button data-nav data-go="result">III</button></nav>
+  </header>
+
+  <section data-screen="guess">
+    <p class="kicker">Before the moments</p>
+    <h1>Where do you think you’ll <i>land?</i></h1>
+    <p class="dek">One tap per line. Your gut, not your best self.</p>
+    <hr class="rule2">
+    <div id="scales"></div>
+    <div class="cta"><button class="btn" data-go="moment">On to the moments</button></div>
+    <p style="margin-top:16px"><button class="link" data-go="moment">Skip — I’d rather not guess</button></p>
+  </section>
+
+  <section data-screen="moment">
+    <p class="kicker">Moment 1 of 10 · Most likely to least likely</p>
+    <p class="moment" id="moment"></p>
+    <p class="hint">Tap them in the order you’d do them. Hold and drag to change it; tap a numbered one to take it out.</p>
+    <div class="ladder"><span>↑ Most likely</span></div>
+    <ul class="opts" id="opts"></ul>
+    <div class="ladder"><span>↓ Least likely</span></div>
+    <button class="tie" data-act="tie">The others are all the same</button>
+    <div class="cta"><button class="btn" data-act="rankDone" disabled>Next</button><button class="link" data-go="guess">Back</button></div>
+  </section>
+
+  <section data-screen="result">
+    <p class="kicker">From 10 moments. More moments, sharper picture.</p>
+    <h1>Your portrait, <i>so far</i></h1>
+    <figure class="plate"><svg id="paint" viewBox="-2 -2 104 104" role="img" aria-label="A painting after Mondrian, drawn from your answers"></svg>
+      <figcaption><b>Plate I</b><span>after Piet Mondrian</span></figcaption></figure>
+    <p class="pull" id="pull"></p>
+    <h2>How to read your painting</h2>
+    <ul class="keys" id="keys"></ul>
+    <h2>Which way your picks lean</h2>
+    <div class="legend"><span><i></i>what you ranked</span><span><s></s>where you said</span></div>
+    <ul class="leans" id="leans"></ul>
+    <h2>Between what you said and what you picked</h2>
+    <div class="gaps" id="gaps"></div>
+    <div class="cta"><button class="btn" data-go="moment">Sharpen it — 10 more moments</button></div>
+    <p style="margin-top:16px"><button class="link" data-go="guess">Start again</button></p>
+    <p class="foot">Look A · Broadsheet — a sample with fixed answers. Not the live quiz.</p>
+  </section>
+</div>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const HUE = { red: '#c8372a', blue: '#203f86', yellow: '#e9b92d', white: '#faf7f0' };
+LOOK({ build(L) {
+  document.getElementById('scales').innerHTML = L.KEYS.map((k) => { const a = L.AXES[k]; return `
+    <div class="scale"><h3>${a.label}</h3>
+      <div class="track">${[1,2,3,4,5].map((v) => `<button data-dot="${k}:${v}" aria-label="${a.label} ${v} of 5"></button>`).join('')}</div>
+      <div class="ends"><span>${a.lo}</span><span>${a.hi}</span></div></div>`; }).join('');
+  document.getElementById('moment').textContent = L.MOMENT.s;
+  document.getElementById('opts').innerHTML = L.MOMENT.opts.map((t, i) => `<li><button class="opt" data-opt="${i}"><span class="n"></span><span class="txt">${t}</span></button></li>`).join('');
+  const lw = 1.6;
+  document.getElementById('paint').innerHTML = L.FIELDS.map((f, i) => `<rect class="fld" style="transition-delay:${i*0.12}s" x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" fill="${HUE[f.hue]}" stroke="#17140f" stroke-width="${lw}"/>`).join('') +
+    `<rect x="0" y="0" width="100" height="100" fill="none" stroke="#17140f" stroke-width="${lw}"/>` +
+    L.FIELDS.filter((f) => f.hue !== 'white').map((f) => `<text class="lbl" x="${f.x+2.4}" y="${f.y+f.h-2.6}" fill="${f.hue==='white'||f.hue==='yellow'?'#17140f':'#faf7f0'}">${L.AXES[f.k].label}</text>`).join('');
+  document.getElementById('pull').textContent = L.leans.find((l) => l.k === 'E').line;
+  document.getElementById('keys').innerHTML = L.keyLines.map((x) => `<li><span class="sw" style="background:${HUE[x.hue]}"></span>${x.line}</li>`).join('') +
+    `<li><span class="sw" style="background:${HUE.white}"></span>${L.COPY.paintWhite(L.whites)}</li><li><span class="sw" style="background:#17140f"></span>${L.COPY.paintLines(L.N_MOMENTS)}</li>`;
+  document.getElementById('leans').innerHTML = L.leans.map((l) => `<li><div class="ax">${l.label}</div><div class="ln">${l.line}</div>
+    <div class="meter"><s style="left:${(l.stated-1)*25}%"></s><i style="left:${50+l.lean*50}%"></i></div><div class="meter-k"><span>${l.lo}</span><span>${l.hi}</span></div></li>`).join('');
+  document.getElementById('gaps').innerHTML = L.gaps.map((g) => `<p><b>${g.label}</b>${g.line}</p>`).join('') + `<p><b>Matched</b>${L.COPY.matchedLine(L.matched)}</p>`;
+}});
+</script>
+</body>
+</html>
