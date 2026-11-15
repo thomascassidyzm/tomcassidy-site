@@ -57,7 +57,7 @@ export const COPY = {
   rankBottom: 'Least likely',
   rankAria: 'The options, in your order',
   rankDone: 'Next',
-  rankTie: 'The others are all the same',
+  rankTie: 'None of the rest are like me',
   youPutFirst: 'You put first',
   back: 'Back',
 

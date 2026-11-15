@@ -201,9 +201,10 @@ function rankSetup(key: string, qi: number, preset?: number[]) {
 
 const visible = () => [...ui.rank, ...ui.shown.filter((i) => !ui.rank.includes(i))];
 const rankFull = (qi: number) => ui.rank.length === MOMENTS[qi].opts.length;
-/* "The others are all the same" (Tom, 2026-11-15): once the first is placed and
-   until the order is full, the rest can be called a tie instead of forced into
-   an order nobody holds. It saves and advances, as ✅ does. */
+/* "None of the rest are like me" (Tom, 2026-11-15): once the most-like-me is
+   placed and until the order is full, the untapped options are NOT like the
+   person, tied at the bottom, instead of forced into an order nobody holds;
+   how many were tapped is kept in the save. It saves and advances, as ✅ does. */
 const canTie = (qi: number) => ui.rank.length > 0 && !rankFull(qi);
 
 function rankBlock(qi: number) {

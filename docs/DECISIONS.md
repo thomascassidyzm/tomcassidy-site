@@ -6,11 +6,16 @@ falsify it.
 
 ---
 
-## 2026-11-15 — /like: "The others are all the same" scores a real tie
+## 2026-11-15 — /like: "None of the rest are like me" scores a real tie
 
 **Decided.** Once the first option is placed, and until the order is full, a
-moment (and a Guess-me card) offers "The others are all the same" (Tom's own
-words). It saves and advances like ✅ Next, with every unplaced option TIED.
+moment (and a Guess-me card) offers "None of the rest are like me" (Tom's
+wording, 11:41Z, replacing the first cut "The others are all the same"): the
+tapped options are like you, in order; the untapped are not like you, tied at
+the bottom, and how many you tapped is kept in the save (`n`, 1 or 2). It
+saves and advances like ✅ Next. Three taps still auto-place the fourth (the
+existing tap behaviour, kept as is), so "three like me, one not" saves the same
+as a full order; it scores identically, only the count is not kept.
 Forcing a full order invented preferences people don't hold; the tie is truer
 data. Tied positions share the average of the RANK_COEFF places they jointly
 occupy (standard tied-rank averaging: first-then-tie = +1, −⅓, −⅓, −⅓;

@@ -46,7 +46,7 @@ export const BLOCK = 10;
 export const MAX_MOMENTS = MOMENTS.length; // 30
 
 /** A ranking: option indices, most likely first. When `n` is set, only the
- *  first `n` are ordered and the rest are TIED ("the others are all the same",
+ *  first `n` are ordered and the rest are TIED at the bottom ("none of the rest are like me",
  *  Tom 2026-11-15); `o` still lists every option, the tied tail in index order.
  *  No `n` = a full ranking, exactly as links made before ties. */
 export interface Ranked {
@@ -312,7 +312,7 @@ export interface State {
 }
 
 /** A guess at someone's moment: their ranking as you think it went (a number =
- *  legacy pick; a Ranked = a guess that ended "the others are all the same"). */
+ *  legacy pick; a Ranked = a guess that ended "none of the rest are like me"). */
 export type Guess = number[] | number | Ranked;
 /** A guess read as an answer, so it scores and paints the same way. */
 export const guessAnswer = (g: Guess): Ranked | Picked =>
