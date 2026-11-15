@@ -16,9 +16,11 @@ host-matched route first in `.vercel/output/config.json`: the root of
 wol.tomcassidy.co serves that file. A post-build step because the Vercel adapter
 writes its own route config and ignores `vercel.json` rewrites. Better than a
 domain redirect (the address stays wol.tomcassidy.co), simpler and cheaper than a
-second project or repo (one file, one build, nothing to keep in step). Falsified
-if the adapter starts honouring `vercel.json` rewrites (move the route there) or if
-a build stops printing `[host-routes] 1 host route(s) added`.
+second project or repo (one file, one build, nothing to keep in step). The same
+step serves /tom on that host: Tom’s own wheel (`public/wol/tom/index.html`, his
+scores published by his choice, view-only, also at tomcassidy.co/wol/tom/).
+Falsified if the adapter starts honouring `vercel.json` rewrites (move the routes
+there) or if a build stops printing `[host-routes] 2 host route(s) added`.
 
 ---
 

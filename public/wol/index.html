@@ -60,10 +60,12 @@ const R0 = 14, R = 130;                       // centre gap and rim radius in SV
 const N = AREAS.length, MAX = 10;
 const TINTS = Array.from({ length: 8 }, (_, i) => `var(--c${i})`);   // each area's colour, light and dark in the CSS
 
-let state = JSON.parse(localStorage.getItem(KEY) || "null") || {};
-state.names = (state.names && state.names.length === N) ? state.names : AREAS.slice();
-state.scores = (state.scores && state.scores.length === N) ? state.scores : Array(N).fill(0);
-const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "null") || {}; } catch (e) { state = {}; }   // bad stored data → an empty wheel
+if (typeof state !== "object" || Array.isArray(state)) state = {};
+state.names = (Array.isArray(state.names) && state.names.length === N && state.names.every(n => typeof n === "string")) ? state.names : AREAS.slice();
+state.scores = (Array.isArray(state.scores) && state.scores.length === N && state.scores.every(Number.isFinite)) ? state.scores : Array(N).fill(0);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 
 const ang = i => (-90 + i * 360 / N) * Math.PI / 180;
 const rad = s => R0 + (R - R0) * s / MAX;
