@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en-GB" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Look 2 · Paper — What are you like, anyway?</title>
+<link rel="stylesheet" href="site.css">
+<style>
+.page { max-width: 460px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 18px) 24px 110px; }
+.mast { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--text-primary); }
+.mast .t { font: italic 400 1.02rem/1 var(--font-display); }
+.mast nav { margin-left: auto; display: flex; gap: 6px; }
+.mast nav button { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 400 .7rem/1 var(--font-mono); color: var(--text-muted); border: 1px solid var(--border); transition: all .3s var(--ease); }
+.mast nav button.on { background: var(--text-primary); color: var(--void); border-color: var(--text-primary); }
+[data-screen].on > * { animation: ink .8s var(--ease) both; } [data-screen].on > *:nth-child(2) { animation-delay: .08s; } [data-screen].on > *:nth-child(3) { animation-delay: .16s; } [data-screen].on > *:nth-child(4) { animation-delay: .24s; }
+@keyframes ink { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } }
+.head { padding: 34px 0 8px; }
+h1 { margin: 16px 0 0; font: 340 3.1rem/.98 var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 50; letter-spacing: -.028em; }
+h1 em { font-style: italic; font-weight: 400; color: var(--established); }
+.dek { margin: 16px 0 0; font: italic 400 1.28rem/1.4 var(--font-body); color: var(--text-secondary); max-width: 26ch; }
+/* guess: numbered journal lines */
+.scale { display: grid; grid-template-columns: 44px 1fr; gap: 0 4px; padding: 18px 0 16px; border-top: 1px solid var(--hairline); }
+.scale:first-child { border-top: 2px solid var(--text-primary); margin-top: 22px; }
+.scale .no { grid-row: span 3; font: 300 2.2rem/1 var(--font-display); font-variation-settings: 'opsz' 144; color: var(--c); }
+.scale h3 { margin: 0 0 4px; font: 400 .7rem/1.4 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); }
+.pips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 6px 0 8px; }
+.pips button { all: unset; cursor: pointer; height: 34px; border-radius: 6px; background: color-mix(in srgb, var(--c) 7%, transparent); position: relative; transition: background .35s var(--ease); }
+.pips button::after { content: ''; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: color-mix(in srgb, var(--c) 45%, transparent); transition: all .4s var(--ease); }
+.pips button.on { background: var(--c); }
+.pips button.on::after { width: 8px; height: 8px; margin: -4px; background: var(--void); }
+.ends { display: flex; justify-content: space-between; gap: 10px; font: italic 400 1.02rem/1.25 var(--font-body); }
+.ends span:last-child { text-align: right; }
+.cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 30px; padding-top: 18px; border-top: 2px solid var(--text-primary); }
+.btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; font: 400 1.5rem/1 var(--font-display); font-variation-settings: 'opsz' 72; letter-spacing: -.01em; transition: gap .3s var(--ease), opacity .3s; }
+.btn::after { content: ''; width: 44px; height: 44px; border-radius: 50%; background: var(--established) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f3eee4' stroke-width='1.6'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center/20px no-repeat; }
+.btn:active { gap: 18px; } .btn:disabled { opacity: .25; }
+.quiet { all: unset; cursor: pointer; font: italic 400 1rem/1.2 var(--font-body); color: var(--text-muted); text-align: right; }
+/* moment */
+.moment { margin: 18px 0 0; font: 360 2.05rem/1.12 var(--font-display); font-variation-settings: 'opsz' 96, 'SOFT' 50; letter-spacing: -.018em; }
+.hint { margin: 16px 0 0; font: italic 400 1rem/1.45 var(--font-body); color: var(--text-muted); }
+.opts { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 2px solid var(--text-primary); }
+.opts li { order: var(--n); }
+.opt { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 50px 1fr; width: 100%; padding: 16px 0; border-bottom: 1px solid var(--hairline); font: 400 1.12rem/1.42 var(--font-body); transition: color .3s; }
+.opt .n { font: 300 2.3rem/.85 var(--font-display); font-variation-settings: 'opsz' 144; color: var(--established); }
+.opt:not(.picked):not(.tied) .n::before { content: ''; display: block; width: 22px; height: 22px; margin-top: 3px; border-radius: 50%; border: 1px solid var(--hairline); }
+.opt.picked { font-style: italic; }
+.opt.tied { color: var(--text-muted); } .opt.tied .n { color: var(--text-muted); }
+.tie { all: unset; cursor: pointer; display: none; margin-top: 16px; font: italic 400 1.15rem/1.2 var(--font-body); color: var(--open); }
+.tie.show { display: inline-block; animation: ink .5s var(--ease); }
+.tie::before { content: '='; display: inline-block; width: 50px; font: 300 1.9rem/0 var(--font-display); vertical-align: -6px; }
+.lad { display: flex; justify-content: space-between; margin-top: 18px; font: 400 .66rem/1 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); }
+/* result */
+.plate { margin: 24px -24px 0; padding: 22px 24px; background: var(--depth-1); }
+.plate svg { display: block; width: 100%; height: auto; box-shadow: var(--shadow-lift); }
+.plate .fld { opacity: 0; transition: opacity 1.1s var(--ease); } body[data-at=result] .plate .fld { opacity: 1; }
+.plate .cap { display: flex; justify-content: space-between; margin-top: 14px; font: 400 .66rem/1 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); }
+.plate .cap i { font: italic 400 1rem/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
+.sec { margin-top: 34px; }
+.sec h2 { margin: 10px 0 8px; font: 360 1.85rem/1.1 var(--font-display); font-variation-settings: 'opsz' 96; letter-spacing: -.015em; }
+.keys { list-style: none; margin: 0; padding: 0; }
+.keys li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--hairline); font: 400 1.06rem/1.45 var(--font-body); }
+.keys i { width: 14px; height: 14px; margin-top: 5px; border: 1px solid var(--text-primary); }
+.lean { display: grid; grid-template-columns: 1fr; padding: 14px 0; border-top: 1px solid var(--hairline); }
+.lean .ax { font: 400 .66rem/1 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--c); }
+.lean .ln { margin-top: 6px; font: 400 1.2rem/1.35 var(--font-body); }
+.lean .bar { position: relative; height: 16px; margin: 12px 0 4px; background: linear-gradient(90deg, transparent calc(50% - .5px), var(--hairline) calc(50% - .5px), var(--hairline) calc(50% + .5px), transparent calc(50% + .5px)); }
+.lean .bar::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted var(--text-muted); }
+.lean .bar b { position: absolute; top: 4px; height: 8px; background: var(--c); border-radius: 4px; }
+.lean .bar s { position: absolute; top: 3px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 1.5px solid var(--text-primary); background: var(--void); }
+.lean .mk { display: flex; justify-content: space-between; font: italic 400 .88rem/1 var(--font-body); color: var(--text-muted); }
+.legend { display: flex; gap: 16px; font: 400 .68rem/1 var(--font-mono); color: var(--text-muted); letter-spacing: .06em; }
+.legend span { display: flex; gap: 6px; align-items: center; } .legend b { width: 16px; height: 6px; border-radius: 3px; background: var(--established); } .legend s { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--text-primary); }
+.gap { padding: 14px 0 14px 16px; border-left: 3px solid var(--contested); margin-top: 14px; background: linear-gradient(90deg, color-mix(in srgb, var(--contested) 7%, transparent), transparent); }
+.gap b { display: block; font: 400 .66rem/1.6 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--contested); }
+.gap p { margin: 0; font: italic 400 1.12rem/1.4 var(--font-body); }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="mast">
+    <svg class="mark" viewBox="0 0 32 32" fill="none" stroke="var(--established)" stroke-width="1"><path d="M16 2 28 9v14L16 30 4 23V9Z"/><path d="M16 9 22.5 20h-13Z"/><path d="M16 2v7M28 9l-5.5 11M28 23l-5.5-3M16 30l-6.5-10 13 0M4 23l5.5-3M4 9l5.5 11"/></svg>
+    <span class="t">What are you like, anyway?</span>
+    <nav><button data-nav data-go="guess">1</button><button data-nav data-go="moment">2</button><button data-nav data-go="result">3</button></nav>
+  </header>
+  <section data-screen="guess">
+    <div class="head"><p class="kicker">Before the moments</p><h1>Where do you think you’ll <em>land?</em></h1><p class="dek">One tap per line. Your gut, not your best self.</p></div>
+    <div id="scales"></div>
+    <div class="cta"><button class="btn" data-go="moment">On to the moments</button><button class="quiet" data-go="moment">Skip — I’d rather not guess</button></div>
+  </section>
+  <section data-screen="moment">
+    <div class="head"><p class="kicker" style="color:var(--contested)">Most likely to least likely</p><p class="moment" id="moment"></p>
+      <p class="hint">Tap them in the order you’d do them. Hold and drag to change it; tap a numbered one to take it out.</p></div>
+    <div><div class="lad"><span>Most likely</span></div><ul class="opts" id="opts"></ul><div class="lad"><span>Least likely</span></div><button class="tie" data-act="tie">The others are all the same</button></div>
+    <div class="cta"><button class="btn" data-act="rankDone" disabled>Next</button><button class="quiet" data-go="guess">Back</button></div>
+  </section>
+  <section data-screen="result">
+    <div class="head"><p class="kicker">From 10 moments. More moments, sharper picture.</p><h1>Your portrait, <em>so far</em></h1></div>
+    <div class="plate"><svg id="paint" viewBox="-1 -1 102 102" role="img" aria-label="A painting after Mondrian, drawn from your answers"></svg><div class="cap"><span>How to read your painting ↓</span><i>after Piet Mondrian</i></div></div>
+    <div>
+      <div class="sec"><p class="kicker">How to read your painting</p><ul class="keys" id="keys" style="margin-top:12px"></ul></div>
+      <div class="sec"><p class="kicker" style="color:var(--derived)">Which way your picks lean</p><div class="legend"><span><b></b>what you ranked</span><span><s></s>where you said</span></div><div id="leans" style="margin-top:10px"></div></div>
+      <div class="sec"><p class="kicker" style="color:var(--contested)">Between what you said and what you picked</p><div id="gaps"></div></div>
+      <div class="cta"><button class="btn" data-go="moment">Sharpen it — 10 more moments</button></div>
+      <p style="margin-top:14px"><button class="quiet" data-go="guess">Start again</button></p>
+      <p class="foot">Look 2 · Paper — a moderate step from tomcassidy.co. A sample with fixed answers, not the live quiz.</p>
+    </div>
+  </section>
+</main>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const P = { O: 'var(--established)', C: 'var(--derived)', E: 'var(--contested)', A: 'var(--open)', N: 'var(--established)', R: 'var(--derived)' };
+const HUE = { red: '#b8402a', blue: '#2e5a86', yellow: '#dcaa35', white: '#faf6ee' };
+LOOK({ build(L) {
+  document.getElementById('scales').innerHTML = L.KEYS.map((k, i) => { const a = L.AXES[k]; return `<div class="scale" style="--c:${P[k]}"><span class="no">${i+1}</span><h3>${a.label}</h3>
+    <div class="pips">${[1,2,3,4,5].map((v) => `<button data-dot="${k}:${v}" aria-label="${a.label} ${v} of 5"></button>`).join('')}</div>
+    <div class="ends"><span>${a.lo}</span><span>${a.hi}</span></div></div>`; }).join('');
+  document.getElementById('moment').textContent = L.MOMENT.s;
+  document.getElementById('opts').innerHTML = L.MOMENT.opts.map((t, i) => `<li><button class="opt" data-opt="${i}"><span class="n"></span><span>${t}</span></button></li>`).join('');
+  document.getElementById('paint').innerHTML = L.FIELDS.map((f, i) => `<rect class="fld" style="transition-delay:${i*.12}s" x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" fill="${HUE[f.hue]}" stroke="#1c1a17" stroke-width="1.5"/>`).join('') + `<rect width="100" height="100" fill="none" stroke="#1c1a17" stroke-width="1.5"/>`;
+  document.getElementById('keys').innerHTML = L.keyLines.map((x) => `<li><i style="background:${HUE[x.hue]}"></i>${x.line}</li>`).join('') + `<li><i style="background:${HUE.white}"></i>${L.COPY.paintWhite(L.whites)}</li><li><i style="background:#1c1a17"></i>${L.COPY.paintLines(L.N_MOMENTS)}</li>`;
+  document.getElementById('leans').innerHTML = L.leans.map((l) => { const p = 50 + l.lean*50, lo = Math.min(50, p), hi = Math.max(50, p);
+    return `<div class="lean" style="--c:${P[l.k]}"><div class="ax">${l.label}</div><div class="ln">${l.line}</div><div class="bar"><b style="left:${lo}%;width:${Math.max(hi-lo,2)}%"></b><s style="left:${(l.stated-1)*25}%"></s></div><div class="mk"><span>${l.lo}</span><span>${l.hi}</span></div></div>`; }).join('');
+  document.getElementById('gaps').innerHTML = L.gaps.map((g) => `<div class="gap"><b>${g.label}</b><p>${g.line}</p></div>`).join('') + `<div class="gap" style="border-color:var(--derived);background:linear-gradient(90deg,color-mix(in srgb,var(--derived) 7%,transparent),transparent)"><b style="color:var(--derived)">Matched</b><p>${L.COPY.matchedLine(L.matched)}</p></div>`;
+}});
+</script>
+</body>
+</html>
