@@ -36,16 +36,14 @@
   .dot { fill:var(--dot); pointer-events:none; }
   .tick { fill:var(--dot); font-size:6.5px; pointer-events:none; }
   .lbl { fill:var(--fg); font-size:9px; font-weight:600; pointer-events:none; }
-  .hit { fill:transparent; cursor:pointer; }
+  svg.live, svg.live * { touch-action:none; cursor:pointer; }   /* dragging on the wheel never scrolls or zooms */
   .poly { fill:var(--coral); fill-opacity:.08; stroke:var(--coral); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
   ul { list-style:none; padding:0; margin:4px 0 0; display:grid; grid-template-columns:1fr 1fr; gap:4px; flex:none; }
-  li { display:flex; align-items:center; gap:2px; height:36px; padding:0 2px 0 5px; border-radius:8px; border:1px solid var(--line);
+  li { display:flex; align-items:center; gap:4px; height:26px; padding:0 8px 0 6px; border-radius:8px; border:1px solid var(--line);
     border-left:4px solid var(--row); background:color-mix(in srgb, var(--rowf) var(--rowmix), var(--card)); min-width:0; }
   .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; letter-spacing:-.1px; }
   .score { color:var(--row); min-width:18px; text-align:center; font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
-  button { font:inherit; color:var(--fg); background:transparent; border:1px solid var(--line); border-radius:7px;
-    min-width:32px; height:30px; padding:0; font-size:17px; line-height:1; }
-  button:active { background:var(--line); }
+  button { font:inherit; color:var(--fg); background:transparent; border:0; padding:0; }
   .foot { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:5px 4px 0; color:var(--muted); font-size:12px; flex:none; }
   .foot b { color:var(--fg); }
   .foot a { color:var(--muted); text-decoration:none; }
@@ -94,7 +92,31 @@ function wedge(i, a, b) {
   return `M${P(a, t - h)} L${P(b, t - h)} A${b} ${b} 0 0 1 ${P(b, t + h)} L${P(a, t + h)} A${a} ${a} 0 0 0 ${P(a, t - h)}Z`;
 }
 
-function setScore(i, s) { if (FIXED) return; state.scores[i] = Math.max(0, Math.min(MAX, s)); save(); render(); }
+let active = -1;   // the wedge under the finger: its current notch grows, a visual tick
+function setScore(i, s) { if (FIXED) return; s = Math.max(0, Math.min(MAX, s));
+  if (state.scores[i] === s && active === i) return; state.scores[i] = s; save(); render(); }
+
+// the whole wheel is the touch target: the angle picks the wedge, the radius picks the notch
+function wheelPoint(e) {
+  const svg = document.getElementById("wheel"), m = svg.getScreenCTM().inverse();
+  const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m);
+  const r = Math.hypot(q.x, q.y), deg = Math.atan2(q.y, q.x) * 180 / Math.PI + 90;
+  const i = ((Math.round(deg / (360 / N)) % N) + N) % N;
+  const s = r < 8 ? 0 : Math.max(1, Math.min(MAX, Math.round((r - R0) / ((R - R0) / MAX))));   // centre clears, first ring = 1
+  return { i, s, r };
+}
+if (!FIXED) {
+  const svg = document.getElementById("wheel"); svg.classList.add("live");
+  let lock = -1;   // a drag stays in the wedge it started in
+  svg.addEventListener("pointerdown", e => {
+    const p = wheelPoint(e); if (p.r > R + 22) return;
+    e.preventDefault(); lock = active = p.i; setScore(p.i, p.s); render();
+    try { svg.setPointerCapture(e.pointerId); } catch (err) {}   // keep the finger's moves even off the wheel
+  });
+  svg.addEventListener("pointermove", e => { if (lock < 0) return; const p = wheelPoint(e); setScore(lock, p.s); });
+  const end = () => { if (lock < 0) return; lock = active = -1; render(); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+}
 
 function render() {
   const svg = document.getElementById("wheel"); svg.innerHTML = "";
@@ -106,16 +128,10 @@ function render() {
   svg.appendChild(svgEl("circle", { class: "rim", r: R })); svg.appendChild(svgEl("circle", { class: "hub", r: 5 }));
   for (let s = 1; s < MAX; s++) { const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
   svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
-  // dots + hit areas (each score owns a ring band of its sector; 10 also takes the area just outside the rim)
-  const step = (R - R0) / MAX;
+  // notch dots; the current score is larger, and larger still under a finger
   for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
-    const [x, y] = pt(i, rad(s));
-    svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: s === state.scores[i] ? 4.6 : 2.6 }));
-    if (FIXED) continue;
-    const a = rad(s) - step / 2, b = s === MAX ? R + 20 : rad(s) + step / 2;
-    const hit = svgEl("path", { class: "hit", d: wedge(i, Math.max(a, 4), b) });
-    hit.addEventListener("click", () => setScore(i, state.scores[i] === s ? s - 1 : s));
-    svg.appendChild(hit);
+    const [x, y] = pt(i, rad(s)), on = s === state.scores[i];
+    svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: on ? (i === active ? 7.5 : 4.6) : 2.6 }));
   }
   // area names on arcs hugging the rim, so they never shrink the wheel
   const h = Math.PI / N;
@@ -130,16 +146,12 @@ function render() {
     const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4);   // layout can report 0 before paint
     if (est > room) txt.style.fontSize = (9 * room / est).toFixed(2) + "px";   // shrink a long name to its arc
   }
-  // compact grid
+  // compact readout
   const ul = document.getElementById("list"); ul.innerHTML = "";
   for (let i = 0; i < N; i++) {
     const li = document.createElement("li"); li.style.setProperty("--row", TINTS[i]); li.style.setProperty("--rowf", FILLS[i]);
-    li.innerHTML = `<span class="nm"></span>` + (FIXED ? "" : `<button aria-label="minus">−</button>`) +
-      `<span class="score">${state.scores[i] || "–"}</span>` + (FIXED ? "" : `<button aria-label="plus">+</button>`);
+    li.innerHTML = `<span class="nm"></span><span class="score">${state.scores[i] || "–"}</span>`;   // a readout: the wheel is the control
     li.querySelector(".nm").textContent = SHORT[i];
-    if (!FIXED) { const [minus, plus] = li.querySelectorAll("button");
-      minus.addEventListener("click", () => setScore(i, state.scores[i] - 1));
-      plus.addEventListener("click", () => setScore(i, state.scores[i] + 1)); }
     ul.appendChild(li);
   }
   const scored = state.scores.filter(s => s > 0);
