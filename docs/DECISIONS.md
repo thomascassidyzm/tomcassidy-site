@@ -6,6 +6,29 @@ falsify it.
 
 ---
 
+## 2026-11-15 — /like: opt-in collection (share box + IPIP), dev only
+
+**Decided.** Tom said Y to the collection exactly as `docs/like-theory/collection-design.md` sketches it, with one refinement. On every section result, below the lean lines, an UNTICKED box: "Add my answers to the room." Nothing leaves the phone until it is ticked: no prefetch, no count probe. A tick sends one anonymous row to `like_results` via `POST /api/like/result`. Only if that lands, and `GET /api/like/ipip-open` says fewer than `IPIP_TARGET` (350) people have done it, a second opt-in offers the 28 public-domain IPIP items (Mini-IPIP 20 + C6 Cautiousness 4 + E5 Excitement-seeking 4, quoted verbatim from ipip.ori.org in `src/lib/like/ipip.ts`; never O6 Liberalism), which go to `like_ipip` via `POST /api/like/ipip`. The refinement: the IPIP answers are their OWN row, joined to the result row only by `result_key`, a random uuid the browser makes at share time and holds in memory only (never the URL, storage, a cookie or another row), fresh for every share. Guess-me flows never send. Every failure is quiet: the box goes back to unticked with "nothing was sent", and the quiz carries on.
+
+The server builds each row from a whitelist (`src/lib/like-store.ts`): the name AND the stated self-placement are emptied out of the answer string (stored as `~~<answers>`), any other field a client sends is dropped, `host` and `day` (UTC date, no time) are stamped server-side, `sections` is derived from the answers, and the bank version must match `bank.json`. No serial id and no timestamp, so insert order and time can't match a row to a visit. Same-origin guard via `x-forwarded-host`/`host`, per-IP sliding-window limit in memory (IPs never logged), honest 503 when Supabase is unconfigured. Raw rows are never served; the gate answers yes/no only.
+
+The migration (`supabase/migrations/20261115_like_results.sql`) is additive and idempotent on the `coach_subscribers` pattern, RLS on with no policies. **Not applied: Tom applies it by hand in Supabase.** Until he does, a ticked box on a deployed build gets a 503/500 and fails quietly.
+
+Why: better (the room and the OCEAN check both need real players, and consent is the feature); simpler (two tables, three tiny routes, no accounts, no SDK); cheaper (no new service, nothing running between visits). Proved in headless WebKit against `tools/postgrest-standin` (a local PostgREST-shaped recorder, no database), never against the shared Supabase.
+
+**New copy, all placeholder for Tom to rewrite** (`ROOM` in `src/lib/like/skin.ts`; the first two are the design's draft, word for word):
+- "**Add my answers to the room.** No name, nothing that identifies you. It's how we'll be able to show where you stand among everyone who's played."
+- "Got three more minutes? Twenty-eight quick statements help us check our moments against the standard test."
+- "Adding…" · "Added. Thank you." · "Couldn't reach the room just now, so nothing was sent."
+- "Yes, go on" · "Not now"
+- IPIP page: "Twenty-eight statements" · "How well does each one describe you?" · "As you generally are now, not as you wish to be. One tap per line." · "Send these too" · "Not now"
+- Scale ends: "Very inaccurate" … "Very accurate" (the IPIP's own five labels, middle one shortened to "Neither")
+- After: "Those are in too. Thank you." · "Couldn't reach the room just now, so those weren't sent."
+
+**What would falsify it.** Any request to `/api/like/*` from a session that never ticked the box; a row carrying anything joinable across visits (a name, IP, UA, device id, a time finer than the day, a reused `result_key`); tick rates so low that 350 IPIP rows never arrive (then the second opt-in is the wrong ask, or in the wrong place); or the Mini-IPIP's alphas blurring the correlations enough that the 50-item set is needed (collection-design.md).
+
+---
+
 ## 2026-11-15 — /like wears Poster Club, in the site's colours
 
 **Decided.** Tom picked look B ("B is the most like me") and asked that it still match tomcassidy.co. The whole quiz now has Poster Club's structure: charcoal outlines, hard offset shadows, cards that squish, stamped number stickers, fields that pop in with axis stickers. Every fill comes from `tokens.css` by name: the four pigments mixed into the paper with `color-mix`, and rank colours following the slot order. Fraunces sets the title, the moment and the big result lines; Bricolage Grotesque sets the buttons, options, stickers and markers. Both are self-hosted in `src/lib/like/fonts` (OFL), and the Google Fonts link is gone from `/like`.
@@ -123,6 +146,9 @@ Simpler: no backend, no account, no localStorage. Cheaper: one static page.
 with what people recognise in themselves more often than the raw one did; or
 links growing past what messaging apps will carry (a 30-moment pair link is
 roughly 200 characters today).
+
+---
+
 ## 2026-11-15 — /like theory: OCEAN is a content relation, never a measurement
 
 **Decided.** The draft theory docs in `docs/like-theory/` relate every option of

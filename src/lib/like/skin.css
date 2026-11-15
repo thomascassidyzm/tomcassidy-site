@@ -595,4 +595,4 @@ button:disabled { cursor: default; }
 .optin input:active { transform: scale(0.85); }
 .optin input:disabled { cursor: default; }
 .room-offer { display: flex; flex-direction: column; gap: 10px; }
-.ipip-item { font-family: var(--f-serif); font-weight: 520; font-size: 1.05rem; }
+.ipip-item { font-family: var(--f-serif); font-weight: 560; font-size: 1.12rem; text-transform: none; letter-spacing: 0; line-height: 1.3; }
