@@ -1,0 +1,1 @@
+A local PostgREST-shaped stand-in (no database) that records `/api/like/*` inserts to a JSONL file, so the routes can be proved end to end without any real Supabase: `node tools/postgrest-standin/server.mjs <port> <rows.jsonl>`, then run the site with `SUPABASE_URL=http://127.0.0.1:<port>` and any non-empty `SUPABASE_SERVICE_ROLE_KEY`.
