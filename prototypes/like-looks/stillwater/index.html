@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Look C · Still Water — What are you like, anyway?</title>
+<link rel="preload" href="figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: 'Figtree'; src: url(figtree-latin-wght-normal.woff2) format('woff2'); font-weight: 300 900; font-display: block; }
+:root { --ink: #23283a; --mute: #6e7488; --glass: rgba(255,255,255,.62); --edge: rgba(255,255,255,.9); --deep: #3d4cc9; --f: 'Figtree', system-ui, sans-serif;
+  --ease: cubic-bezier(.22,.8,.24,1); }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: #eef0f6; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font: 400 16px/1.45 var(--f); background: linear-gradient(170deg, #eef1f8 0%, #f3eef4 45%, #f6efe8 100%); }
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sky i { position: absolute; border-radius: 50%; filter: blur(50px); opacity: .55; animation: drift 18s ease-in-out infinite alternate; }
+.sky i:nth-child(1) { width: 300px; height: 300px; left: -80px; top: -60px; background: #b9c8ff; }
+.sky i:nth-child(2) { width: 260px; height: 260px; right: -90px; top: 260px; background: #ffd0c2; animation-delay: -6s; }
+.sky i:nth-child(3) { width: 280px; height: 280px; left: 20px; bottom: -120px; background: #c7ecdf; animation-delay: -11s; }
+@keyframes drift { to { transform: translate(30px, 40px) scale(1.12); } }
+.page { position: relative; z-index: 1; max-width: 460px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 16px) 18px 120px; }
+.top { display: flex; justify-content: space-between; align-items: center; }
+.top .t { font: 600 14px/1 var(--f); color: var(--mute); }
+.dots { display: flex; gap: 4px; padding: 4px; border-radius: 99px; background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.dots button { all: unset; cursor: pointer; height: 8px; width: 8px; border-radius: 99px; background: #c9cddb; transition: width .4s var(--ease), background .4s; margin: 6px 3px; }
+.dots button.on { width: 26px; background: var(--deep); }
+[data-screen] { display: none; }
+[data-screen].on { display: block; }
+[data-screen].on > * { animation: fade .7s var(--ease) both; }
+[data-screen].on > *:nth-child(2) { animation-delay: .08s; } [data-screen].on > *:nth-child(3) { animation-delay: .16s; } [data-screen].on > *:nth-child(4) { animation-delay: .24s; }
+@keyframes fade { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.label { margin: 30px 0 8px; font: 600 13px/1 var(--f); color: var(--deep); letter-spacing: .02em; }
+h1 { margin: 0; font: 650 34px/1.08 var(--f); letter-spacing: -.025em; }
+.dek { margin: 10px 0 0; font: 400 17px/1.4 var(--f); color: var(--mute); }
+.card { margin-top: 14px; padding: 18px; border-radius: 26px; background: var(--glass); border: 1px solid var(--edge); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: 0 1px 1px rgba(35,40,58,.04), 0 12px 32px -14px rgba(35,40,58,.18); }
+/* scales */
+.scale + .scale { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(35,40,58,.07); }
+.scale h3 { margin: 0 0 12px; font: 600 15px/1 var(--f); }
+.track { position: relative; height: 40px; border-radius: 99px; background: rgba(35,40,58,.06); display: grid; grid-template-columns: repeat(5,1fr); }
+.track .thumb { position: absolute; top: 4px; left: 4px; width: calc(20% - 8px); height: 32px; border-radius: 99px; background: #fff; box-shadow: 0 4px 14px -4px rgba(61,76,201,.45), inset 0 0 0 1.5px rgba(61,76,201,.25);
+  transform: translateX(calc(var(--v, 2) * (100% + 8px))); opacity: 0; transition: transform .55s var(--ease), opacity .3s; }
+.track.set .thumb { opacity: 1; }
+.track button { all: unset; cursor: pointer; position: relative; z-index: 1; display: grid; place-items: center; }
+.track button::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #b5bacb; transition: all .4s var(--ease); }
+.track button.on::after { width: 10px; height: 10px; background: var(--deep); }
+.ends { display: flex; justify-content: space-between; margin-top: 8px; font: 500 14px/1.2 var(--f); color: var(--mute); }
+.ends span:last-child { text-align: right; }
+.cta { display: flex; flex-direction: column; gap: 6px; margin-top: 22px; }
+.btn { all: unset; cursor: pointer; text-align: center; padding: 17px; border-radius: 99px; background: var(--ink); color: #fff; font: 600 17px/1 var(--f);
+  box-shadow: 0 10px 24px -10px rgba(35,40,58,.6); transition: transform .3s var(--ease), opacity .3s; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .25; box-shadow: none; }
+.quiet { all: unset; cursor: pointer; text-align: center; padding: 12px; font: 500 15px/1 var(--f); color: var(--mute); }
+/* moment */
+.moment { margin: 0; font: 550 23px/1.3 var(--f); letter-spacing: -.012em; }
+.hint { margin: 14px 4px 0; font: 400 13px/1.4 var(--f); color: var(--mute); }
+.zone { margin: 18px 4px 8px; font: 600 12px/1 var(--f); color: var(--mute); letter-spacing: .04em; text-transform: uppercase; }
+.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.opts li { order: var(--n); }
+.opt { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; width: 100%; padding: 15px 16px; border-radius: 22px;
+  background: rgba(255,255,255,.5); border: 1px solid var(--edge); font: 450 16px/1.35 var(--f); color: var(--ink);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: background .5s var(--ease), box-shadow .5s var(--ease), transform .3s var(--ease); }
+.opt:active { transform: scale(.985); }
+.opt .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 650 15px/1 var(--f); color: #fff; background: transparent; box-shadow: inset 0 0 0 1.5px #c9cddb; transition: all .5s var(--ease); }
+.opt.picked { background: #fff; box-shadow: 0 10px 26px -14px rgba(61,76,201,.55); }
+.opt.picked .n { background: linear-gradient(140deg, #6a78ef, #3d4cc9); box-shadow: none; }
+.opts li:nth-child(n) .opt.picked .n { opacity: calc(1 - var(--n, 0) * .18); }
+.opt.tied { background: rgba(255,255,255,.3); color: var(--mute); }
+.opt.tied .n { color: var(--mute); box-shadow: inset 0 0 0 1.5px #c9cddb; }
+.tie { all: unset; cursor: pointer; display: block; text-align: center; max-height: 0; opacity: 0; overflow: hidden; margin-top: 0; padding: 0 16px; border-radius: 99px; border: 1px dashed #aab0c4;
+  font: 550 15px/1 var(--f); color: var(--deep); transition: all .5s var(--ease); }
+.tie.show { max-height: 60px; opacity: 1; margin-top: 12px; padding: 15px 16px; }
+/* result */
+.portrait { margin-top: 16px; padding: 14px; border-radius: 30px; }
+.portrait svg { display: block; width: 100%; height: auto; border-radius: 18px; }
+.portrait rect.fld { opacity: 0; transition: opacity 1.4s var(--ease); }
+body[data-at=result] .portrait rect.fld { opacity: 1; }
+.cap { display: flex; justify-content: space-between; margin: 10px 4px 0; font: 500 13px/1 var(--f); color: var(--mute); }
+h2 { margin: 0 0 10px; font: 650 19px/1.2 var(--f); letter-spacing: -.01em; }
+.keys { list-style: none; margin: 0; padding: 0; }
+.keys li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; font: 450 15px/1.4 var(--f); }
+.keys i { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 6px; }
+.lean { padding: 12px 0; } .lean + .lean { border-top: 1px solid rgba(35,40,58,.07); }
+.lean .ax { font: 600 12px/1 var(--f); color: var(--mute); }
+.lean .ln { margin-top: 5px; font: 550 16px/1.35 var(--f); }
+.gauge { position: relative; height: 8px; margin: 12px 0 6px; border-radius: 99px; background: rgba(35,40,58,.07); }
+.gauge b { position: absolute; top: -4px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: linear-gradient(140deg, #6a78ef, #3d4cc9); box-shadow: 0 0 0 6px rgba(61,76,201,.14); transition: left 1.2s var(--ease); }
+.gauge s { position: absolute; top: -2px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px #9aa2bb; text-decoration: none; }
+.gk { display: flex; justify-content: space-between; font: 450 12px/1 var(--f); color: var(--mute); }
+.legend { display: flex; gap: 14px; margin-bottom: 4px; font: 500 12px/1 var(--f); color: var(--mute); }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend b { width: 10px; height: 10px; border-radius: 50%; background: var(--deep); }
+.legend s { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 2px #9aa2bb; background: #fff; }
+.gap { padding: 12px 0; font: 450 15.5px/1.45 var(--f); } .gap + .gap { border-top: 1px solid rgba(35,40,58,.07); }
+.gap b { display: block; font: 600 12px/1.4 var(--f); color: var(--deep); }
+.foot { margin: 26px 4px 0; font: 400 12px/1.4 var(--f); color: var(--mute); }
+</style>
+</head>
+<body>
+<div class="sky"><i></i><i></i><i></i></div>
+<div class="page">
+  <header class="top"><span class="t">What are you like, anyway?</span>
+    <nav class="dots"><button data-nav data-go="guess" aria-label="Guess"></button><button data-nav data-go="moment" aria-label="Moment"></button><button data-nav data-go="result" aria-label="Result"></button></nav></header>
+
+  <section data-screen="guess">
+    <div><p class="label">Before the moments</p><h1>Where do you think you’ll land?</h1><p class="dek">One tap per line. Your gut, not your best self.</p></div>
+    <div class="card" id="scales"></div>
+    <div class="cta"><button class="btn" data-go="moment">On to the moments</button><button class="quiet" data-go="moment">Skip — I’d rather not guess</button></div>
+  </section>
+
+  <section data-screen="moment">
+    <div><p class="label">Most likely to least likely</p></div>
+    <div class="card"><p class="moment" id="moment"></p></div>
+    <div><p class="hint">Tap them in the order you’d do them. Hold and drag to change it; tap a numbered one to take it out.</p>
+      <p class="zone">Most likely</p><ul class="opts" id="opts"></ul><p class="zone">Least likely</p>
+      <button class="tie" data-act="tie">The others are all the same</button></div>
+    <div class="cta"><button class="btn" data-act="rankDone" disabled>Next</button><button class="quiet" data-go="guess">Back</button></div>
+  </section>
+
+  <section data-screen="result">
+    <div><p class="label">From 10 moments. More moments, sharper picture.</p><h1>Your portrait, so far</h1></div>
+    <div class="card portrait"><svg id="paint" viewBox="0 0 100 100" role="img" aria-label="A painting after Mondrian, drawn from your answers"></svg>
+      <div class="cap"><span></span><span>after Piet Mondrian</span></div></div>
+    <div class="card"><h2>How to read your painting</h2><ul class="keys" id="keys"></ul></div>
+    <div class="card"><h2>Which way your picks lean</h2><div class="legend"><span><b></b>what you ranked</span><span><s></s>where you said</span></div><div id="leans"></div></div>
+    <div class="card"><h2>Between what you said and what you picked</h2><div id="gaps"></div></div>
+    <div class="cta"><button class="btn" data-go="moment">Sharpen it — 10 more moments</button><button class="quiet" data-go="guess">Start again</button>
+      <p class="foot">Look C · Still Water — a sample with fixed answers. Not the live quiz.</p></div>
+  </section>
+</div>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const HUE = { red: '#f08a7a', blue: '#7f8ff0', yellow: '#f5cf7a', white: '#fbfaf7' };
+const GRAD = { red: ['#f6a596', '#e46f5f'], blue: ['#9ba8f6', '#5b69df'], yellow: ['#fadf9a', '#efbb55'], white: ['#ffffff', '#f1f0ec'] };
+// FLIP: remember where each option sat before a tap, glide it to where it lands.
+let before = null;
+document.addEventListener('click', (e) => { if (e.target.closest('[data-opt],[data-act=tie]')) before = new Map([...document.querySelectorAll('.opts li')].map((li) => [li, li.getBoundingClientRect().top])); }, true);
+LOOK({
+  onStated(k, v) { const t = document.querySelector(`[data-track="${k}"]`); t.classList.add('set'); t.style.setProperty('--v', v - 1); },
+  onRank() {
+    if (!before) return;
+    document.querySelectorAll('.opts li').forEach((li) => { const dy = before.get(li) - li.getBoundingClientRect().top; if (!dy) return;
+      li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.22,.8,.24,1)' }); });
+    before = null;
+  },
+  build(L) {
+  document.getElementById('scales').innerHTML = L.KEYS.map((k) => { const a = L.AXES[k]; return `
+    <div class="scale"><h3>${a.label}</h3>
+      <div class="track" data-track="${k}"><span class="thumb"></span>${[1,2,3,4,5].map((v) => `<button data-dot="${k}:${v}" aria-label="${a.label} ${v} of 5"></button>`).join('')}</div>
+      <div class="ends"><span>${a.lo}</span><span>${a.hi}</span></div></div>`; }).join('');
+  document.getElementById('moment').textContent = L.MOMENT.s;
+  document.getElementById('opts').innerHTML = L.MOMENT.opts.map((t, i) => `<li><button class="opt" data-opt="${i}"><span class="n"></span><span>${t}</span></button></li>`).join('');
+  const gap = 1.2, lw = .45;
+  document.getElementById('paint').innerHTML = `<defs>${Object.entries(GRAD).map(([h, [a, b]]) => `<linearGradient id="g-${h}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`).join('')}</defs>
+    <rect width="100" height="100" fill="#e6e7ee"/>` + L.FIELDS.map((f, i) =>
+    `<rect class="fld" style="transition-delay:${0.2 + i*0.18}s" x="${f.x + gap}" y="${f.y + gap}" width="${f.w - 2*gap}" height="${f.h - 2*gap}" rx="3.2" fill="url(#g-${f.hue})" stroke="#2b3046" stroke-opacity=".55" stroke-width="${lw}"/>`).join('');
+  document.getElementById('keys').innerHTML = L.keyLines.map((x) => `<li><i style="background:linear-gradient(140deg,${GRAD[x.hue][0]},${GRAD[x.hue][1]})"></i>${x.line}</li>`).join('') +
+    `<li><i style="background:#fbfaf7;box-shadow:inset 0 0 0 1px #cfd2de"></i>${L.COPY.paintWhite(L.whites)}</li><li><i style="background:#fff;box-shadow:inset 0 0 0 1.5px #2b3046"></i>${L.COPY.paintLines(L.N_MOMENTS)}</li>`;
+  document.getElementById('leans').innerHTML = L.leans.map((l) => `<div class="lean"><div class="ax">${l.label}</div><div class="ln">${l.line}</div>
+    <div class="gauge"><s style="left:${(l.stated-1)*25}%"></s><b style="left:${50+l.lean*50}%"></b></div><div class="gk"><span>${l.lo}</span><span>${l.hi}</span></div></div>`).join('');
+  document.getElementById('gaps').innerHTML = L.gaps.map((g) => `<div class="gap"><b>${g.label}</b>${g.line}</div>`).join('') + `<div class="gap"><b>Matched</b>${L.COPY.matchedLine(L.matched)}</div>`;
+}});
+</script>
+</body>
+</html>
