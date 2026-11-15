@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Wheel of life</title>
+<style>
+  :root { --bg:#fafaf7; --fg:#1d1d1f; --muted:#6e6e73; --line:#d8d8d2; --card:#fff; --accent:#2f6fde;
+    --c0:#7c7314; --c1:#4f7a34; --c2:#8a6a14; --c3:#3d7533; --c4:#b04f34; --c5:#6c4d8c; --c6:#6b5f3a; --c7:#2c6c93;
+    --f0:#E6E3A1; --f1:#CFE0BF; --f2:#E8D79A; --f3:#A9C99A; --f4:#EDB7A3; --f5:#C3B1D1; --f6:#B7AE8E; --f7:#B5D3E6;
+    --edge:#8f7a63; --dot:#76624c; --coral:#df6a52; --wedge-op:1; --rowmix:42%; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16181c; --fg:#ececec; --muted:#9a9aa0; --line:#33363d; --card:#1f2228; --accent:#6ea2ff;
+      --c0:#E6E3A1; --c1:#CFE0BF; --c2:#E8D79A; --c3:#A9C99A; --c4:#EDB7A3; --c5:#C3B1D1; --c6:#B7AE8E; --c7:#B5D3E6;
+      --edge:#a08d76; --dot:#cdbb9f; --coral:#ff8a70; --wedge-op:.3; --rowmix:16%; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  /* no double-tap zoom on iPhone; scroll and pinch still work */
+  html, body, svg, svg *, button, li, a, .foot { touch-action:manipulation; }
+  body, svg, button, li { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  html { height:100%; background:var(--bg); }
+  /* one screen: the wheel takes whatever height the title, grid and foot leave */
+  body { margin:0 auto; max-width:560px; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
+    padding:max(6px, env(safe-area-inset-top)) 8px max(6px, env(safe-area-inset-bottom));
+    background:var(--bg); color:var(--fg); font:13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  h1 { font-size:15px; font-weight:650; margin:0 4px; flex:none; }
+  .hint { margin:2px 4px 0; font-size:12px; color:var(--muted); flex:none; }
+  .hint.anim { transition:opacity .6s; }   /* fade only after the first draw, so a return visit never flashes it */
+  .hint.gone { opacity:0; }
+  h1 small { font-weight:400; color:var(--muted); font-size:13px; margin-left:6px; }
+  /* title at the top; the wheel and its bottom line centred together in the rest, spare height split evenly */
+  .stage { flex:1 1 0; min-height:0; display:flex; flex-direction:column; justify-content:center; }
+  svg { flex:0 1 auto; min-height:0; width:100%; aspect-ratio:1 / 1; display:block; }
+  .wedge { fill-opacity:var(--wedge-op); }
+  .ring { fill:none; stroke:var(--edge); stroke-width:.8; stroke-dasharray:2.2 2.6; stroke-opacity:.75; }
+  .edge { stroke:var(--edge); stroke-width:1.5; }
+  .rim { fill:none; stroke:var(--edge); stroke-width:2.2; }
+  .hub { fill:var(--dot); }
+  .spoke { stroke:var(--dot); stroke-width:1; }
+  .dot { fill:var(--dot); pointer-events:none; }
+  .tick { fill:var(--dot); font-size:6.5px; pointer-events:none; }
+  .lbl { fill:var(--fg); font-size:9px; font-weight:600; pointer-events:none; }
+  svg.live, svg.live * { touch-action:none; cursor:pointer; }   /* dragging on the wheel never scrolls or zooms */
+  .poly { fill:var(--coral); fill-opacity:.08; stroke:var(--coral); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
+  .badge { stroke-width:1.6; pointer-events:none; }
+  .badge-t { font-size:9.5px; font-weight:800; text-anchor:middle; dominant-baseline:central; pointer-events:none; }
+  button { font:inherit; color:var(--fg); background:transparent; border:0; padding:0; }
+  .foot { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:5px 4px 0; color:var(--muted); font-size:12px; flex:none; }
+  .foot b { color:var(--fg); }
+  .foot a { color:var(--muted); text-decoration:none; }
+  .foot .act { color:var(--accent); font-weight:600; border:0; height:auto; min-width:0; font-size:12px; padding:6px 2px; }
+</style>
+</head>
+<body>
+<h1 id="title">Wheel of life</h1>
+<p id="hint" class="hint">Drag the dots to score each area</p>
+<main class="stage">
+<svg id="wheel" viewBox="-159 -159 318 318" aria-label="Wheel of life"></svg>
+<div class="foot"><span>Average <b id="avg">–</b></span><span id="act"></span><a href="https://tomcassidy.co">tomcassidy.co</a></div>
+</main>
+
+<script>
+// ---- the eight areas, clockwise from the top (short names for the grid) ----
+const AREAS = ["Business / Career", "Finances", "Health", "Family and friends",
+  "Romance", "Personal development", "Fun and recreation", "Contribution to society"];
+const SHORT = ["Career", "Finances", "Health", "Family", "Romance", "Personal dev", "Fun", "Contribution"];
+// FIXED: null = the visitor's own wheel (stored on their phone); an object = a view-only published wheel
+const FIXED = null;
+const KEY = "tomcassidy-wol-v1";
+const R0 = 14, R = 130;                       // centre gap and rim radius in SVG units
+const N = AREAS.length, MAX = 10;
+const TINTS = Array.from({ length: N }, (_, i) => `var(--c${i})`);   // ink: text, row edge
+const FILLS = Array.from({ length: N }, (_, i) => `var(--f${i})`);   // the wedge pastels
+
+let state = {};
+if (FIXED) state = { scores: FIXED.scores.slice() };
+else {
+  try { state = JSON.parse(localStorage.getItem(KEY) || "null") || {}; } catch (e) { state = {}; }   // bad stored data → an empty wheel
+  if (typeof state !== "object" || Array.isArray(state)) state = {};
+}
+state.names = AREAS.slice();
+state.scores = (Array.isArray(state.scores) && state.scores.length === N && state.scores.every(Number.isFinite)) ? state.scores : Array(N).fill(0);
+const save = () => { if (FIXED) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+const ang = i => (-90 + i * 360 / N) * Math.PI / 180;
+const rad = s => R0 + (R - R0) * s / MAX;
+const pt = (i, r) => [Math.cos(ang(i)) * r, Math.sin(ang(i)) * r];
+const svgEl = (tag, attrs) => { const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const P = (r, th) => (Math.cos(th) * r).toFixed(1) + " " + (Math.sin(th) * r).toFixed(1);
+
+// sector wedge for spoke i between radii a and b (half a sector each side)
+function wedge(i, a, b) {
+  const h = Math.PI / N, t = ang(i);
+  return `M${P(a, t - h)} L${P(b, t - h)} A${b} ${b} 0 0 1 ${P(b, t + h)} L${P(a, t + h)} A${a} ${a} 0 0 0 ${P(a, t - h)}Z`;
+}
+
+let active = -1;   // the wedge under the finger: its current notch grows, a visual tick
+function setScore(i, s) { if (FIXED) return; s = Math.max(0, Math.min(MAX, s));
+  if (state.scores[i] === s && active === i) return; state.scores[i] = s; save(); render(); }
+
+// the whole wheel is the touch target: the angle picks the wedge, the radius picks the notch
+function wheelPoint(e) {
+  const svg = document.getElementById("wheel"), m = svg.getScreenCTM().inverse();
+  const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m);
+  const r = Math.hypot(q.x, q.y), deg = Math.atan2(q.y, q.x) * 180 / Math.PI + 90;
+  const i = ((Math.round(deg / (360 / N)) % N) + N) % N;
+  const s = r < 8 ? 0 : Math.max(1, Math.min(MAX, Math.round((r - R0) / ((R - R0) / MAX))));   // centre clears, first ring = 1
+  return { i, s, r };
+}
+if (!FIXED) {
+  const svg = document.getElementById("wheel"); svg.classList.add("live");
+  let lock = -1;   // a drag stays in the wedge it started in
+  svg.addEventListener("pointerdown", e => {
+    const p = wheelPoint(e); if (p.r > R + 26) return;
+    e.preventDefault(); lock = active = p.i; setScore(p.i, p.s); render();
+    try { svg.setPointerCapture(e.pointerId); } catch (err) {}   // keep the finger's moves even off the wheel
+  });
+  svg.addEventListener("pointermove", e => { if (lock < 0) return; const p = wheelPoint(e); setScore(lock, p.s); });
+  const end = () => { if (lock < 0) return; lock = active = -1; render(); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+}
+
+function render() {
+  const svg = document.getElementById("wheel"); svg.innerHTML = "";
+  // spare height on a tall phone grows the names and badges a little rather than leaving a void
+  const stage = svg.parentElement.getBoundingClientRect(), w = svg.getBoundingClientRect().width;
+  const K = w ? Math.max(1, Math.min(1.2, 1 + (stage.height - w - 40) / w * 0.6)) : 1;
+  for (let i = 0; i < N; i++) svg.appendChild(svgEl("path", { class: "wedge", d: wedge(i, 0, R), style: `fill:${FILLS[i]}` }));
+  for (let s = 1; s < MAX; s++) svg.appendChild(svgEl("circle", { class: "ring", r: rad(s) }));   // dashed rings inside the wedges
+  for (let i = 0; i < N; i++) { const [x, y] = pt(i, R); svg.appendChild(svgEl("line", { class: "spoke", x1: 0, y1: 0, x2: x, y2: y })); }
+  // solid boundaries between wedges, the rim, the hub, and 1-9 up the top spoke (the rim is 10)
+  for (let i = 0; i < N; i++) { const t = ang(i) + Math.PI / N; svg.appendChild(svgEl("line", { class: "edge", x1: 0, y1: 0, x2: Math.cos(t) * R, y2: Math.sin(t) * R })); }
+  svg.appendChild(svgEl("circle", { class: "rim", r: R })); svg.appendChild(svgEl("circle", { class: "hub", r: 5 }));
+  const s0 = state.scores[0];   // never draw a ring number under or beside the top badge
+  for (let s = 1; s < MAX; s++) { if (s0 && Math.abs(s - s0) <= 1) continue; const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
+  svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
+  // notch dots, then each area's score as a badge at its point on the shape (larger under a finger)
+  for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
+    if (s === state.scores[i]) continue;
+    const [x, y] = pt(i, rad(s)); svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: 2.6 }));
+  }
+  for (let i = 0; i < N; i++) { const s = state.scores[i]; if (!s) continue;
+    const [x, y] = pt(i, rad(s)), big = i === active;
+    svg.appendChild(svgEl("circle", { class: "badge", cx: x, cy: y, r: (big ? 11 : 8) * K, style: `fill:${FILLS[i]}; stroke:${TINTS[i]}` }));
+    const t = svgEl("text", { class: "badge-t", x, y: y + .5, style: `fill:${TINTS[i]}; font-size:${((big ? 13 : 9.5) * K).toFixed(2)}px` }); t.textContent = s; svg.appendChild(t);
+  }
+  // area names on arcs hugging the rim, so they never shrink the wheel
+  const h = Math.PI / N;
+  for (let i = 0; i < N; i++) {
+    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 10 + 9 * K : R + 3 + 8 * K;   // clear of a 10 badge on the rim
+    const d = below ? `M${P(r, t + h)} A${r} ${r} 0 0 0 ${P(r, t - h)}` : `M${P(r, t - h)} A${r} ${r} 0 0 1 ${P(r, t + h)}`;
+    svg.appendChild(svgEl("path", { id: "lp" + i, d, fill: "none" }));
+    const txt = svgEl("text", { class: "lbl", "text-anchor": "middle", style: `font-size:${(9 * K).toFixed(2)}px` });
+    const tp = svgEl("textPath", { href: "#lp" + i, startOffset: "50%" }); tp.textContent = state.names[i];
+    txt.appendChild(tp); svg.appendChild(txt);
+    const room = 2 * h * r * 0.94;
+    const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4 * K);   // layout can report 0 before paint
+    if (est > room) txt.style.fontSize = (9 * K * room / est).toFixed(2) + "px";   // shrink a long name to its arc
+  }
+  const scored = state.scores.filter(s => s > 0);
+  document.getElementById("hint").classList.toggle("gone", scored.length > 0);   // fades once anything is scored; back after Reset
+  document.getElementById("avg").textContent = scored.length ? (scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(1) : "–";
+}
+
+if (FIXED) {
+  document.title = FIXED.title; document.getElementById("hint").hidden = true;
+  document.getElementById("title").innerHTML = "";
+  document.getElementById("title").append(FIXED.title, Object.assign(document.createElement("small"), { textContent: FIXED.date }));
+  document.getElementById("act").innerHTML = `<a class="act" href="/wol/">Make your own</a>`;
+} else {
+  document.getElementById("act").innerHTML = `<button class="act" id="reset">Reset</button>`;
+  document.getElementById("reset").addEventListener("click", () => {
+    if (confirm("Clear all scores?")) { state.scores = Array(N).fill(0); save(); render(); }
+  });
+}
+render();
+addEventListener("resize", () => render());   // Safari's bars come and go
+requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("hint").classList.add("anim")));
+</script>
+</body>
+</html>

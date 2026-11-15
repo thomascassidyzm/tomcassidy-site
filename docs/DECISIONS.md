@@ -123,6 +123,60 @@ Simpler: no backend, no account, no localStorage. Cheaper: one static page.
 with what people recognise in themselves more often than the raw one did; or
 links growing past what messaging apps will carry (a 30-moment pair link is
 roughly 200 characters today).
+## 2026-11-15 — /like theory: OCEAN is a content relation, never a measurement
+
+**Decided.** The draft theory docs in `docs/like-theory/` relate every option of
+the 30 moments to IPIP-NEO items with the words "shares ground with" only, and
+treat each relation as a prediction to test (collection-design.md), not a claim
+the quiz measures OCEAN. No room placement is shown until our own anonymous
+players build the room, per depth, as a band.
+
+**Why.** Better: honest, and it gives Tom concrete OCEAN language without
+over-claiming. Simpler: one reading of the words, no psychometric machinery.
+Cheaper: no build; the measured check comes free with the room collection.
+
+**Falsified if** a collected correlation for C, E or N comes in under about .3
+at ~350 people, or a lean tracks another IPIP domain better than its own.
+
+---
+
+## 2026-11-15 — The wheel of life is two static files at /wol/
+
+`public/wol/index.html` (a visitor's own wheel, opens empty, scores in their
+localStorage under `tomcassidy-wol-v1`) and `public/wol/tom/index.html` (Tom's
+wheel, published by his choice, view-only; the same file with one `FIXED` line
+changed). Self-contained, no external requests, one iPhone screen at 100dvh. A
+wol.tomcassidy.co host route was tried the same morning and removed when Tom
+dropped the subdomain: it needed a post-build script because the Vercel adapter
+ignores `vercel.json` rewrites, and that weight is not worth carrying for an
+address nobody needs. Falsified if the page needs data or sign-in, at which
+point it becomes an Astro page.
+
+---
+
+## 2026-11-13 — The SmartWisdom notemap as a static, unlisted copy at /sw/
+
+Tom asked for the Kemp notemap on tomcassidy.co/sw/ so it opens on his iPad and
+for Jonathan Kemp with no tailnet, cookie or token. `public/sw/` is a plain
+static copy of notemap `public/designs/best` (text seated on the template
+routes, #698·AH lineage), opening on `set=kemp&theme=light`. Every asset is
+served from this site; nothing calls another host. It is unlisted: noindex on
+both pages, `Disallow: /sw/` in `robots.txt`, no nav link, not in the
+`/writing` index (that is built from the essays collection only), and the site
+has no sitemap. The pocket-coach service worker (`/sw.js`) is scoped to
+`/reasonable-eating` and cannot touch `/sw/`.
+
+Better × simpler × cheaper: static files beat an Astro route (no code, no
+function), and the copy is made by notemap's own export tool rather than by hand.
+The design has no audio: notemap `designs/best` plays the drawing, not sound.
+
+**Refresh** (from a notemap checkout carrying `--to`, branch
+`cs/768-share-export-to-dir` until merged):
+`tools/share-export.sh --to <this repo>/public/sw "/sw/designs/best/index.html?set=kemp&theme=light"`,
+then commit and push `public/sw/`.
+
+**What would falsify it.** `/sw/` showing in a search engine, or a design newer
+than the copy reaching Jonathan only by the tailnet link.
 
 ---
 
