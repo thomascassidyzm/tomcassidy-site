@@ -12,6 +12,7 @@ import {
   answeredCount,
   compareAxis,
   decodeState,
+  encodePerson,
   encodeState,
   gaps,
   guessMoments,
@@ -31,8 +32,10 @@ import {
   type Side,
   type State,
 } from './engine';
-import { AXES, COPY, TRY, gapLine, inline, leanLine, paintFieldLine, tryLabel } from './skin';
+import { AXES, COPY, ROOM, TRY, gapLine, inline, leanLine, paintFieldLine, tryLabel } from './skin';
 import { paint, toSvg } from './painting';
+import { ITEMS, ITEM_COUNT, ITEM_SET, SCALE_LABELS, SHOWN_ORDER } from './ipip';
+import bankDoc from './bank.json';
 
 /* The "Where do you think you'll land?" prediction page (Tom, 2026-11-15:
    "let's lose the prediction page for now"). Off: the flow skips it and the
@@ -66,6 +69,16 @@ const ui: {
   /** The worked example is due before the first real card (never saved). */
   example: boolean;
   exStep: number;
+  /** The room opt-in, per section result (1-3): nothing is ever sent without a tick. */
+  room: Record<number, 'sending' | 'sent' | 'failed'>;
+  /** The IPIP offer: shown once, after a ticked share succeeded and the gate said open. */
+  ipip: 'none' | 'offer' | 'open' | 'sent' | 'failed' | 'declined';
+  /** The random key joining the IPIP row to its result row. MEMORY ONLY: never
+      in the URL, storage, a cookie or any other row; fresh for every share. */
+  ipipKey: string | null;
+  ipipResp: (number | null)[];
+  /** The answers they had before "Start again", stripped — sent as prev_answers if they share. */
+  prev: string | null;
 } = {
   started: false,
   qi: null,
@@ -81,6 +94,11 @@ const ui: {
   animated: false,
   example: false,
   exStep: 0,
+  room: {},
+  ipip: 'none',
+  ipipKey: null,
+  ipipResp: Array(ITEM_COUNT).fill(null),
+  prev: null,
 };
 
 const root = () => document.getElementById('like-app')!;
@@ -99,9 +117,10 @@ function linkFor(s: State) {
 }
 
 /* ================= STAGE ================= */
-type Stage = 'front' | 'guessFront' | 'example' | 'guess' | 'guessReveal' | 'stated' | 'moment' | 'result';
+type Stage = 'front' | 'guessFront' | 'example' | 'guess' | 'guessReveal' | 'stated' | 'moment' | 'result' | 'ipip';
 
 function stage(): Stage {
+  if (ui.ipip === 'open' && st.me) return 'ipip';
   if (st.ask && st.them && !st.me) {
     const gm = guessMoments(st.them);
     const done = gm.filter((i) => st.gt?.[i] !== undefined).length;
@@ -136,6 +155,7 @@ function render() {
     : s === 'guessReveal' ? guessReveal()
     : s === 'stated' ? stated()
     : s === 'moment' ? momentCard()
+    : s === 'ipip' ? ipipPage()
     : result();
   if (s === 'result') sharpen();
   if (s === 'example') playExample();
@@ -838,6 +858,7 @@ function result() {
     ${pair}
     ${gapHtml ? `<section class="block"><h3 class="h3">${COPY.gapHeading}</h3>${gapHtml}</section>` : ''}
     <section class="block"><h3 class="h3">${COPY.leanHeading}</h3><ul class="leans">${leans}</ul></section>
+    ${roomBlock()}
     ${trySection(me)}
     <section class="block share">
       <h3 class="h3">${COPY.guessHeading}</h3>
@@ -853,6 +874,146 @@ function result() {
     </section>
     <button class="textlink" data-act="restart">${COPY.startOver}</button>
   </section>`;
+}
+
+/* ---------- the room: opt-in sharing ----------
+   An UNTICKED box under the lean lines. Nothing leaves the phone until it is
+   ticked: no prefetch, no count probe. Ticking sends one anonymous row (the
+   answers with the name and stated taps stripped, a random key, the bank
+   version); only if that lands and the server says the IPIP is still open does
+   the second offer appear. Every failure is quiet: the result carries on. */
+const sectionOf = (me: Person) => Math.min(3, Math.floor(answeredCount(me.answers) / BLOCK));
+const BANK_VERSION = (bankDoc as { meta: { bank_version: string } }).meta.bank_version;
+/** Name and stated placement emptied: the link's own encoding, answers only. */
+const stripped = (p: Person) => encodePerson({ answers: p.answers });
+
+function randomKey(): string {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+function roomBlock() {
+  const me = st.me!;
+  const sec = sectionOf(me);
+  if (sec < 1) return '';
+  const state = ui.room[sec];
+  const locked = state === 'sending' || state === 'sent';
+  const status =
+    state === 'sending' ? ROOM.sending : state === 'sent' ? ROOM.sent : state === 'failed' ? ROOM.failed : '';
+  let offer = '';
+  if (state === 'sent' && ui.ipip === 'offer') {
+    offer = `<div class="room-offer enter">
+      <p class="body">${esc(ROOM.offer)}</p>
+      <button class="pill primary" data-act="ipipGo">${esc(ROOM.offerGo)}</button>
+      <button class="pill quiet" data-act="ipipNo">${esc(ROOM.offerNo)}</button>
+    </div>`;
+  } else if (ui.ipip === 'sent') offer = `<p class="fine">${esc(ROOM.ipipSent)}</p>`;
+  else if (ui.ipip === 'failed') offer = `<p class="fine">${esc(ROOM.ipipFailed)}</p>`;
+  return `<section class="block room" id="like-room-block">
+    <label class="optin">
+      <input type="checkbox" id="like-room" ${locked ? 'checked disabled' : ''}>
+      <span><strong>${esc(ROOM.boxStrong)}</strong> ${esc(ROOM.boxRest)}</span>
+    </label>
+    ${status ? `<p class="fine room-status" aria-live="polite">${esc(status)}</p>` : ''}
+    ${offer}
+  </section>`;
+}
+
+/** Redraw just the room block, so the result doesn't jump or re-animate. */
+function syncRoom() {
+  const el = document.getElementById('like-room-block');
+  if (el && stage() === 'result') el.outerHTML = roomBlock();
+}
+
+async function post(path: string, body: unknown): Promise<boolean> {
+  try {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function shareRoom() {
+  const me = st.me;
+  if (!me) return;
+  const sec = sectionOf(me);
+  if (sec < 1 || ui.room[sec] === 'sending' || ui.room[sec] === 'sent') return;
+  ui.room[sec] = 'sending';
+  syncRoom();
+  const key = randomKey();
+  const answers = stripped(me);
+  const ok = await post('/api/like/result', {
+    result_key: key,
+    bank_version: BANK_VERSION,
+    answers,
+    ...(ui.prev && ui.prev !== answers ? { prev_answers: ui.prev } : {}),
+  });
+  ui.room[sec] = ok ? 'sent' : 'failed';
+  if (ok && ui.ipip === 'none') {
+    try {
+      const res = await fetch('/api/like/ipip-open', { credentials: 'omit', cache: 'no-store' });
+      const j = res.ok ? ((await res.json()) as { open?: unknown }) : null;
+      if (j?.open === true) {
+        ui.ipip = 'offer';
+        ui.ipipKey = key;
+      }
+    } catch {
+      /* quiet: no offer */
+    }
+  }
+  syncRoom();
+}
+
+/* ---------- the short questionnaire (IPIP) ---------- */
+function ipipPage() {
+  const rows = SHOWN_ORDER.map((idx, i) => {
+    const sel = ui.ipipResp[idx];
+    const dots = SCALE_LABELS.map(
+      (lab, j) =>
+        `<button class="tapdot${sel === j + 1 ? ' on' : ''}" data-act="ipipDot" data-item="${idx}" data-v="${j + 1}" aria-pressed="${sel === j + 1}" aria-label="${esc(ITEMS[idx].text)} ${esc(lab)}"><span></span></button>`,
+    ).join('');
+    return `<div class="srow" style="--i:${Math.min(i, 8)}">
+      <div class="srow-head"><span class="axis ipip-item">${esc(ITEMS[idx].text)}</span></div>
+      <div class="dots">${dots}</div>
+      <div class="ends"><span>${esc(SCALE_LABELS[0])}</span><span>${esc(SCALE_LABELS[4])}</span></div>
+    </div>`;
+  }).join('');
+  const all = ui.ipipResp.every((v) => v !== null);
+  return `<section class="screen enter">
+    <p class="label">${esc(ROOM.pageLabel)}</p>
+    <h2 class="h2">${esc(ROOM.pageTitle)}</h2>
+    <p class="hint">${esc(ROOM.pageHint)}</p>
+    <div class="stated">${rows}</div>
+    <button class="pill primary" data-act="ipipSend" ${all ? '' : 'disabled'}>${esc(ROOM.pageGo)}</button>
+    <button class="pill quiet" data-act="ipipNo">${esc(ROOM.pageBack)}</button>
+  </section>`;
+}
+
+async function sendIpip() {
+  const key = ui.ipipKey;
+  if (!key || !ui.ipipResp.every((v) => v !== null)) return;
+  const ok = await post('/api/like/ipip', { result_key: key, item_set: ITEM_SET, responses: ui.ipipResp });
+  ui.ipip = ok ? 'sent' : 'failed';
+  ui.ipipKey = null;
+  ui.ipipResp = Array(ITEM_COUNT).fill(null);
+  render();
+  document.getElementById('like-room-block')?.scrollIntoView({ block: 'center' });
+}
+
+function onChange(e: Event) {
+  const t = e.target as HTMLInputElement;
+  if (t.id === 'like-room' && t.checked) void shareRoom();
 }
 
 /* ================= ACTIONS ================= */
@@ -978,9 +1139,36 @@ function onClick(e: Event) {
     case 'copy':
       void shareOrCopy(location.href, COPY.title, btn);
       return;
+    case 'ipipGo':
+      ui.ipip = 'open';
+      return render();
+    case 'ipipNo':
+      ui.ipip = 'declined';
+      ui.ipipKey = null;
+      ui.ipipResp = Array(ITEM_COUNT).fill(null);
+      render();
+      document.getElementById('like-room-block')?.scrollIntoView({ block: 'center' });
+      return;
+    case 'ipipDot': {
+      ui.ipipResp[Number(btn.dataset.item)] = v;
+      const row = btn.parentElement!;
+      row.querySelectorAll('button').forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      const go = root().querySelector<HTMLButtonElement>('[data-act="ipipSend"]');
+      if (go) go.disabled = !ui.ipipResp.every((x) => x !== null);
+      return;
+    }
+    case 'ipipSend':
+      void sendIpip();
+      return;
     case 'restart':
       if (!confirm('Start again? Your current link still holds this result if you’ve kept it.')) return;
+      if (st.me && sectionOf(st.me) >= 1) ui.prev = stripped(st.me);
       st = {};
+      ui.room = {};
       Object.assign(ui, { started: false, qi: null, rankFor: null, tryPick: null, tryAll: false, shareUrl: null, backUrl: null, animated: false, example: false });
       break;
     default:
@@ -1015,6 +1203,7 @@ function load() {
 
 export function boot() {
   root().addEventListener('click', onClick);
+  root().addEventListener('change', onChange);
   bindDrag();
   window.addEventListener('hashchange', load);
   load();

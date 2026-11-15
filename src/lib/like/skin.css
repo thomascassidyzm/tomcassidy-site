@@ -577,3 +577,22 @@ button:disabled { cursor: default; }
 .paintpair figure:nth-child(2) { transform: rotate(1.2deg); }
 .paintpair figure:nth-child(1) { transform: rotate(-1.2deg); }
 .paintpair figcaption { font-size: 0.8rem; line-height: 1.25; font-weight: 700; }
+
+/* ---------- the room: opt-in box (#17·AI) ---------- */
+.optin {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px; background: var(--card);
+  border: var(--bw) solid var(--line); border-radius: 18px; box-shadow: var(--sh);
+  font-size: 0.95rem; line-height: 1.4; color: var(--text-primary); cursor: pointer;
+}
+.optin input {
+  appearance: none; flex: none; width: 26px; height: 26px; margin: 1px 0 0;
+  border: var(--bw) solid var(--line); border-radius: 8px; background: var(--card);
+  display: grid; place-items: center; transition: background 0.2s, transform 0.3s var(--squish);
+}
+.optin input:checked { background: var(--fill-green); box-shadow: 2px 2px 0 var(--line); }
+.optin input:checked::after { content: '✓'; font-weight: 800; font-size: 1rem; line-height: 1; color: var(--line); }
+.optin input:active { transform: scale(0.85); }
+.optin input:disabled { cursor: default; }
+.room-offer { display: flex; flex-direction: column; gap: 10px; }
+.ipip-item { font-family: var(--f-serif); font-weight: 520; font-size: 1.05rem; }

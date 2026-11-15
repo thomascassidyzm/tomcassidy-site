@@ -3,9 +3,10 @@
  * /like — "What are you like, anyway?" PROTOTYPE (preview only, 2026-10-10).
  *
  * A single static page; everything happens on the device and every answer is
- * written into the URL fragment, so the link is the save and nothing is sent
- * to a server. Engine: src/lib/like/engine.ts. Words: src/lib/like/skin.ts.
- * Look: src/lib/like/skin.css. Player: src/lib/like/app.ts.
+ * written into the URL fragment, so the link is the save. Nothing is sent to
+ * a server unless the person ticks "Add my answers to the room" on the result
+ * (then one anonymous row, via /api/like/*; see src/lib/like-store.ts).
+ * Engine: src/lib/like/engine.ts. Words: src/lib/like/skin.ts. Look: src/lib/like/skin.css. Player: src/lib/like/app.ts.
  *
  * Deliberately outside BaseLayout: no site header eating a phone's first
  * screen, and paper (light) regardless of the site's dark default.

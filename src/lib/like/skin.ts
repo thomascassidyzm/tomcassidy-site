@@ -232,3 +232,23 @@ export function inline(t: string): string {
   const u = t.replace(/[.!?…\s]+$/, '');
   return u.charAt(0).toLowerCase() + u.slice(1);
 }
+
+/** PLACEHOLDER (#17·AI) — every string here is for Tom to rewrite. The opt-in
+ *  box line and the IPIP offer are collection-design.md's draft, word for word. */
+export const ROOM = {
+  boxStrong: 'Add my answers to the room.',
+  boxRest: 'No name, nothing that identifies you. It’s how we’ll be able to show where you stand among everyone who’s played.',
+  sending: 'Adding…',
+  sent: 'Added. Thank you.',
+  failed: 'Couldn’t reach the room just now, so nothing was sent.',
+  offer: 'Got three more minutes? Twenty-eight quick statements help us check our moments against the standard test.',
+  offerGo: 'Yes, go on',
+  offerNo: 'Not now',
+  pageLabel: 'Twenty-eight statements',
+  pageTitle: 'How well does each one describe you?',
+  pageHint: 'As you generally are now, not as you wish to be. One tap per line.',
+  pageGo: 'Send these too',
+  pageBack: 'Not now',
+  ipipSent: 'Those are in too. Thank you.',
+  ipipFailed: 'Couldn’t reach the room just now, so those weren’t sent.',
+};
