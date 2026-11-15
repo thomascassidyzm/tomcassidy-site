@@ -179,6 +179,7 @@ function progress(done: number, total: number, notches = 0) {
    start, so it can be skipped. */
 let exTimers: number[] = [];
 const guessing = () => !!(st.ask && st.them && !st.me);
+const exSteps = () => (guessing() ? COPY.exStepsThem(st.them!.name || undefined) : COPY.exSteps);
 
 function example() {
   ui.exStep = 0;
@@ -193,11 +194,11 @@ function example() {
   return `<section class="screen moment">
     <article class="card enter example" aria-live="polite">
       <p class="label">${COPY.exLabel}</p>
-      <p class="scenario">${esc(COPY.exScenario)}</p>
+      <p class="scenario">${esc(g ? COPY.exScenarioThem(nm) : COPY.exScenario)}</p>
       <p class="hint rank-hint">${esc(g ? COPY.rankFirstThem(nm) : COPY.rankFirst)}</p>
       <ol class="rank" aria-hidden="true">${cards}</ol>
       <div class="pill quiet rank-tie ex-tie" aria-hidden="true">${esc(g ? COPY.rankTieThem(nm) : COPY.rankTie)}</div>
-      <p class="hint ex-step">${COPY.exSteps[0]}</p>
+      <p class="hint ex-step">${esc(exSteps()[0])}</p>
       <p class="fine">${COPY.exNote}</p>
       <button class="pill primary" data-act="exGo">${COPY.exGo}</button>
     </article>
@@ -211,7 +212,7 @@ function playExample() {
   const card = (i: number) => r.querySelector<HTMLElement>(`[data-ex="${i}"]`);
   const step = (n: number) => {
     const el = r.querySelector('.ex-step');
-    if (el) el.textContent = COPY.exSteps[n];
+    if (el) el.textContent = exSteps()[n];
   };
   const hint = (t: string) => {
     const el = r.querySelector('.rank-hint');

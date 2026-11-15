@@ -77,6 +77,13 @@ export const COPY = {
     'Then the next most like you.',
     'When none of the rest are like you, say so. That’s one moment done.',
   ],
+  /** Guess-me: the same example, naming the person being guessed. */
+  exScenarioThem: (n?: string) => `A weekday morning, and ${n ?? 'they'} want${n ? 's' : ''} breakfast.`,
+  exStepsThem: (n?: string) => [
+    `Tap the one most like ${n ?? 'them'}.`,
+    `Then the next most like ${n ?? 'them'}.`,
+    `When none of the rest are like ${n ?? 'them'}, say so. That’s one moment done.`,
+  ],
   exGo: 'Got it',
   exNote: 'This one doesn’t count.',
   rankTop: 'Most likely',
