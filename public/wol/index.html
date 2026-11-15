@@ -6,9 +6,11 @@
 <meta name="color-scheme" content="light dark">
 <title>Wheel of life</title>
 <style>
-  :root { --bg:#fafaf7; --fg:#1d1d1f; --muted:#6e6e73; --line:#d8d8d2; --card:#fff; --accent:#2f6fde; }
+  :root { --bg:#fafaf7; --fg:#1d1d1f; --muted:#6e6e73; --line:#d8d8d2; --card:#fff; --accent:#2f6fde;
+    --c0:#2f62c9; --c1:#2e8540; --c2:#c8372d; --c3:#b85f00; --c4:#c2307a; --c5:#7b4bc4; --c6:#0b7f80; --c7:#7a6a00; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#16181c; --fg:#ececec; --muted:#9a9aa0; --line:#33363d; --card:#1f2228; --accent:#6ea2ff; }
+    :root { --bg:#16181c; --fg:#ececec; --muted:#9a9aa0; --line:#33363d; --card:#1f2228; --accent:#6ea2ff;
+      --c0:#7aa2ff; --c1:#6fcf86; --c2:#ff7b6e; --c3:#ffaa4d; --c4:#ff7eb9; --c5:#b493ff; --c6:#4fd1cf; --c7:#d9c84a; }
   }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; background:var(--bg); color:var(--fg);
@@ -17,20 +19,21 @@
   h1 { font-size:22px; margin:4px 4px 8px; font-weight:650; }
   svg { width:100%; height:auto; display:block; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
   .ring { fill:none; stroke:var(--line); stroke-width:1; }
-  .spoke { stroke:var(--line); stroke-width:1; }
+  .spoke { stroke-width:1.2; stroke-opacity:.5; }
   .hit { fill:transparent; cursor:pointer; }
-  .dot { fill:var(--muted); opacity:.35; pointer-events:none; }
-  .dot.on { fill:var(--accent); opacity:1; }
-  .poly { fill:var(--accent); fill-opacity:.22; stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
+  .dot { opacity:.3; pointer-events:none; }
+  .dot.on { opacity:1; }
+  .poly { fill:var(--fg); fill-opacity:.07; stroke:var(--fg); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
   .lbl { fill:var(--fg); font-size:12px; font-weight:600; pointer-events:none; }
-  .num { fill:var(--muted); font-size:9px; pointer-events:none; }
+  .num { font-size:9px; font-weight:700; pointer-events:none; }
   ul { list-style:none; padding:0; margin:8px 0 0; }
   li { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line);
-    border-radius:12px; padding:6px 6px 6px 12px; margin-bottom:6px; }
+    border-radius:12px; padding:6px 6px 6px 12px; margin-bottom:6px;
+    border-left:5px solid var(--row); background:color-mix(in srgb, var(--row) 9%, var(--card)); }
   .sw { width:10px; height:10px; border-radius:50%; flex:none; }
   .name { flex:1; min-width:0; border:0; background:transparent; color:var(--fg); font:inherit; padding:8px 0; }
   .name:focus { outline:none; border-bottom:1px solid var(--accent); }
-  .score { width:34px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:18px; }
+  .score { color:var(--row); width:34px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:18px; }
   button { font:inherit; color:var(--fg); background:transparent; border:1px solid var(--line); border-radius:10px;
     min-width:44px; height:44px; font-size:22px; }
   button:active { background:var(--line); }
@@ -55,7 +58,7 @@ const AREAS = ["Business / Career", "Finances", "Health", "Family and friends",
 const KEY = "tomcassidy-wol-v1";
 const R0 = 14, R = 130;                       // centre gap and rim radius in SVG units
 const N = AREAS.length, MAX = 10;
-const TINTS = ["#e8a13a","#5bb07a","#e06c6c","#d98bc6","#e2627f","#7d8ce0","#4bb3c4","#a0a85a"];
+const TINTS = Array.from({ length: 8 }, (_, i) => `var(--c${i})`);   // each area's colour, light and dark in the CSS
 
 let state = JSON.parse(localStorage.getItem(KEY) || "null") || {};
 state.names = (state.names && state.names.length === N) ? state.names : AREAS.slice();
@@ -79,16 +82,16 @@ function setScore(i, s) { state.scores[i] = Math.max(0, Math.min(MAX, s)); save(
 
 function render() {
   const svg = document.getElementById("wheel"); svg.innerHTML = "";
-  for (let i = 0; i < N; i++) svg.appendChild(svgEl("path", { d: wedge(i, R0, R), fill: TINTS[i], "fill-opacity": .09 }));
+  for (let i = 0; i < N; i++) svg.appendChild(svgEl("path", { d: wedge(i, R0, R), style: `fill:${TINTS[i]}`, "fill-opacity": .13 }));
   for (let s = 1; s <= MAX; s++) svg.appendChild(svgEl("circle", { class: "ring", r: rad(s), "stroke-width": s % 5 ? 1 : 1.6 }));
-  for (let i = 0; i < N; i++) { const [x, y] = pt(i, R); svg.appendChild(svgEl("line", { class: "spoke", x1: 0, y1: 0, x2: x, y2: y })); }
+  for (let i = 0; i < N; i++) { const [x, y] = pt(i, R); svg.appendChild(svgEl("line", { class: "spoke", style: `stroke:${TINTS[i]}`, x1: 0, y1: 0, x2: x, y2: y })); }
   // polygon
   svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
   // dots + hit areas (each score owns a ring band of its sector; 10 also takes the area just outside the rim)
   const step = (R - R0) / MAX;
   for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
     const [x, y] = pt(i, rad(s));
-    svg.appendChild(svgEl("circle", { class: "dot" + (s <= state.scores[i] ? " on" : ""), cx: x, cy: y, r: s === state.scores[i] ? 5 : 2.6 }));
+    svg.appendChild(svgEl("circle", { class: "dot" + (s <= state.scores[i] ? " on" : ""), style: `fill:${TINTS[i]}`, cx: x, cy: y, r: s === state.scores[i] ? 5 : 2.6 }));
     const a = rad(s) - step / 2, b = s === MAX ? R + 18 : rad(s) + step / 2;
     const hit = svgEl("path", { class: "hit", d: wedge(i, Math.max(a, 4), b) });
     hit.addEventListener("click", () => setScore(i, state.scores[i] === s ? s - 1 : s));
@@ -104,13 +107,13 @@ function render() {
       if (l && (l + " " + w).length <= 13) lines[lines.length - 1] = l + " " + w; else lines.push(w); }
     lines.forEach((l, k) => { const ts = svgEl("tspan", { x, dy: k ? "1.15em" : (-(lines.length - 1) * 0.575) + "em" }); ts.textContent = l; t.appendChild(ts); });
     svg.appendChild(t);
-    const n = svgEl("text", { class: "num", x: pt(i, R + 10)[0], y: pt(i, R + 10)[1], "text-anchor": "middle", "dominant-baseline": "middle" });
+    const n = svgEl("text", { class: "num", style: `fill:${TINTS[i]}`, x: pt(i, R + 10)[0], y: pt(i, R + 10)[1], "text-anchor": "middle", "dominant-baseline": "middle" });
     n.textContent = state.scores[i] || ""; svg.appendChild(n);
   }
   // list
   const ul = document.getElementById("list"); ul.innerHTML = "";
   state.names.forEach((name, i) => {
-    const li = document.createElement("li");
+    const li = document.createElement("li"); li.style.setProperty("--row", TINTS[i]);
     li.innerHTML = `<span class="sw" style="background:${TINTS[i]}"></span><input class="name" enterkeyhint="done"><button aria-label="minus">−</button><span class="score">${state.scores[i] || "–"}</span><button aria-label="plus">+</button>`;
     const inp = li.querySelector("input"); inp.value = name;
     inp.addEventListener("change", () => { state.names[i] = inp.value.trim() || AREAS[i]; save(); render(); });
