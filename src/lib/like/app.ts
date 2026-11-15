@@ -34,6 +34,15 @@ import {
 import { AXES, COPY, TRY, gapLine, inline, leanLine, paintFieldLine, tryLabel } from './skin';
 import { paint, toSvg } from './painting';
 
+/* The "Where do you think you'll land?" prediction page (Tom, 2026-11-15:
+   "let's lose the prediction page for now"). Off: the flow skips it and the
+   result shows no said-vs-picked gaps, no guess rings, no copy about a guess.
+   Flip to true and the page and every said-vs-picked view come back as they
+   were. Links that already carry stated values still decode either way. */
+const ASK_STATED = false;
+/** The person did make a prediction, and the prediction page is switched on. */
+const hasStated = (p: Person) => ASK_STATED && !!p.stated && p.stated.some((x) => x !== null);
+
 let st: State = {};
 /* The outgoing card stays tappable through its exit fade; this closes it so a
    double-tap can't answer two moments with one card on screen. */
@@ -54,6 +63,9 @@ const ui: {
   shareUrl: string | null;
   backUrl: string | null;
   animated: boolean;
+  /** The worked example is due before the first real card (never saved). */
+  example: boolean;
+  exStep: number;
 } = {
   started: false,
   qi: null,
@@ -67,6 +79,8 @@ const ui: {
   shareUrl: null,
   backUrl: null,
   animated: false,
+  example: false,
+  exStep: 0,
 };
 
 const root = () => document.getElementById('like-app')!;
@@ -85,18 +99,20 @@ function linkFor(s: State) {
 }
 
 /* ================= STAGE ================= */
-type Stage = 'front' | 'guessFront' | 'guess' | 'guessReveal' | 'stated' | 'moment' | 'result';
+type Stage = 'front' | 'guessFront' | 'example' | 'guess' | 'guessReveal' | 'stated' | 'moment' | 'result';
 
 function stage(): Stage {
   if (st.ask && st.them && !st.me) {
     const gm = guessMoments(st.them);
     const done = gm.filter((i) => st.gt?.[i] !== undefined).length;
     if (done === 0 && !ui.started) return 'guessFront';
+    if (done === 0 && ui.example) return 'example';
     if (done < gm.length) return 'guess';
     return 'guessReveal';
   }
   if (!st.me) return 'front';
-  if (st.me.stated === undefined) return 'stated';
+  if (ASK_STATED && st.me.stated === undefined) return 'stated';
+  if (ui.example && answeredCount(st.me.answers) === 0) return 'example';
   if (firstUnanswered() >= 0) return 'moment';
   return 'result';
 }
@@ -115,12 +131,14 @@ function render() {
   el.innerHTML =
     s === 'front' ? front()
     : s === 'guessFront' ? guessFront()
+    : s === 'example' ? example()
     : s === 'guess' ? guessCard()
     : s === 'guessReveal' ? guessReveal()
     : s === 'stated' ? stated()
     : s === 'moment' ? momentCard()
     : result();
   if (s === 'result') sharpen();
+  if (s === 'example') playExample();
   window.scrollTo(0, 0);
 }
 
@@ -128,10 +146,11 @@ function front() {
   return `<section class="screen front enter">
     <h1 class="title">${COPY.title}</h1>
     <p class="dek">${COPY.dek}</p>
+    <p class="size">${COPY.size(BLOCK, MAX_MOMENTS)}</p>
     <button class="pill primary" data-act="start">${COPY.start}</button>
     <p class="fine">${COPY.privacy}</p>
     <button class="textlink" data-act="how" aria-expanded="${ui.showHow}">${COPY.how}</button>
-    ${ui.showHow ? `<div class="how">${COPY.howBody.map((p) => `<p>${p}</p>`).join('')}</div>` : ''}
+    ${ui.showHow ? `<div class="how">${(ASK_STATED ? COPY.howBody : COPY.howBodyPlain).map((p) => `<p>${p}</p>`).join('')}</div>` : ''}
   </section>`;
 }
 
@@ -151,6 +170,73 @@ function progress(done: number, total: number, notches = 0) {
   let n = '';
   for (let i = 1; i < notches; i++) n += `<i style="left:${(i / notches) * 100}%"></i>`;
   return `<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}" aria-label="${done} of ${total}"><b style="width:${pct}%"></b>${n}</div>`;
+}
+
+/* ---------- the worked example ----------
+   One unscored card before the first real one: it plays itself — the first
+   tap, the next, then "None of the rest are like me" — and nothing here is
+   written to the answers, the link or the result. "Got it" is there from the
+   start, so it can be skipped. */
+let exTimers: number[] = [];
+const guessing = () => !!(st.ask && st.them && !st.me);
+
+function example() {
+  ui.exStep = 0;
+  const g = guessing();
+  const nm = g ? st.them!.name || undefined : undefined;
+  const cards = COPY.exOpts
+    .map(
+      (t, i) => `<li class="rslot" style="--i:${i}"><div class="rcard ex" data-ex="${i}">
+        <span class="badge" aria-hidden="true"></span><span class="rtext">${esc(t)}</span></div></li>`,
+    )
+    .join('');
+  return `<section class="screen moment">
+    <article class="card enter example" aria-live="polite">
+      <p class="label">${COPY.exLabel}</p>
+      <p class="scenario">${esc(COPY.exScenario)}</p>
+      <p class="hint rank-hint">${esc(g ? COPY.rankFirstThem(nm) : COPY.rankFirst)}</p>
+      <ol class="rank" aria-hidden="true">${cards}</ol>
+      <div class="pill quiet rank-tie ex-tie" aria-hidden="true">${esc(g ? COPY.rankTieThem(nm) : COPY.rankTie)}</div>
+      <p class="hint ex-step">${COPY.exSteps[0]}</p>
+      <p class="fine">${COPY.exNote}</p>
+      <button class="pill primary" data-act="exGo">${COPY.exGo}</button>
+    </article>
+  </section>`;
+}
+
+function playExample() {
+  exTimers.forEach(clearTimeout);
+  exTimers = [];
+  const r = root();
+  const card = (i: number) => r.querySelector<HTMLElement>(`[data-ex="${i}"]`);
+  const step = (n: number) => {
+    const el = r.querySelector('.ex-step');
+    if (el) el.textContent = COPY.exSteps[n];
+  };
+  const hint = (t: string) => {
+    const el = r.querySelector('.rank-hint');
+    if (el) el.textContent = t;
+  };
+  const place = (i: number, n: number) => {
+    const c = card(i);
+    if (!c) return;
+    c.classList.add('ranked');
+    c.querySelector('.badge')!.textContent = String(n);
+  };
+  const at = (ms: number, f: () => void) => exTimers.push(window.setTimeout(f, ms));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const t = reduce ? 0.4 : 1;
+  at(1100 * t, () => place(0, 1));
+  at(1900 * t, () => { hint(COPY.rankNext); step(1); });
+  at(2900 * t, () => place(2, 2));
+  at(3800 * t, () => { step(2); r.querySelector('.ex-tie')?.classList.add('show', 'pressed'); });
+  at(4700 * t, () => r.querySelectorAll<HTMLElement>('.rcard.ex:not(.ranked)').forEach((c) => c.classList.add('rest')));
+}
+
+/** The short instruction above the options: "Most like you…" until the first tap, then "then…". */
+function rankHintText(): string {
+  if (ui.rank.length) return COPY.rankNext;
+  return guessing() ? COPY.rankFirstThem(st.them!.name || undefined) : COPY.rankFirst;
 }
 
 function stated() {
@@ -243,9 +329,9 @@ function momentCard() {
       ${progress(done, BLOCK)}
     </div>
     <article class="card enter" aria-live="polite">
-      <p class="label">${COPY.pickLabel}</p>
+      <p class="label">${COPY.position(blockStart / BLOCK + 1, qi - blockStart + 1, BLOCK)}</p>
       <p class="scenario">${esc(m.s)}</p>
-      <p class="hint rank-hint">${COPY.rankHint}</p>
+      <p class="hint rank-hint">${esc(rankHintText())}</p>
       ${rankBlock(qi)}
     </article>
   </section>`;
@@ -263,7 +349,7 @@ function guessCard() {
     <article class="card enter" aria-live="polite">
       <p class="label">${esc(COPY.guessPick(nameOf(them)))}</p>
       <p class="scenario">${esc(m.s)}</p>
-      <p class="hint rank-hint">${esc(COPY.rankHintThem(them.name || undefined))}</p>
+      <p class="hint rank-hint">${esc(rankHintText())}</p>
       ${rankBlock(qi, COPY.rankTieThem(them.name || undefined), COPY.rankAriaThem(them.name || undefined))}
     </article>
   </section>`;
@@ -302,6 +388,8 @@ function syncRank(qi: number, from?: Map<string, number>) {
   const full = rankFull(qi);
   done.hidden = !full;
   done.classList.toggle('show', full);
+  const hint = root().querySelector('.rank-hint');
+  if (hint) hint.textContent = rankHintText();
   const tie = root().querySelector<HTMLButtonElement>('.rank-tie')!;
   const tieOn = canTie(qi);
   if (tie.hidden === tieOn) {
@@ -543,7 +631,7 @@ function portrait(me: Person, them?: Person) {
   const rt = them ? readAll(them.answers) : null;
   const rows = AXIS_KEYS.map((k, i) => {
     const a = r[k];
-    const s = me.stated?.[i];
+    const s = hasStated(me) ? me.stated![i] : undefined;
     const blur = Math.max(0, (a.unc - 8) * 0.28);
     const halo = a.unc * 2;
     const ring =
@@ -567,7 +655,7 @@ function portrait(me: Person, them?: Person) {
   }).join('');
   const legend = `<div class="legend">
     <span><i class="lg dot-lg"></i>${COPY.legendRevealed}</span>
-    ${me.stated && me.stated.some((x) => x !== null) ? `<span><i class="lg ring-lg"></i>${COPY.legendStated}</span>` : ''}
+    ${hasStated(me) ? `<span><i class="lg ring-lg"></i>${COPY.legendStated}</span>` : ''}
     ${them ? `<span><i class="lg them-lg"></i>${esc(COPY.legendThem(nameOf(them)))}</span>` : ''}
   </div>`;
   return `<div class="portrait">${rows}</div>${legend}`;
@@ -597,7 +685,7 @@ function evidenceLine(qi?: number) {
 function trySuggestions(me: Person): { k: AxisKey; side: Side }[] {
   const out: { k: AxisKey; side: Side }[] = [];
   // towards how you see yourself, where your picks fell short of it
-  for (const g of gaps(me)) {
+  for (const g of hasStated(me) ? gaps(me) : []) {
     if (g.statedSide !== 0) out.push({ k: g.k, side: g.statedSide });
     else out.push({ k: g.k, side: (g.delta > 0 ? -1 : 1) as Side });
   }
@@ -639,6 +727,18 @@ function trySection(me: Person) {
   </section>`;
 }
 
+/* ---------- sections of ten ----------
+   A result after every BLOCK moments, recomputed on everything answered so
+   far, with a plain offer of the next ten until the bank (MAX_MOMENTS) runs out. */
+function moreOffer() {
+  const section = Math.ceil(Math.min(target(), MAX_MOMENTS) / BLOCK);
+  if (target() >= MAX_MOMENTS) return `<div class="more"><p class="body">${COPY.allDone(MAX_MOMENTS)}</p></div>`;
+  return `<div class="more">
+    <p class="body">${COPY.sectionDone(section)} ${COPY.moreOffer(BLOCK)}</p>
+    <button class="pill quiet" data-act="more">${COPY.moreGo(section + 1, BLOCK)}</button>
+  </div>`;
+}
+
 function result() {
   const me = st.me!;
   const them = st.them && answeredCount(st.them.answers) > 0 ? st.them : undefined;
@@ -647,7 +747,7 @@ function result() {
 
   // three views: said, picked, guessed
   let gapHtml = '';
-  if (me.stated && me.stated.some((x) => x !== null)) {
+  if (hasStated(me)) {
     const g = gaps(me);
     const gk = new Set(g.map((x) => x.k));
     const matched = AXIS_KEYS.filter((k, i) => !gk.has(k) && me.stated![i] !== null && r[k].ev > 0).map((k) => AXES[k].label);
@@ -662,7 +762,7 @@ function result() {
           )
           .join('') + (matched.length ? `<p class="hint">${esc(COPY.matchedLine(matched))}</p>` : '')
       : `<p class="body">${COPY.noGaps}</p>`;
-  } else gapHtml = `<p class="body">${COPY.noStated}</p>`;
+  } else if (ASK_STATED) gapHtml = `<p class="body">${COPY.noStated}</p>`;
 
   const paintedSet = paintedAxes(r);
   const leans = AXIS_KEYS.filter((k) => r[k].ev > 0)
@@ -725,15 +825,15 @@ function result() {
 
   return `<section class="screen result">
     <p class="label">${COPY.resultLabel}</p>
-    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : (me.stated && me.stated.some((x) => x !== null) ? 'What you said, and how you ranked' : 'How you ranked')}</h1>
+    <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : (hasStated(me) ? 'What you said, and how you ranked' : 'How you ranked')}</h1>
     ${painting(me)}
     ${portrait(me, them)}
     <p class="hint">${COPY.momentsSoFar(n)}</p>
-    ${n < MAX_MOMENTS ? `<button class="pill quiet" data-act="more">${COPY.sharpen}</button>` : ''}
+    ${moreOffer()}
     ${sendBack}
     ${others}
     ${pair}
-    <section class="block"><h3 class="h3">${COPY.gapHeading}</h3>${gapHtml}</section>
+    ${gapHtml ? `<section class="block"><h3 class="h3">${COPY.gapHeading}</h3>${gapHtml}</section>` : ''}
     <section class="block"><h3 class="h3">${COPY.leanHeading}</h3><ul class="leans">${leans}</ul></section>
     ${trySection(me)}
     <section class="block share">
@@ -789,10 +889,17 @@ function onClick(e: Event) {
     case 'start':
       st = { me: { answers: [] } };
       ui.stated = [null, null, null, null, null, null];
+      ui.example = true;
       break;
     case 'guessStart':
       ui.started = true;
+      ui.example = true;
       break;
+    case 'exGo':
+      exTimers.forEach(clearTimeout);
+      exTimers = [];
+      ui.example = false;
+      return render();
     case 'stated': {
       ui.stated[Number(btn.dataset.axis)] = v;
       // update in place: no re-render, so the row doesn't jump
@@ -871,7 +978,7 @@ function onClick(e: Event) {
     case 'restart':
       if (!confirm('Start again? Your current link still holds this result if you’ve kept it.')) return;
       st = {};
-      Object.assign(ui, { started: false, qi: null, rankFor: null, tryPick: null, tryAll: false, shareUrl: null, backUrl: null, animated: false });
+      Object.assign(ui, { started: false, qi: null, rankFor: null, tryPick: null, tryAll: false, shareUrl: null, backUrl: null, animated: false, example: false });
       break;
     default:
       return;

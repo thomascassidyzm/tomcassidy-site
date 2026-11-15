@@ -35,10 +35,18 @@ export function end(k: AxisKey, side: Side): string {
 
 export const COPY = {
   title: 'What are you like, anyway?',
-  dek: 'Ten everyday moments. About two minutes. You’ll see which way you lean — and you can send it to someone who thinks they know you.',
+  dek: 'Everyday moments. You’ll see which way you lean — and you can send it to someone who thinks they know you.',
+  /** DRAFT (#14·AI): the size of the thing, up front. */
+  size: (block: number, max: number) => `${block} moments to start. ${block} is enough for a first picture; there are ${max} in all, and more sharpens it.`,
   start: 'Start',
   privacy: 'No account. Your answers live in the link — keep the link and you keep the result.',
   how: 'How this works',
+  /** DRAFT (#14·AI): used while the prediction page is off (ASK_STATED = false). */
+  howBodyPlain: [
+    'Each moment has four options. Tap the one most like you, then the next. When none of the rest are like you, say so and move on.',
+    'You get a picture after every ten. Stop there, or do another ten to sharpen it.',
+    'It reads tendencies and directions from a handful of choices. It doesn’t put you in a box, and it doesn’t compare you with anyone you haven’t chosen to compare with. Adults only.',
+  ],
   howBody: [
     'First you say where you think you’ll land. Then ten moments: put the four options in the order you’d actually do them, most likely first.',
     'The result is three views of you — what you said, what you picked, and what a friend guesses — and the gaps between them.',
@@ -53,6 +61,24 @@ export const COPY = {
 
   pickLabel: 'Most likely to least likely',
   rankHint: 'Tap them in the order you’d do them. Hold and drag to change it; tap a numbered one to take it out.',
+  /** DRAFT (#14·AI): the short instruction — before the first tap, then after it. */
+  rankFirst: 'Most like you…',
+  rankNext: 'then…',
+  rankFirstThem: (n?: string) => `Most like ${n ?? 'them'}…`,
+  /** DRAFT (#14·AI): where you are, on every moment card. */
+  position: (section: number, pos: number, of: number) => `Section ${section} · ${pos} of ${of}`,
+
+  /** DRAFT (#14·AI): the worked example — unscored, never saved. */
+  exLabel: 'A quick example',
+  exScenario: 'A weekday morning, and you want breakfast.',
+  exOpts: ['Toast', 'Whatever’s left in the fridge', 'Just a coffee', 'A proper cooked breakfast'],
+  exSteps: [
+    'Tap the one most like you.',
+    'Then the next most like you.',
+    'When none of the rest are like you, say so. That’s one moment done.',
+  ],
+  exGo: 'Got it',
+  exNote: 'This one doesn’t count.',
   rankTop: 'Most likely',
   rankBottom: 'Least likely',
   rankAria: 'The options, in your order',
@@ -70,6 +96,11 @@ export const COPY = {
   legendRevealed: 'what you ranked',
   legendStated: 'where you said',
   sharpen: 'Sharpen it — 10 more moments',
+  /** DRAFT (#14·AI): the offer after each section of ten. */
+  sectionDone: (section: number) => `That’s section ${section} done.`,
+  moreOffer: (block: number) => `That’s enough for a first picture. Another ${block} sharpens it.`,
+  moreGo: (section: number, block: number) => `Section ${section} — ${block} more`,
+  allDone: (max: number) => `That’s all ${max}. This is the sharpest picture it can draw.`,
   momentsSoFar: (n: number) => `From ${n} moments. More moments, sharper picture.`,
   leanHeading: 'Which way your picks lean',
   gapHeading: 'Between what you said and what you picked',
