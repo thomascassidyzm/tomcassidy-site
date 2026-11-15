@@ -599,8 +599,13 @@ function painting(me: Person) {
     ...(white.length ? [esc(COPY.paintWhite(white))] : []),
     esc(COPY.paintLines(answeredCount(me.answers))),
   ];
+  // Poster Club: the plate is framed, and each coloured field carries its axis as a sticker.
+  const tilt = [-6, 4, -3];
+  const stickers = coloured
+    .map((f, i) => `<span class="stk" aria-hidden="true" style="left:calc(10px + ${((f.x + f.w / 2) / 100).toFixed(3)} * (100% - 20px));top:calc(10px + ${((f.y + 5) / 100).toFixed(3)} * (100% - 20px));translate:${(-(f.x + f.w / 2)).toFixed(0)}% 0;rotate:${tilt[i % 3]}deg">${esc(AXES[f.k].label)}</span>`)
+    .join('');
   return `<figure class="painting">
-    ${toSvg(p, COPY.paintAria)}
+    <div class="plate">${toSvg(p, COPY.paintAria)}${stickers}</div>
     <figcaption>
       <p class="pkey-h">${COPY.paintKey}</p>
       <ul class="pkey">${lines.map((l) => `<li>${l}</li>`).join('')}</ul>
