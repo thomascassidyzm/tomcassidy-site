@@ -18,130 +18,145 @@
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   /* no double-tap zoom on iPhone; scroll and pinch still work */
   html, body, svg, svg *, button, li, a, .foot { touch-action:manipulation; }
-  svg, button, li, .foot, h1 { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
-  input { -webkit-user-select:text; user-select:text; font-size:16px; }
-  html, body { margin:0; background:var(--bg); color:var(--fg);
-    font:16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  body { padding:12px 12px calc(24px + env(safe-area-inset-bottom)); max-width:560px; margin:0 auto; overflow-x:hidden; }
-  h1 { font-size:22px; margin:4px 4px 8px; font-weight:650; }
-  svg { width:100%; height:auto; display:block; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
+  body, svg, button, li { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  html { height:100%; background:var(--bg); }
+  /* one screen: the wheel takes whatever height the title, grid and foot leave */
+  body { margin:0 auto; max-width:560px; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column; justify-content:center;
+    padding:max(6px, env(safe-area-inset-top)) 8px max(6px, env(safe-area-inset-bottom));
+    background:var(--bg); color:var(--fg); font:13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  h1 { font-size:15px; font-weight:650; margin:0 4px; flex:none; }
+  h1 small { font-weight:400; color:var(--muted); font-size:13px; margin-left:6px; }
+  svg { flex:1 1 0; min-height:0; max-height:calc(100vw - 16px); width:100%; display:block; }
   .wedge { fill-opacity:var(--wedge-op); }
   .ring { fill:none; stroke:var(--edge); stroke-width:.8; stroke-dasharray:2.2 2.6; stroke-opacity:.75; }
   .edge { stroke:var(--edge); stroke-width:1.5; }
   .rim { fill:none; stroke:var(--edge); stroke-width:2.2; }
   .hub { fill:var(--dot); }
-  .tick { fill:var(--dot); font-size:7px; pointer-events:none; }
   .spoke { stroke:var(--dot); stroke-width:1; }
-  .hit { fill:transparent; cursor:pointer; }
   .dot { fill:var(--dot); pointer-events:none; }
+  .tick { fill:var(--dot); font-size:6.5px; pointer-events:none; }
+  .lbl { fill:var(--fg); font-size:9px; font-weight:600; pointer-events:none; }
+  .hit { fill:transparent; cursor:pointer; }
   .poly { fill:var(--coral); fill-opacity:.08; stroke:var(--coral); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
-  .lbl { fill:var(--fg); font-size:12px; font-weight:600; pointer-events:none; }
-  .num { font-size:9px; font-weight:700; pointer-events:none; }
-  ul { list-style:none; padding:0; margin:8px 0 0; }
-  li { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line);
-    border-radius:12px; padding:6px 6px 6px 12px; margin-bottom:6px;
-    border-left:5px solid var(--row); background:color-mix(in srgb, var(--rowf) var(--rowmix), var(--card)); }
-  .sw { width:10px; height:10px; border-radius:50%; flex:none; }
-  .name { flex:1; min-width:0; border:0; background:transparent; color:var(--fg); font:inherit; padding:8px 0; }
-  .name:focus { outline:none; border-bottom:1px solid var(--accent); }
-  .score { color:var(--row); width:34px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums; font-size:18px; }
-  button { font:inherit; color:var(--fg); background:transparent; border:1px solid var(--line); border-radius:10px;
-    min-width:44px; height:44px; font-size:22px; }
+  ul { list-style:none; padding:0; margin:4px 0 0; display:grid; grid-template-columns:1fr 1fr; gap:4px; flex:none; }
+  li { display:flex; align-items:center; gap:2px; height:36px; padding:0 2px 0 5px; border-radius:8px; border:1px solid var(--line);
+    border-left:4px solid var(--row); background:color-mix(in srgb, var(--rowf) var(--rowmix), var(--card)); min-width:0; }
+  .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; letter-spacing:-.1px; }
+  .score { color:var(--row); min-width:18px; text-align:center; font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
+  button { font:inherit; color:var(--fg); background:transparent; border:1px solid var(--line); border-radius:7px;
+    min-width:32px; height:30px; padding:0; font-size:17px; line-height:1; }
   button:active { background:var(--line); }
-  .foot { display:flex; justify-content:space-between; align-items:center; margin:12px 4px 0; color:var(--muted); }
+  .foot { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:5px 4px 0; color:var(--muted); font-size:12px; flex:none; }
   .foot b { color:var(--fg); }
-  #reset { font-size:15px; padding:0 14px; }
-  .when { margin:-4px 4px 8px; color:var(--muted); }
-  .mine { color:var(--accent); font-weight:600; text-decoration:none; padding:10px 4px; }
-  li button { display:none; }
-  .hit { cursor:default; }
-  .home { margin:20px 4px 0; text-align:center; font-size:13px; }
-  .home a { color:var(--muted); text-decoration:none; }
+  .foot a { color:var(--muted); text-decoration:none; }
+  .foot .act { color:var(--accent); font-weight:600; border:0; height:auto; min-width:0; font-size:12px; padding:6px 2px; }
 </style>
 </head>
 <body>
-<h1>Tom’s wheel of life</h1>
-<p class="when">15 Nov 2026</p>
-<svg id="wheel" viewBox="-238 -195 476 390" aria-label="Wheel of life"></svg>
+<h1 id="title">Wheel of life</h1>
+<svg id="wheel" viewBox="-152 -152 304 304" aria-label="Wheel of life"></svg>
 <ul id="list"></ul>
-<div class="foot"><span>Average: <b id="avg">–</b></span><a class="mine" href="/wol/">Make your own</a></div>
-<p class="home"><a href="https://tomcassidy.co">tomcassidy.co</a></p>
+<div class="foot"><span>Average <b id="avg">–</b></span><span id="act"></span><a href="https://tomcassidy.co">tomcassidy.co</a></div>
 
 <script>
-// ---- Edit here: the eight areas, clockwise from the top ----
+// ---- the eight areas, clockwise from the top (short names for the grid) ----
 const AREAS = ["Business / Career", "Finances", "Health", "Family and friends",
   "Romance", "Personal development", "Fun and recreation", "Contribution to society"];
+const SHORT = ["Career", "Finances", "Health", "Family", "Romance", "Personal dev", "Fun", "Contribution"];
+// FIXED: null = the visitor's own wheel (stored on their phone); an object = a view-only published wheel
+const FIXED = { title: "Tom’s wheel of life", date: "15 Nov 2026", scores: [8, 7, 8, 9, 8, 10, 8, 9] };   // published by Tom, view-only
+const KEY = "tomcassidy-wol-v1";
 const R0 = 14, R = 130;                       // centre gap and rim radius in SVG units
 const N = AREAS.length, MAX = 10;
-const TINTS = Array.from({ length: 8 }, (_, i) => `var(--c${i})`);   // ink: text, row edge
-const FILLS = Array.from({ length: 8 }, (_, i) => `var(--f${i})`);   // the wedge pastels   // each area's colour, light and dark in the CSS
+const TINTS = Array.from({ length: N }, (_, i) => `var(--c${i})`);   // ink: text, row edge
+const FILLS = Array.from({ length: N }, (_, i) => `var(--f${i})`);   // the wedge pastels
 
-const state = { names: AREAS.slice(), scores: [8, 7, 8, 9, 8, 10, 8, 9] };   // Tom’s scores, 15 Nov 2026 — view-only, nothing stored
+let state = {};
+if (FIXED) state = { scores: FIXED.scores.slice() };
+else {
+  try { state = JSON.parse(localStorage.getItem(KEY) || "null") || {}; } catch (e) { state = {}; }   // bad stored data → an empty wheel
+  if (typeof state !== "object" || Array.isArray(state)) state = {};
+}
+state.names = AREAS.slice();
+state.scores = (Array.isArray(state.scores) && state.scores.length === N && state.scores.every(Number.isFinite)) ? state.scores : Array(N).fill(0);
+const save = () => { if (FIXED) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 
 const ang = i => (-90 + i * 360 / N) * Math.PI / 180;
 const rad = s => R0 + (R - R0) * s / MAX;
 const pt = (i, r) => [Math.cos(ang(i)) * r, Math.sin(ang(i)) * r];
 const svgEl = (tag, attrs) => { const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
   for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const P = (r, th) => (Math.cos(th) * r).toFixed(1) + " " + (Math.sin(th) * r).toFixed(1);
 
 // sector wedge for spoke i between radii a and b (half a sector each side)
 function wedge(i, a, b) {
   const h = Math.PI / N, t = ang(i);
-  const P = (r, th) => (Math.cos(th) * r).toFixed(1) + " " + (Math.sin(th) * r).toFixed(1);
   return `M${P(a, t - h)} L${P(b, t - h)} A${b} ${b} 0 0 1 ${P(b, t + h)} L${P(a, t + h)} A${a} ${a} 0 0 0 ${P(a, t - h)}Z`;
 }
 
-function setScore() {}
+function setScore(i, s) { if (FIXED) return; state.scores[i] = Math.max(0, Math.min(MAX, s)); save(); render(); }
 
 function render() {
   const svg = document.getElementById("wheel"); svg.innerHTML = "";
   for (let i = 0; i < N; i++) svg.appendChild(svgEl("path", { class: "wedge", d: wedge(i, 0, R), style: `fill:${FILLS[i]}` }));
   for (let s = 1; s < MAX; s++) svg.appendChild(svgEl("circle", { class: "ring", r: rad(s) }));   // dashed rings inside the wedges
   for (let i = 0; i < N; i++) { const [x, y] = pt(i, R); svg.appendChild(svgEl("line", { class: "spoke", x1: 0, y1: 0, x2: x, y2: y })); }
-  // solid boundaries between wedges, the rim, the hub, and 1-10 up the top spoke
+  // solid boundaries between wedges, the rim, the hub, and 1-9 up the top spoke (the rim is 10)
   for (let i = 0; i < N; i++) { const t = ang(i) + Math.PI / N; svg.appendChild(svgEl("line", { class: "edge", x1: 0, y1: 0, x2: Math.cos(t) * R, y2: Math.sin(t) * R })); }
   svg.appendChild(svgEl("circle", { class: "rim", r: R })); svg.appendChild(svgEl("circle", { class: "hub", r: 5 }));
-  for (let s = 1; s <= MAX; s++) { const k = svgEl("text", { class: "tick", x: 6, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
-  // polygon
+  for (let s = 1; s < MAX; s++) { const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
   svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
   // dots + hit areas (each score owns a ring band of its sector; 10 also takes the area just outside the rim)
   const step = (R - R0) / MAX;
   for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
     const [x, y] = pt(i, rad(s));
-    svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: s === state.scores[i] ? 4.6 : 3 }));
-    const a = rad(s) - step / 2, b = s === MAX ? R + 18 : rad(s) + step / 2;
+    svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: s === state.scores[i] ? 4.6 : 2.6 }));
+    if (FIXED) continue;
+    const a = rad(s) - step / 2, b = s === MAX ? R + 20 : rad(s) + step / 2;
     const hit = svgEl("path", { class: "hit", d: wedge(i, Math.max(a, 4), b) });
     hit.addEventListener("click", () => setScore(i, state.scores[i] === s ? s - 1 : s));
     svg.appendChild(hit);
   }
-  // labels, wrapped to two lines
+  // area names on arcs hugging the rim, so they never shrink the wheel
+  const h = Math.PI / N;
   for (let i = 0; i < N; i++) {
-    const [x, y] = pt(i, R + 30), c = Math.cos(ang(i));
-    const t = svgEl("text", { class: "lbl", x, y, "text-anchor": Math.abs(c) < .3 ? "middle" : c > 0 ? "start" : "end",
-      "dominant-baseline": "middle" });
-    const words = state.names[i].split(" "), lines = [];
-    for (const w of words) { const l = lines[lines.length - 1];
-      if (l && (l + " " + w).length <= 13) lines[lines.length - 1] = l + " " + w; else lines.push(w); }
-    lines.forEach((l, k) => { const ts = svgEl("tspan", { x, dy: k ? "1.15em" : (-(lines.length - 1) * 0.575) + "em" }); ts.textContent = l; t.appendChild(ts); });
-    svg.appendChild(t);
-    const n = svgEl("text", { class: "num", style: `fill:${TINTS[i]}`, x: pt(i, R + 10)[0], y: pt(i, R + 10)[1], "text-anchor": "middle", "dominant-baseline": "middle" });
-    n.textContent = state.scores[i] || ""; svg.appendChild(n);
+    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 13 : R + 5;
+    const d = below ? `M${P(r, t + h)} A${r} ${r} 0 0 0 ${P(r, t - h)}` : `M${P(r, t - h)} A${r} ${r} 0 0 1 ${P(r, t + h)}`;
+    svg.appendChild(svgEl("path", { id: "lp" + i, d, fill: "none" }));
+    const txt = svgEl("text", { class: "lbl", "text-anchor": "middle" });
+    const tp = svgEl("textPath", { href: "#lp" + i, startOffset: "50%" }); tp.textContent = state.names[i];
+    txt.appendChild(tp); svg.appendChild(txt);
+    const room = 2 * h * r * 0.94;
+    const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4);   // layout can report 0 before paint
+    if (est > room) txt.style.fontSize = (9 * room / est).toFixed(2) + "px";   // shrink a long name to its arc
   }
-  // list
+  // compact grid
   const ul = document.getElementById("list"); ul.innerHTML = "";
-  state.names.forEach((name, i) => {
+  for (let i = 0; i < N; i++) {
     const li = document.createElement("li"); li.style.setProperty("--row", TINTS[i]); li.style.setProperty("--rowf", FILLS[i]);
-    li.innerHTML = `<span class="sw" style="background:${FILLS[i]}; box-shadow:0 0 0 1.5px ${TINTS[i]}"></span><input class="name" readonly tabindex="-1"><button aria-label="minus">−</button><span class="score">${state.scores[i] || "–"}</span><button aria-label="plus">+</button>`;
-    const inp = li.querySelector("input"); inp.value = name;
-    const [minus, plus] = li.querySelectorAll("button");
-    minus.addEventListener("click", () => setScore(i, state.scores[i] - 1));
-    plus.addEventListener("click", () => setScore(i, state.scores[i] + 1));
+    li.innerHTML = `<span class="nm"></span>` + (FIXED ? "" : `<button aria-label="minus">−</button>`) +
+      `<span class="score">${state.scores[i] || "–"}</span>` + (FIXED ? "" : `<button aria-label="plus">+</button>`);
+    li.querySelector(".nm").textContent = SHORT[i];
+    if (!FIXED) { const [minus, plus] = li.querySelectorAll("button");
+      minus.addEventListener("click", () => setScore(i, state.scores[i] - 1));
+      plus.addEventListener("click", () => setScore(i, state.scores[i] + 1)); }
     ul.appendChild(li);
-  });
+  }
   const scored = state.scores.filter(s => s > 0);
   document.getElementById("avg").textContent = scored.length ? (scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(1) : "–";
 }
 
+if (FIXED) {
+  document.title = FIXED.title;
+  document.getElementById("title").innerHTML = "";
+  document.getElementById("title").append(FIXED.title, Object.assign(document.createElement("small"), { textContent: FIXED.date }));
+  document.getElementById("act").innerHTML = `<a class="act" href="/wol/">Make your own</a>`;
+} else {
+  document.getElementById("act").innerHTML = `<button class="act" id="reset">Reset</button>`;
+  document.getElementById("reset").addEventListener("click", () => {
+    if (confirm("Clear all scores?")) { state.scores = Array(N).fill(0); save(); render(); }
+  });
+}
 render();
 </script>
 </body>

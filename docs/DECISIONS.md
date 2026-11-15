@@ -6,21 +6,17 @@ falsify it.
 
 ---
 
-## 2026-11-15 — The wheel of life at wol.tomcassidy.co, one file, one project
+## 2026-11-15 — The wheel of life is two static files at /wol/
 
-Tom wanted the wheel of life touch page public at wol.tomcassidy.co. The page is the
-static `public/wol/index.html` (also served at tomcassidy.co/wol/); the subdomain is
-attached to this same Vercel project (tomcassidy.co's DNS is Vercel DNS, so no record
-was needed), and `scripts/host-routes.mjs` runs after `astro build` to put one
-host-matched route first in `.vercel/output/config.json`: the root of
-wol.tomcassidy.co serves that file. A post-build step because the Vercel adapter
-writes its own route config and ignores `vercel.json` rewrites. Better than a
-domain redirect (the address stays wol.tomcassidy.co), simpler and cheaper than a
-second project or repo (one file, one build, nothing to keep in step). The same
-step serves /tom on that host: Tom’s own wheel (`public/wol/tom/index.html`, his
-scores published by his choice, view-only, also at tomcassidy.co/wol/tom/).
-Falsified if the adapter starts honouring `vercel.json` rewrites (move the routes
-there) or if a build stops printing `[host-routes] 2 host route(s) added`.
+`public/wol/index.html` (a visitor's own wheel, opens empty, scores in their
+localStorage under `tomcassidy-wol-v1`) and `public/wol/tom/index.html` (Tom's
+wheel, published by his choice, view-only; the same file with one `FIXED` line
+changed). Self-contained, no external requests, one iPhone screen at 100dvh. A
+wol.tomcassidy.co host route was tried the same morning and removed when Tom
+dropped the subdomain: it needed a post-build script because the Vercel adapter
+ignores `vercel.json` rewrites, and that weight is not worth carrying for an
+address nobody needs. Falsified if the page needs data or sign-in, at which
+point it becomes an Astro page.
 
 ---
 

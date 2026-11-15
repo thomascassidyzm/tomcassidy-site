@@ -18,14 +18,12 @@ rule written into the comments is: change the shape there first, then port here.
 
 ## Commands
 
-Everything is in `package.json`. The one script, `scripts/host-routes.mjs`, runs
-after `astro build` (it is part of `npm run build`) and adds the wol.tomcassidy.co
-host route to the Vercel output; see `docs/DECISIONS.md`, 2026-11-15.
+Everything is in `package.json`; there is no scripts directory.
 
 | Command             | What it does                                  |
 | ------------------- | --------------------------------------------- |
 | `npm run dev`       | Local dev server (`astro dev`)                |
-| `npm run build`     | Production build, then the host-route step    |
+| `npm run build`     | Production build                              |
 | `npm run preview`   | Preview the build                             |
 | `npm run check`     | `astro check` — types across `.astro` too     |
 | `npm run typecheck` | `tsc --noEmit`                                |
