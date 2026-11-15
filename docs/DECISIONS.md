@@ -6,6 +6,37 @@ falsify it.
 
 ---
 
+## 2026-11-15 — /like: prediction page off behind a switch; the quiz in sections of ten
+
+**Decided.** (Tom, after playing the preview: "lose the prediction page for
+now", "an idea of the size of the thing… first 10 questions and so on… more is
+better but 10 is ok", "simpler instructions / Most like you…", "a quick
+example".) The "Where do you think you'll land?" page is skipped behind one
+constant, `ASK_STATED = false` at the top of `src/lib/like/app.ts`. With it off
+the result shows no said-vs-picked gaps, no guess rings, no legend entry and no
+copy about a guess; the "try" suggestions come from leans only. Links that carry
+stated values still decode (the engine is untouched); their stated data is
+simply not shown. Flip the constant and every one of those views returns as it
+was. The quiz is framed as sections of ten (`BLOCK`): the front screen says 10
+to start and 30 in all, each card reads "Section 1 · 3 of 10", and each
+section ends in the full result recomputed on all answers so far, with an
+offer of the next ten until the bank's 30 run out. This reuses the existing
+`st.t` + `BLOCK` mechanic; the bank already holds 30 moments in three tens, so
+no new moments were written. Cards instruct "Most like you…" until the first
+tap, then "then…" (Guess-me: "Most like Tom…"). One unscored worked example
+(breakfast) plays itself before the first card and is never saved.
+
+**Why.** Better: Tom finds the prediction page friction before anything has
+happened, and a person who can see the size and the stopping point starts more
+readily. Simpler: one constant instead of a deletion, so the said-vs-picked
+work is not lost. Cheaper: no engine or encoding change, no new bank content.
+
+**Falsified if** people stop after the worked example (it reads as a barrier,
+not a help), or the result without the said-vs-picked gap reads as thin enough
+that Tom wants the prediction back. In that case flip `ASK_STATED`.
+
+---
+
 ## 2026-11-15 — /like: "None of the rest are like me" scores a real tie
 
 **Decided.** Once the first option is placed, and until the order is full, a

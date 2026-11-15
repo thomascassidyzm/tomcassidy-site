@@ -828,7 +828,6 @@ function result() {
     <h1 class="title sm">${them ? esc(COPY.pairHeading(nameOf(them))) : (hasStated(me) ? 'What you said, and how you ranked' : 'How you ranked')}</h1>
     ${painting(me)}
     ${portrait(me, them)}
-    <p class="hint">${COPY.momentsSoFar(n)}</p>
     ${moreOffer()}
     ${sendBack}
     ${others}
