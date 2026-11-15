@@ -307,9 +307,7 @@ function rankBlock(qi: number, tieLabel: string = COPY.rankTie, ariaLabel: strin
       </li>`;
     })
     .join('');
-  return `<p class="rank-ends"><span>${COPY.rankTop}</span></p>
-    <ol class="rank" aria-label="${esc(ariaLabel)}">${cards}</ol>
-    <p class="rank-ends"><span>${COPY.rankBottom}</span></p>
+  return `<ol class="rank" aria-label="${esc(ariaLabel)}">${cards}</ol>
     <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>
     <button class="pill quiet rank-tie${canTie(qi) ? ' show' : ''}" data-act="rankTie" ${canTie(qi) ? '' : 'hidden'}>${esc(tieLabel)}</button>`;
 }

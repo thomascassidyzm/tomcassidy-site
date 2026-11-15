@@ -86,8 +86,6 @@ export const COPY = {
   ],
   exGo: 'Got it',
   exNote: 'This one doesn’t count.',
-  rankTop: 'Most likely',
-  rankBottom: 'Least likely',
   rankAria: 'The options, in your order',
   /** Guess-me: the friend ranks as the person from the link would, so the words name that person, never "you". */
   rankHintThem: (n?: string) => `Tap them in the order ${n ?? 'they'} would do them. Hold and drag to change it; tap a numbered one to take it out.`,
