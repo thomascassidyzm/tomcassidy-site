@@ -21,7 +21,7 @@
   body, svg, button, li { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   html { height:100%; background:var(--bg); }
   /* one screen: the wheel takes whatever height the title, grid and foot leave */
-  body { margin:0 auto; max-width:560px; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column; justify-content:center;
+  body { margin:0 auto; max-width:560px; height:100vh; height:100dvh; overflow:hidden; display:flex; flex-direction:column;
     padding:max(6px, env(safe-area-inset-top)) 8px max(6px, env(safe-area-inset-bottom));
     background:var(--bg); color:var(--fg); font:13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   h1 { font-size:15px; font-weight:650; margin:0 4px; flex:none; }
@@ -29,7 +29,9 @@
   .hint.anim { transition:opacity .6s; }   /* fade only after the first draw, so a return visit never flashes it */
   .hint.gone { opacity:0; }
   h1 small { font-weight:400; color:var(--muted); font-size:13px; margin-left:6px; }
-  svg { flex:1 1 0; min-height:0; max-height:calc(100vw - 16px); width:100%; display:block; }
+  /* title at the top; the wheel and its bottom line centred together in the rest, spare height split evenly */
+  .stage { flex:1 1 0; min-height:0; display:flex; flex-direction:column; justify-content:center; }
+  svg { flex:0 1 auto; min-height:0; width:100%; aspect-ratio:1 / 1; display:block; }
   .wedge { fill-opacity:var(--wedge-op); }
   .ring { fill:none; stroke:var(--edge); stroke-width:.8; stroke-dasharray:2.2 2.6; stroke-opacity:.75; }
   .edge { stroke:var(--edge); stroke-width:1.5; }
@@ -53,8 +55,10 @@
 <body>
 <h1 id="title">Wheel of life</h1>
 <p id="hint" class="hint">Drag the dots to score each area</p>
+<main class="stage">
 <svg id="wheel" viewBox="-159 -159 318 318" aria-label="Wheel of life"></svg>
 <div class="foot"><span>Average <b id="avg">–</b></span><span id="act"></span><a href="https://tomcassidy.co">tomcassidy.co</a></div>
+</main>
 
 <script>
 // ---- the eight areas, clockwise from the top (short names for the grid) ----
@@ -120,13 +124,17 @@ if (!FIXED) {
 
 function render() {
   const svg = document.getElementById("wheel"); svg.innerHTML = "";
+  // spare height on a tall phone grows the names and badges a little rather than leaving a void
+  const stage = svg.parentElement.getBoundingClientRect(), w = svg.getBoundingClientRect().width;
+  const K = w ? Math.max(1, Math.min(1.2, 1 + (stage.height - w - 40) / w * 0.6)) : 1;
   for (let i = 0; i < N; i++) svg.appendChild(svgEl("path", { class: "wedge", d: wedge(i, 0, R), style: `fill:${FILLS[i]}` }));
   for (let s = 1; s < MAX; s++) svg.appendChild(svgEl("circle", { class: "ring", r: rad(s) }));   // dashed rings inside the wedges
   for (let i = 0; i < N; i++) { const [x, y] = pt(i, R); svg.appendChild(svgEl("line", { class: "spoke", x1: 0, y1: 0, x2: x, y2: y })); }
   // solid boundaries between wedges, the rim, the hub, and 1-9 up the top spoke (the rim is 10)
   for (let i = 0; i < N; i++) { const t = ang(i) + Math.PI / N; svg.appendChild(svgEl("line", { class: "edge", x1: 0, y1: 0, x2: Math.cos(t) * R, y2: Math.sin(t) * R })); }
   svg.appendChild(svgEl("circle", { class: "rim", r: R })); svg.appendChild(svgEl("circle", { class: "hub", r: 5 }));
-  for (let s = 1; s < MAX; s++) { const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
+  const s0 = state.scores[0];   // never draw a ring number under or beside the top badge
+  for (let s = 1; s < MAX; s++) { if (s0 && Math.abs(s - s0) <= 1) continue; const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
   svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
   // notch dots, then each area's score as a badge at its point on the shape (larger under a finger)
   for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
@@ -135,21 +143,21 @@ function render() {
   }
   for (let i = 0; i < N; i++) { const s = state.scores[i]; if (!s) continue;
     const [x, y] = pt(i, rad(s)), big = i === active;
-    svg.appendChild(svgEl("circle", { class: "badge", cx: x, cy: y, r: big ? 11 : 8, style: `fill:${FILLS[i]}; stroke:${TINTS[i]}` }));
-    const t = svgEl("text", { class: "badge-t", x, y: y + .5, style: `fill:${TINTS[i]}${big ? "; font-size:13px" : ""}` }); t.textContent = s; svg.appendChild(t);
+    svg.appendChild(svgEl("circle", { class: "badge", cx: x, cy: y, r: (big ? 11 : 8) * K, style: `fill:${FILLS[i]}; stroke:${TINTS[i]}` }));
+    const t = svgEl("text", { class: "badge-t", x, y: y + .5, style: `fill:${TINTS[i]}; font-size:${((big ? 13 : 9.5) * K).toFixed(2)}px` }); t.textContent = s; svg.appendChild(t);
   }
   // area names on arcs hugging the rim, so they never shrink the wheel
   const h = Math.PI / N;
   for (let i = 0; i < N; i++) {
-    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 19 : R + 11;   // clear of a 10 badge on the rim
+    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 10 + 9 * K : R + 3 + 8 * K;   // clear of a 10 badge on the rim
     const d = below ? `M${P(r, t + h)} A${r} ${r} 0 0 0 ${P(r, t - h)}` : `M${P(r, t - h)} A${r} ${r} 0 0 1 ${P(r, t + h)}`;
     svg.appendChild(svgEl("path", { id: "lp" + i, d, fill: "none" }));
-    const txt = svgEl("text", { class: "lbl", "text-anchor": "middle" });
+    const txt = svgEl("text", { class: "lbl", "text-anchor": "middle", style: `font-size:${(9 * K).toFixed(2)}px` });
     const tp = svgEl("textPath", { href: "#lp" + i, startOffset: "50%" }); tp.textContent = state.names[i];
     txt.appendChild(tp); svg.appendChild(txt);
     const room = 2 * h * r * 0.94;
-    const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4);   // layout can report 0 before paint
-    if (est > room) txt.style.fontSize = (9 * room / est).toFixed(2) + "px";   // shrink a long name to its arc
+    const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4 * K);   // layout can report 0 before paint
+    if (est > room) txt.style.fontSize = (9 * K * room / est).toFixed(2) + "px";   // shrink a long name to its arc
   }
   const scored = state.scores.filter(s => s > 0);
   document.getElementById("hint").classList.toggle("gone", scored.length > 0);   // fades once anything is scored; back after Reset
@@ -168,6 +176,7 @@ if (FIXED) {
   });
 }
 render();
+addEventListener("resize", () => render());   // Safari's bars come and go
 requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("hint").classList.add("anim")));
 </script>
 </body>
