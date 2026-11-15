@@ -38,11 +38,8 @@
   .lbl { fill:var(--fg); font-size:9px; font-weight:600; pointer-events:none; }
   svg.live, svg.live * { touch-action:none; cursor:pointer; }   /* dragging on the wheel never scrolls or zooms */
   .poly { fill:var(--coral); fill-opacity:.08; stroke:var(--coral); stroke-width:2.5; stroke-linejoin:round; pointer-events:none; }
-  ul { list-style:none; padding:0; margin:4px 0 0; display:grid; grid-template-columns:1fr 1fr; gap:4px; flex:none; }
-  li { display:flex; align-items:center; gap:4px; height:26px; padding:0 8px 0 6px; border-radius:8px; border:1px solid var(--line);
-    border-left:4px solid var(--row); background:color-mix(in srgb, var(--rowf) var(--rowmix), var(--card)); min-width:0; }
-  .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; letter-spacing:-.1px; }
-  .score { color:var(--row); min-width:18px; text-align:center; font-weight:700; font-size:14px; font-variant-numeric:tabular-nums; }
+  .badge { stroke-width:1.6; pointer-events:none; }
+  .badge-t { font-size:9.5px; font-weight:800; text-anchor:middle; dominant-baseline:central; pointer-events:none; }
   button { font:inherit; color:var(--fg); background:transparent; border:0; padding:0; }
   .foot { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:5px 4px 0; color:var(--muted); font-size:12px; flex:none; }
   .foot b { color:var(--fg); }
@@ -52,8 +49,7 @@
 </head>
 <body>
 <h1 id="title">Wheel of life</h1>
-<svg id="wheel" viewBox="-152 -152 304 304" aria-label="Wheel of life"></svg>
-<ul id="list"></ul>
+<svg id="wheel" viewBox="-159 -159 318 318" aria-label="Wheel of life"></svg>
 <div class="foot"><span>Average <b id="avg">–</b></span><span id="act"></span><a href="https://tomcassidy.co">tomcassidy.co</a></div>
 
 <script>
@@ -109,7 +105,7 @@ if (!FIXED) {
   const svg = document.getElementById("wheel"); svg.classList.add("live");
   let lock = -1;   // a drag stays in the wedge it started in
   svg.addEventListener("pointerdown", e => {
-    const p = wheelPoint(e); if (p.r > R + 22) return;
+    const p = wheelPoint(e); if (p.r > R + 26) return;
     e.preventDefault(); lock = active = p.i; setScore(p.i, p.s); render();
     try { svg.setPointerCapture(e.pointerId); } catch (err) {}   // keep the finger's moves even off the wheel
   });
@@ -128,15 +124,20 @@ function render() {
   svg.appendChild(svgEl("circle", { class: "rim", r: R })); svg.appendChild(svgEl("circle", { class: "hub", r: 5 }));
   for (let s = 1; s < MAX; s++) { const k = svgEl("text", { class: "tick", x: 5, y: -rad(s) - 4, "dominant-baseline": "middle" }); k.textContent = s; svg.appendChild(k); }
   svg.appendChild(svgEl("polygon", { class: "poly", points: state.scores.map((s, i) => pt(i, rad(s)).join(",")).join(" ") }));
-  // notch dots; the current score is larger, and larger still under a finger
+  // notch dots, then each area's score as a badge at its point on the shape (larger under a finger)
   for (let i = 0; i < N; i++) for (let s = 1; s <= MAX; s++) {
-    const [x, y] = pt(i, rad(s)), on = s === state.scores[i];
-    svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: on ? (i === active ? 7.5 : 4.6) : 2.6 }));
+    if (s === state.scores[i]) continue;
+    const [x, y] = pt(i, rad(s)); svg.appendChild(svgEl("circle", { class: "dot", cx: x, cy: y, r: 2.6 }));
+  }
+  for (let i = 0; i < N; i++) { const s = state.scores[i]; if (!s) continue;
+    const [x, y] = pt(i, rad(s)), big = i === active;
+    svg.appendChild(svgEl("circle", { class: "badge", cx: x, cy: y, r: big ? 11 : 8, style: `fill:${FILLS[i]}; stroke:${TINTS[i]}` }));
+    const t = svgEl("text", { class: "badge-t", x, y: y + .5, style: `fill:${TINTS[i]}${big ? "; font-size:13px" : ""}` }); t.textContent = s; svg.appendChild(t);
   }
   // area names on arcs hugging the rim, so they never shrink the wheel
   const h = Math.PI / N;
   for (let i = 0; i < N; i++) {
-    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 13 : R + 5;
+    const t = ang(i), below = Math.sin(t) > 0.01, r = below ? R + 19 : R + 11;   // clear of a 10 badge on the rim
     const d = below ? `M${P(r, t + h)} A${r} ${r} 0 0 0 ${P(r, t - h)}` : `M${P(r, t - h)} A${r} ${r} 0 0 1 ${P(r, t + h)}`;
     svg.appendChild(svgEl("path", { id: "lp" + i, d, fill: "none" }));
     const txt = svgEl("text", { class: "lbl", "text-anchor": "middle" });
@@ -145,14 +146,6 @@ function render() {
     const room = 2 * h * r * 0.94;
     const est = Math.max(txt.getComputedTextLength(), state.names[i].length * 5.4);   // layout can report 0 before paint
     if (est > room) txt.style.fontSize = (9 * room / est).toFixed(2) + "px";   // shrink a long name to its arc
-  }
-  // compact readout
-  const ul = document.getElementById("list"); ul.innerHTML = "";
-  for (let i = 0; i < N; i++) {
-    const li = document.createElement("li"); li.style.setProperty("--row", TINTS[i]); li.style.setProperty("--rowf", FILLS[i]);
-    li.innerHTML = `<span class="nm"></span><span class="score">${state.scores[i] || "–"}</span>`;   // a readout: the wheel is the control
-    li.querySelector(".nm").textContent = SHORT[i];
-    ul.appendChild(li);
   }
   const scored = state.scores.filter(s => s > 0);
   document.getElementById("avg").textContent = scored.length ? (scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(1) : "–";
