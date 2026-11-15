@@ -207,7 +207,7 @@ const rankFull = (qi: number) => ui.rank.length === MOMENTS[qi].opts.length;
    how many were tapped is kept in the save. It saves and advances, as ✅ does. */
 const canTie = (qi: number) => ui.rank.length > 0 && !rankFull(qi);
 
-function rankBlock(qi: number, tieLabel: string = COPY.rankTie) {
+function rankBlock(qi: number, tieLabel: string = COPY.rankTie, ariaLabel: string = COPY.rankAria) {
   const m = MOMENTS[qi];
   const cards = visible()
     .map((i, pos) => {
@@ -221,7 +221,7 @@ function rankBlock(qi: number, tieLabel: string = COPY.rankTie) {
     })
     .join('');
   return `<p class="rank-ends"><span>${COPY.rankTop}</span></p>
-    <ol class="rank" aria-label="${COPY.rankAria}">${cards}</ol>
+    <ol class="rank" aria-label="${esc(ariaLabel)}">${cards}</ol>
     <p class="rank-ends"><span>${COPY.rankBottom}</span></p>
     <button class="pill primary rank-done${rankFull(qi) ? ' show' : ''}" data-act="rankDone" ${rankFull(qi) ? '' : 'hidden'}>✅ ${COPY.rankDone}</button>
     <button class="pill quiet rank-tie${canTie(qi) ? ' show' : ''}" data-act="rankTie" ${canTie(qi) ? '' : 'hidden'}>${esc(tieLabel)}</button>`;
@@ -263,8 +263,8 @@ function guessCard() {
     <article class="card enter" aria-live="polite">
       <p class="label">${esc(COPY.guessPick(nameOf(them)))}</p>
       <p class="scenario">${esc(m.s)}</p>
-      <p class="hint rank-hint">${COPY.rankHint}</p>
-      ${rankBlock(qi, COPY.rankTieThem(them.name || undefined))}
+      <p class="hint rank-hint">${esc(COPY.rankHintThem(them.name || undefined))}</p>
+      ${rankBlock(qi, COPY.rankTieThem(them.name || undefined), COPY.rankAriaThem(them.name || undefined))}
     </article>
   </section>`;
 }
